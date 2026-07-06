@@ -30,7 +30,7 @@ let package = Package(
 
         .binaryTarget(
             name: "CodeLanguagesContainer",
-            path: "CodeLanguagesContainer.xcframework.zip"
+            path: "CodeLanguagesContainer.xcframework"
         ),
 
         .testTarget(
