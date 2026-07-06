@@ -3,7 +3,7 @@
 Feel free to join and collaborate on our [Discord Server](https://discord.gg/vChUXVf9Em).
 
 > [!WARNING]
-> Please do not submit `localization` related pull requests at this time. 
+> Please do not submit `localization` related pull requests at this time.
 > Once we are ready to support more languages we will let you know with a guide on how to contribute here and on our [Discord Server](https://discord.gg/vChUXVf9Em).
 
 ## Fork & Clone CodeEdit

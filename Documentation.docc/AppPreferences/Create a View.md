@@ -36,7 +36,7 @@ To add your option toggle below the other options just add something like this:
 ```swift
 private extension GeneralSettingsView {
     // MARK: - Settings View
-    
+
     private var yourOption: some View {
         Toggle("Your text", isOn: $general.yourNewOption)
     }

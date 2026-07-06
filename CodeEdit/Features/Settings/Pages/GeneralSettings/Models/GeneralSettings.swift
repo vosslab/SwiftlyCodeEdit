@@ -41,7 +41,7 @@ extension SettingsData {
                 "Project Navigator Size",
                 "Find Navigator Detail",
                 "Issue Navigator Detail",
-                "Show “Open With CodeEdit“ option in Finder",
+                "Show "Open With CodeEdit" option in Finder",
                 "'codeedit' Shell command",
                 "Dialog Warnings",
                 "Check for updates",

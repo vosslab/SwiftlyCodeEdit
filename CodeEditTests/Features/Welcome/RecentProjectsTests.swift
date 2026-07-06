@@ -73,7 +73,7 @@ private enum TestContext {
 // MARK: - Test-suite
 // -----------------------------------------------------------------------------
 
-// Needs to be serial – everything writes to `UserDefaults.standard`.
+// Needs to be serial - everything writes to `UserDefaults.standard`.
 @Suite(.serialized)
 @MainActor
 class RecentsStoreTests {
@@ -147,7 +147,7 @@ class RecentsStoreTests {
         RecentsStore.documentOpened(at: dir)
         RecentsStore.documentOpened(at: file)
 
-        // Open `dir` again → should move to front
+        // Open `dir` again -> should move to front
         RecentsStore.documentOpened(at: dir)
         // Open duplicate again (no change in order, still unique)
         RecentsStore.documentOpened(at: dir)

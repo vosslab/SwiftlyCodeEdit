@@ -41,7 +41,7 @@ struct GeneralSettings: Codable, Hashable {
 
     // Try to decode the value from json.
     self.yourNewOption = try container.decodeIfPresent(
-      Bool.self, 
+      Bool.self,
       forKey: .yourNewOption
     ) ?? true // If the key is not present in the json, set the default value
   }
@@ -66,7 +66,7 @@ public extension YourNewSection: Codable {
 
     // Try to decode the value from json.
     self.yourNewOption = try container.decodeIfPresent(
-      Bool.self, 
+      Bool.self,
       forKey: .yourNewOption
     ) ?? true // If the key is not present in the json, set the default value
   }

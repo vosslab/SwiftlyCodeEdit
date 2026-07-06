@@ -271,8 +271,8 @@ extension SettingsData {
             var showTabs: Bool
             var showLineEndings: Bool
 
-            var spaceReplacement: String = "·"
-            var tabReplacement: String = "→"
+            var spaceReplacement: String = "*"
+            var tabReplacement: String = "->"
 
             // Controlled by `showLineEndings`
             var carriageReturnReplacement: String = "↵"

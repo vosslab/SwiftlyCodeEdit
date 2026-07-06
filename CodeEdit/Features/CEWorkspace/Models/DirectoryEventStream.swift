@@ -156,7 +156,7 @@ class DirectoryEventStream {
     /// Parses ``FSEvent`` from the raw flag value.
     ///
     /// There can be multiple events in the raw flag value,
-    /// bacause of how OS processes almost simlutaneous actions – thus this functions returns a `Set` of `FSEvent`.
+    /// bacause of how OS processes almost simlutaneous actions - thus this functions returns a `Set` of `FSEvent`.
     ///
     /// Often returns ``[FSEvent/changeInDirectory]`` as `FSEventStream` returns
     /// `kFSEventStreamEventFlagNone (0x00000000)` frequently without more information.

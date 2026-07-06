@@ -297,7 +297,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         }
 
         do {
-            // Get parent directory for cases when entire folders were deleted – and recreate them as needed
+            // Get parent directory for cases when entire folders were deleted - and recreate them as needed
             let directory = fileURL.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
 

@@ -8,7 +8,7 @@
 import XCTest
 final class HideInterfaceUITests: XCTestCase {
 
-    // MARK: – Setup
+    // MARK: - Setup
     private var app: XCUIApplication!
     private var path: String!
 
@@ -23,7 +23,7 @@ final class HideInterfaceUITests: XCTestCase {
         ["Navigator", "Inspector", "Utility Area", "Toolbar"]
     }
 
-    // MARK: – Tests
+    // MARK: - Tests
 
     /// Test 1: Ensure each panel can show and hide individually.
     func testPanelsShowAndHideIndividually() {

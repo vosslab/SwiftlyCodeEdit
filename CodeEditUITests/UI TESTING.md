@@ -1,6 +1,6 @@
 # UI Testing in CodeEdit
 
-CodeEdit uses XCUITests for automating tests that require user interaction. Ideally, we have UI tests for every UI 
+CodeEdit uses XCUITests for automating tests that require user interaction. Ideally, we have UI tests for every UI
 component in CodeEdit, but right now (as of Jan, 2025) we have fewer tests than we'd like.
 
 ## Test Application Setup
@@ -35,5 +35,5 @@ let navigator = Query.Window.getProjectNavigator(window)
 let newFileCell = Query.Navigator.getProjectNavigatorRow(fileTitle: "FileName", navigator)
 ```
 
-This isn't necessary for all tests, but useful for querying common regions like the project navigator, window, or 
+This isn't necessary for all tests, but useful for querying common regions like the project navigator, window, or
 utility area.

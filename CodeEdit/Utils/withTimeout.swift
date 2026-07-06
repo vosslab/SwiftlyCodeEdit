@@ -34,7 +34,7 @@ public func withTimeout<R>(
                 try await Task.sleep(until: deadline) // sleep until the deadline
             }
             try Task.checkCancellation()
-            // We’ve reached the timeout.
+            // We've reached the timeout.
             try await onTimeout()
             throw TimedOutError()
         }

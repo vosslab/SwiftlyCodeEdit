@@ -14,7 +14,7 @@ echo "SwiftLint Version: $(swiftlint --version)"
 
 export LC_CTYPE=en_US.UTF-8
 
-# xcbeautify flags: 
+# xcbeautify flags:
 # - renderer: render to gh actions
 # - q: quiet output
 # - is-ci: include test results in output

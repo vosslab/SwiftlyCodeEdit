@@ -13,10 +13,10 @@ categories:
       - 'documentation'
       - 'dependencies'
 template: |
-  <!-- Update Template --> 
+  <!-- Update Template -->
 
   ## Changes
 
   $CHANGES
-  
+
   <!-- sparkle:edSignature=xxxxx -->

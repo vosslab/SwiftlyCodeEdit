@@ -69,7 +69,7 @@ struct ThemeSettingsThemeRow: View {
             isHovering = hovering
         }
         .alert(
-            Text("Are you sure you want to delete the theme “\(theme.displayName)”?"),
+            Text("Are you sure you want to delete the theme "\(theme.displayName)"?"),
             isPresented: $deleteConfirmationIsPresented
         ) {
             Button("Delete Theme") {

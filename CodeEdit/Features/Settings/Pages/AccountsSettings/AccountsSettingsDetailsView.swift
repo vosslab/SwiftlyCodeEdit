@@ -126,7 +126,7 @@ struct AccountsSettingsDetailsView: View {
                         deleteConfirmationIsPresented.toggle()
                     }
                     .alert(
-                        Text("Are you sure you want to delete the account “\(account.description)”?"),
+                        Text("Are you sure you want to delete the account "\(account.description)"?"),
                         isPresented: $deleteConfirmationIsPresented
                     ) {
                         Button("OK") {

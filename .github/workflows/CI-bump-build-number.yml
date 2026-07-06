@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-  
+
       - name: Bump Build Number
         run: |
           xcrun agvtool next-version -all

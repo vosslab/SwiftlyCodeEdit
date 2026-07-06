@@ -23,11 +23,11 @@ struct SourceControlSwitchView: View {
                     .resizable()
                     .frame(width: 64, height: 64)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Do you want to switch to “\(branch.name)”?")
+                    Text("Do you want to switch to "\(branch.name)"?")
                         .font(.headline)
                     Text(
                         "All files in the local repository will switch from the current branch " +
-                        "(“\(sourceControlManager.currentBranch?.name ?? "")”) to “\(branch.name)”."
+                        "("\(sourceControlManager.currentBranch?.name ?? "")") to "\(branch.name)"."
                     )
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)

@@ -44,9 +44,9 @@ CodeEdit is a code editor built by the community, for the community, written ent
 
 ## Motivation
 
-Most editors in use today rely on Electron or other cross-platform frameworks, limiting their ability to fully utilize system resources. While Xcode provides a native experience, it is specifically designed for projects targeting Apple platforms. 
+Most editors in use today rely on Electron or other cross-platform frameworks, limiting their ability to fully utilize system resources. While Xcode provides a native experience, it is specifically designed for projects targeting Apple platforms.
 
-We think developers working on projects not written for Apple platforms deserve that same macOS-native experience we get with Xcode while unlocking the full potential of the Mac. 
+We think developers working on projects not written for Apple platforms deserve that same macOS-native experience we get with Xcode while unlocking the full potential of the Mac.
 
 This raised the question "what if such an editor existed?", a question that led to the creation of [this concept](https://www.figma.com/proto/qj6raZbQsZpGO0NAVi4qsv/CodeEdit-Concept?node-id=1%3A870), which our project aims to make a reality.
 
@@ -66,9 +66,9 @@ Join our growing community on [Discord](https://discord.gg/vChUXVf9Em) and [GitH
 
 > [!NOTE]
 > We hold a weekly meetup on Discord **every Saturday at 3pm UTC** where we discuss latests development, feature requests, goals, and priorities.
-> 
+>
 > [**Join us**](https://discord.gg/KvdE3wYKNR?event=1189275961456336937)
-> 
+>
 ## Activity
 
 <img src="https://repobeats.axiom.co/api/embed/acd5eeb654fc98f6ffbce26b09fd0e3603edf1fd.svg" alt="CodeEdit Repository Activity" width="100%" />
@@ -102,7 +102,7 @@ For issues we want to focus on that are most relevant at any given time, please 
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MarcoCarnevali"><img src="https://avatars.githubusercontent.com/u/9656572?v=4?s=100" width="100px;" alt="Marco Carnevali"/><br /><sub><b>Marco Carnevali</b></sub></a><br /><a href="#infra-MarcoCarnevali" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/CodeEditApp/CodeEdit/commits?author=MarcoCarnevali" title="Tests">⚠️</a> <a href="https://github.com/CodeEditApp/CodeEdit/commits?author=MarcoCarnevali" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nanashili"><img src="https://avatars.githubusercontent.com/u/63672227?v=4?s=100" width="100px;" alt="Nanashi Li"/><br /><sub><b>Nanashi Li</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=nanashili" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://ninjiacoder.me"><img src="https://avatars.githubusercontent.com/u/22616933?v=4?s=100" width="100px;" alt="ninjiacoder"/><br /><sub><b>ninjiacoder</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=RayZhao1998" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://twitch.tv/Jeehut"><img src="https://avatars.githubusercontent.com/u/6942160?v=4?s=100" width="100px;" alt="Cihat Gündüz"/><br /><sub><b>Cihat Gündüz</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=Jeehut" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://twitch.tv/Jeehut"><img src="https://avatars.githubusercontent.com/u/6942160?v=4?s=100" width="100px;" alt="Cihat Gunduz"/><br /><sub><b>Cihat Gunduz</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=Jeehut" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MysteryCoder456"><img src="https://avatars.githubusercontent.com/u/43755491?v=4?s=100" width="100px;" alt="Rehatbir Singh"/><br /><sub><b>Rehatbir Singh</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=MysteryCoder456" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Angelk90"><img src="https://avatars.githubusercontent.com/u/20476002?v=4?s=100" width="100px;" alt="Angelk90"/><br /><sub><b>Angelk90</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=Angelk90" title="Code">💻</a></td>
     </tr>
@@ -170,7 +170,7 @@ For issues we want to focus on that are most relevant at any given time, please 
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/dscyrescotti"><img src="https://avatars.githubusercontent.com/u/67727096?v=4?s=100" width="100px;" alt="Dscyre Scotti"/><br /><sub><b>Dscyre Scotti</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=dscyrescotti" title="Code">💻</a></td>
     </tr>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="http://tomasboda.com"><img src="https://avatars.githubusercontent.com/u/40064599?v=4?s=100" width="100px;" alt="Tomáš Boďa"/><br /><sub><b>Tomáš Boďa</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Advandyy" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://tomasboda.com"><img src="https://avatars.githubusercontent.com/u/40064599?v=4?s=100" width="100px;" alt="Tomas Boda"/><br /><sub><b>Tomas Boda</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Advandyy" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Ahattalla"><img src="https://avatars.githubusercontent.com/u/53402452?v=4?s=100" width="100px;" alt="Ahmed Attalla"/><br /><sub><b>Ahmed Attalla</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3AAhattalla" title="Bug reports">🐛</a> <a href="https://github.com/CodeEditApp/CodeEdit/commits?author=Ahattalla" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://estebanborai.com"><img src="https://avatars.githubusercontent.com/u/34756077?v=4?s=100" width="100px;" alt="Esteban Borai"/><br /><sub><b>Esteban Borai</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=EstebanBorai" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/avinizhanov"><img src="https://avatars.githubusercontent.com/u/42622715?v=4?s=100" width="100px;" alt="avinizhanov"/><br /><sub><b>avinizhanov</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Aavinizhanov" title="Bug reports">🐛</a> <a href="https://github.com/CodeEditApp/CodeEdit/commits?author=avinizhanov" title="Code">💻</a></td>
@@ -180,7 +180,7 @@ For issues we want to focus on that are most relevant at any given time, please 
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ElvisWong213"><img src="https://avatars.githubusercontent.com/u/40566101?v=4?s=100" width="100px;" alt="Elvis Wong"/><br /><sub><b>Elvis Wong</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3AElvisWong213" title="Bug reports">🐛</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://ibrahimcetin.dev"><img src="https://avatars.githubusercontent.com/u/33904390?v=4?s=100" width="100px;" alt="İbrahim Çetin"/><br /><sub><b>İbrahim Çetin</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Aibrahimcetin" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://ibrahimcetin.dev"><img src="https://avatars.githubusercontent.com/u/33904390?v=4?s=100" width="100px;" alt="Ibrahim Cetin"/><br /><sub><b>Ibrahim Cetin</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Aibrahimcetin" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/phlpsong"><img src="https://avatars.githubusercontent.com/u/103433299?v=4?s=100" width="100px;" alt="phlpsong"/><br /><sub><b>phlpsong</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/issues?q=author%3Aphlpsong" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://ahnafmahmud.com"><img src="https://avatars.githubusercontent.com/u/44692189?v=4?s=100" width="100px;" alt="Ahnaf Mahmud"/><br /><sub><b>Ahnaf Mahmud</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=infinitepower18" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/DanKlaver15"><img src="https://avatars.githubusercontent.com/u/9391497?v=4?s=100" width="100px;" alt="Dan K"/><br /><sub><b>Dan K</b></sub></a><br /><a href="https://github.com/CodeEditApp/CodeEdit/commits?author=DanKlaver15" title="Code">💻</a></td>

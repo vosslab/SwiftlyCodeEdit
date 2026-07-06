@@ -41,7 +41,7 @@ jobs:
           echo -n "$MAC_CERT_B64" | base64 --decode -o "$MAC_CERT_P12"
           security import "$MAC_CERT_P12" -P "$MAC_CERT_PWD" -A -t cert -f pkcs12 -k "$KEYCHAIN_DB"
           security list-keychain -d user -s "$KEYCHAIN_DB"
-      
+
       ############################
       # Build
       ############################
@@ -49,7 +49,7 @@ jobs:
         env:
           APPLE_TEAM_ID:  ${{ secrets.APPLE_TEAM_ID }}
         run: xcodebuild -scheme CodeEdit -configuration Pre -derivedDataPath "$RUNNER_TEMP/DerivedData" -archivePath "$RUNNER_TEMP/CodeEdit.xcarchive" -skipPackagePluginValidation DEVELOPMENT_TEAM=$APPLE_TEAM_ID archive | xcpretty
-      
+
       ############################
       # Sign
       ############################
@@ -98,7 +98,7 @@ jobs:
             "$RUNNER_TEMP/CodeEdit.dmg" \
             "$RUNNER_TEMP/CodeEdit.xcarchive/Products/Applications/"
           echo $RUNNER_PW | sudo -S security lock-keychain
-          
+
       ############################
       # Get Version and Build number
       ############################

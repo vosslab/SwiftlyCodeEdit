@@ -154,7 +154,7 @@ struct AccountsSettingsSigninView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .alert(
-                    Text("Unable to add account “\(username)”"),
+                    Text("Unable to add account "\(username)""),
                     isPresented: $signinErrorAlertIsPresented
                 ) {
                     Button("OK") {

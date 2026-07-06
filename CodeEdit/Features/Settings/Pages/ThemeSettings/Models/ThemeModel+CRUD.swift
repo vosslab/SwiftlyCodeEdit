@@ -267,7 +267,7 @@ extension ThemeModel {
         }
     }
 
-    /// Removes the given theme from `–/Library/Application Support/CodeEdit/themes`
+    /// Removes the given theme from `-/Library/Application Support/CodeEdit/themes`
     ///
     /// After removing the theme, themes are reloaded
     /// from `~/Library/Application Support/CodeEdit/Themes`. See ``loadThemes()``

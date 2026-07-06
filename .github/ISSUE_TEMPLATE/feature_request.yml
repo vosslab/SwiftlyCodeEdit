@@ -11,7 +11,7 @@ body:
         A clear and concise description of what you would like to happen...
     validations:
       required: true
-      
+
   - type: textarea
     attributes:
       label: Alternatives Considered
@@ -23,7 +23,7 @@ body:
       label: Additional Context
       placeholder: >-
         Any other context or considerations about the feature request...
-      
+
   - type: textarea
     attributes:
       label: Screenshots

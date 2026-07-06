@@ -90,7 +90,7 @@ public class SearchIndexer {
     /// - `indexType`: The type of the index to be created.
     ///     Options include `.unknown`, `.inverted`, `.vector` or `.invertedVector`
     /// - `proximityIndexing`: A Boolean flag indicating whether or not Search Kit should use proximity indexing.
-    /// - `stopWords`: A set of stop-words — words not to index.
+    /// - `stopWords`: A set of stop-words - words not to index.
     /// - `minTermLength`: The minimum term length to index (defaults to 1).
     public class CreateProperties {
         /// The type of the index to be created
@@ -107,7 +107,7 @@ public class SearchIndexer {
         /// - Parameters:
         ///   - indexType: The type of index
         ///   - proximityIndexing: A Boolean flag indicating whether or not Search Kit should use proximity indexing
-        ///   - stopWords: A set of stop-words — words not to index
+        ///   - stopWords: A set of stop-words - words not to index
         ///   - minTermLength: The minimum term length to index (defaults to 1)
         public init(
             indexType: SearchIndexer.IndexType = .inverted,

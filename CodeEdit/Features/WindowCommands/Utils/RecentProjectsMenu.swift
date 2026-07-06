@@ -35,7 +35,7 @@ final class RecentProjectsMenu: NSObject, NSMenuDelegate {
         rebuildMenu()
     }
 
-    // Rebuilds the whole “Open Recent” menu.
+    // Rebuilds the whole "Open Recent" menu.
     private func rebuildMenu() {
         menu.removeAllItems()
 

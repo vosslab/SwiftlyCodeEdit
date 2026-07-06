@@ -1,9 +1,9 @@
 #  What is Keychain?
 
-Keychain is the password management system in macOS, developed by Apple. It was introduced with Mac OS 8.6, and has been included in all subsequent versions of the operating system, now known as macOS. A Keychain can contain various types of data: passwords, private keys, certificates, and secure notes. 
+Keychain is the password management system in macOS, developed by Apple. It was introduced with Mac OS 8.6, and has been included in all subsequent versions of the operating system, now known as macOS. A Keychain can contain various types of data: passwords, private keys, certificates, and secure notes.
 
 ## Notice:
-This build of CodeEditKeychain could change at anytime if bugs or breaking changes are found in the module. 
+This build of CodeEditKeychain could change at anytime if bugs or breaking changes are found in the module.
 
 ## Usage
 

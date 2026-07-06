@@ -34,7 +34,7 @@ extension GitClient {
 
     /// Get the URL of the remote
     /// > Note: If a git repository has multiple remotes, by default the `origin` remote
-    /// > will be used, unless there’s an upstream branch configured for the current branch.
+    /// > will be used, unless there's an upstream branch configured for the current branch.
     /// > (Reference: https://git-scm.com/docs/git-ls-remote, https://git-scm.com/docs/git-fetch)
     /// - Returns: A URL if a remote is configured, nil otherwise
     /// - Throws: `GitClientError.outputError` if the underlying git command fails unexpectedly

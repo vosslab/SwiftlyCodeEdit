@@ -2,8 +2,8 @@
 
 ## Overview
 
-When the current project is a git repository, this will show the currently 
-checked-out branch as a subtitle. Once a tap is registered, a popup will 
+When the current project is a git repository, this will show the currently
+checked-out branch as a subtitle. Once a tap is registered, a popup will
 appear displaying the currently checked-out branch and all other local branches.
 
 This view should be set to the `view` property in a [`NSToolbarItem`](https://developer.apple.com/documentation/appkit/nstoolbaritem).
@@ -16,8 +16,8 @@ First make sure a `WorkspaceDocument` is accessible in the context.
 var workspace: WorkspaceDocument?
 ```
 
-Then in 
-[`toolbar(_:itemForItemIdentifier:willBeInsertedIntoToolbar:)`](https://developer.apple.com/documentation/appkit/nstoolbardelegate/1516985-toolbar), 
+Then in
+[`toolbar(_:itemForItemIdentifier:willBeInsertedIntoToolbar:)`](https://developer.apple.com/documentation/appkit/nstoolbardelegate/1516985-toolbar),
 create a new [`NSToolbarItem`](https://developer.apple.com/documentation/appkit/nstoolbaritem):
 
 ```swift

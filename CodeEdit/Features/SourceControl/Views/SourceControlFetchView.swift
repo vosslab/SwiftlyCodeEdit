@@ -25,7 +25,7 @@ struct SourceControlFetchView: View {
                     .resizable()
                     .frame(width: 64, height: 64)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Fetching changes for “\(projectName)”...")
+                    Text("Fetching changes for "\(projectName)"...")
                         .font(.headline)
                     Text("CodeEdit is fetching changes and updating the status of files in the local repository.")
                         .font(.subheadline)

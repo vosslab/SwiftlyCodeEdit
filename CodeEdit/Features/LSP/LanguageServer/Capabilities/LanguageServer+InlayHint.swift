@@ -26,7 +26,7 @@ extension LanguageServer {
     }
 
     /// The request is sent from the client to the server to resolve additional information for a given inlay hint.
-    /// This is usually used to compute the tooltip, location or command properties of an inlay hint’s label part
+    /// This is usually used to compute the tooltip, location or command properties of an inlay hint's label part
     /// to avoid its unnecessary computation during the textDocument/inlayHint request.
     func requestInlayHintResolve(_ inlayHint: InlayHint) async throws -> InlayHint? {
         do {

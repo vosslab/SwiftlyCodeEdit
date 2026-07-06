@@ -114,7 +114,7 @@ struct SourceControlNavigatorRepositoryView: View {
             : Text("Try committing or discarding the changes.")
         }
         .confirmationDialog(
-            "Do you want to delete the branch “\(branchToDelete?.name ?? "")”?",
+            "Do you want to delete the branch "\(branchToDelete?.name ?? "")"?",
             isPresented: $isPresentingConfirmDeleteBranch
         ) {
             Button("Delete") {
@@ -133,10 +133,10 @@ struct SourceControlNavigatorRepositoryView: View {
                 }
             }
         } message: {
-            Text("The branch will be removed from the repository. You can’t undo this action.")
+            Text("The branch will be removed from the repository. You can't undo this action.")
         }
         .confirmationDialog(
-            "Do you want to delete the stash “\(stashEntryToDelete?.message ?? "")”?",
+            "Do you want to delete the stash "\(stashEntryToDelete?.message ?? "")"?",
             isPresented: $isPresentingConfirmDeleteStashEntry
         ) {
             Button("Delete") {
@@ -155,10 +155,10 @@ struct SourceControlNavigatorRepositoryView: View {
                 }
             }
         } message: {
-            Text("The stash will be removed from the repository. You can’t undo this action.")
+            Text("The stash will be removed from the repository. You can't undo this action.")
         }
         .confirmationDialog(
-            "Do you want to delete the remote “\(remoteToDelete?.name ?? "")”?",
+            "Do you want to delete the remote "\(remoteToDelete?.name ?? "")"?",
             isPresented: $isPresentingConfirmDeleteRemote
         ) {
             Button("Delete") {
@@ -177,7 +177,7 @@ struct SourceControlNavigatorRepositoryView: View {
                 }
             }
         } message: {
-            Text("The remote will be removed from the repository. You can’t undo this action.")
+            Text("The remote will be removed from the repository. You can't undo this action.")
         }
         .task {
             await sourceControlManager.refreshBranches()

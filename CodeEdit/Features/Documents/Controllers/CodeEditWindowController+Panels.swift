@@ -142,7 +142,7 @@ extension CodeEditWindowController {
 
     /// Calculates the collapse state an interface element should have after a hide / show toggle.
     /// - Parameters:
-    ///   - shouldHide: `true` when we’re hiding the whole interface.
+    ///   - shouldHide: `true` when we're hiding the whole interface.
     ///   - currentlyCollapsed: The panels current state
     ///   - previouslyCollapsed: The state we saved the last time we hid the UI, if any.
     /// - Returns: `true` for visible element, `false` for collapsed element
