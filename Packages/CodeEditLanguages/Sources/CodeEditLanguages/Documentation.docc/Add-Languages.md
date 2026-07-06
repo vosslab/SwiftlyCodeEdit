@@ -1,10 +1,10 @@
 # Add Languages
 
-This article is a writedown on how to add support for more languages to ``CodeLanguage``.
+This article describes how to add support for more languages to ``CodeLanguage``.
 
 ## Overview
 
-First of all have a look at the corresponding [GitHub Issue](https://github.com/CodeEditApp/CodeEditTextView/issues/15) to see which languages still need implementation.
+First of all, check the corresponding [GitHub Issue](https://github.com/CodeEditApp/CodeEditTextView/issues/15) to see which languages still need implementation.
 
 > Note: If you want to update existing languages see <doc:Update-Languages> instead.
 
@@ -20,7 +20,7 @@ Edit the `.gitignore` file to exclude the `.build/` directory from git.
 
 ### Package.swift
 
-Create a new file `Package.swift` in the `root` directory of the repository and add the following configuration.
+Create a new file `Package.swift` in the root directory of the repository and add the following configuration.
 
 > Warning: Make sure to remove the comment in 'sources'.
 
@@ -30,7 +30,7 @@ import PackageDescription
 
 let package = Package(
     name: "TreeSitter{LANG}",
-    platforms: [.macOS(.v10_13), .iOS(.v11)],
+    platforms: [.macOS(.v26)],
     products: [
         .library(name: "TreeSitter{LANG}", targets: ["TreeSitter{LANG}"]),
     ],
@@ -97,15 +97,13 @@ extern TSLanguage *tree_sitter_{lang}();
 
 ## Add it to CodeEditLanguages
 
-In order to add a language to ``CodeEditLanguages`` you need to open the `.xcodeproj` file located inside `CodeLanguage-Container`.
+In order to add a language to ``CodeEditLanguages`` you update the source-built container target in `Packages/CodeEditLanguages/Package.swift`.
 
-`.xcodeproj` location
+1. Add the language resource package you created earlier as a dependency like you would in a regular Swift package.
 
-1. Add the `tree-sitter` package you created earlier as a dependency like you would in a regular Xcode project.
+2. Then make sure the `CodeLanguagesContainer` target loads the package module.
 
-2. Then make sure the framework target loads the package module.
-
-3. Now open the `CodeLanguages_Container.h` header file and add:
+3. Now open the `CodeLanguages_Container.h` header file under `CodeLanguages-Container/CodeLanguages-Container/include/` and add:
 
     ```cpp
     extern TSLanguage *tree_sitter_{lang}();
@@ -113,14 +111,11 @@ In order to add a language to ``CodeEditLanguages`` you need to open the `.xcode
 
     > Important: Please keep an alphabetical order
 
-4. Now create the `xcframework` by running the `build_framework.sh` script from the Package's root directory.
+4. Now refresh the package resources by running the `build_framework.sh` script from the package root directory.
    ```bash
    $ ./build_framework.sh
    ```
-    > Note: To run the script, you need to install `jq` by downloading it [here](https://stedolan.github.io/jq/) or with Homebrew using:
-    > ```bash
-    > $ brew install jq
-    > ```
+    > Note: To run the script, you need to install `jq` by downloading it [here](https://stedolan.github.io/jq/) or with Homebrew using `brew install jq`.
 
 5. Check the output of the script. It should say `Done!` at the end.
    `build_framework.sh` console output
@@ -129,7 +124,7 @@ In order to add a language to ``CodeEditLanguages`` you need to open the `.xcode
    > $ ./build_framework.sh --debug
    > ```
 
-6. You are now done in the Xcode Project and may close it now. Open the Package and continue.
+6. You are now done in the package manifest and can continue with the language source files.
 
 ## Add it to CodeLanguage
 
@@ -210,11 +205,11 @@ public func query(for language: TreeSitterLanguage) -> Query? {
 
 Make sure to test the newly created language in a sample project!
 
-When everything is working correctly push your `tree-sitter-{lang}` changes to `origin` and also create a Pull Request to the official repository.
+When everything is working correctly push your `{lang}` changes to `origin` and also create a Pull Request to the official repository.
 
-> Tip: Take [this PR description](https://github.com/tree-sitter/tree-sitter-javascript/pull/223) as a template and cross-reference it with your Pull Request.
+> Tip: Use an existing language-update PR as a template and cross-reference it with your Pull Request.
 
-Now you can remove the local dependencies and replace it with the actual package URLs and submit a Pull Request for `CodeEditTextView`.
+Now you can remove the local dependencies and replace them with the actual package URLs and submit a Pull Request for `CodeEditTextView`.
 
 ## Unit Tests
 

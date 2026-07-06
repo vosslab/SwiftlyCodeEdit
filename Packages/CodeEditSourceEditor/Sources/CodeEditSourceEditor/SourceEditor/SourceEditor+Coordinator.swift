@@ -26,7 +26,7 @@ extension SourceEditor {
         init(text: TextAPI, editorState: Binding<SourceEditorState>, highlightProviders: [any HighlightProviding]?) {
             self.text = text
             self._editorState = editorState
-            self.highlightProviders = highlightProviders ?? [TreeSitterClient()]
+            self.highlightProviders = highlightProviders ?? []
             super.init()
         }
 
@@ -113,7 +113,7 @@ extension SourceEditor {
 
         func updateHighlightProviders(_ highlightProviders: [any HighlightProviding]?) {
             guard let highlightProviders else {
-                return // Keep our default `TreeSitterClient` if they're `nil`
+                return // Keep the current provider set if they're `nil`
             }
             // Otherwise, we can replace the stored providers.
             self.highlightProviders = highlightProviders

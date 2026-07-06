@@ -1,11 +1,11 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "CodeEditSourceEditor",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v26)],
     products: [
         // A source editor with useful features for code editing.
         .library(
@@ -16,7 +16,10 @@ let package = Package(
     dependencies: [
         // A fast, efficient, text view for code.
         .package(path: "../CodeEditTextView"),
-        // tree-sitter languages
+        // Shared highlight model for the editor surface.
+        .package(path: "../CodeEditHighlighting"),
+        // Declarative syntax definition resources.
+        .package(path: "../CodeEditSyntaxDefinitions"),
         .package(path: "../CodeEditLanguages"),
         // CodeEditSymbols
         .package(path: "../CodeEditSymbols"),
@@ -38,9 +41,30 @@ let package = Package(
             name: "CodeEditSourceEditor",
             dependencies: [
                 "CodeEditTextView",
+                "CodeEditHighlighting",
+                "CodeEditSyntaxDefinitions",
                 "CodeEditLanguages",
                 "TextFormation",
                 "CodeEditSymbols"
+            ],
+            exclude: [
+                "TreeSitter",
+                "Highlighting/Highlighter.swift",
+                "Highlighting/HighlightProviding",
+                "Highlighting/HighlightRange.swift",
+                "Highlighting/StyledRangeContainer",
+                "Controller/TextViewController+Highlighter.swift",
+                "Controller/TextViewController+TextFormation.swift",
+                "Extensions/TreeSitterLanguage+TagFilter.swift",
+                "Extensions/NSRange+/NSRange+TSRange.swift",
+                "Extensions/NSRange+/NSRange+InputEdit.swift",
+                "Extensions/Node+filterChildren.swift",
+                "Extensions/Tree+prettyPrint.swift",
+                "Extensions/TextView+/TextView+Point.swift",
+                "Extensions/TextView+/TextView+createReadBlock.swift",
+                "Filters/TagFilter.swift",
+                "JumpToDefinition",
+                "CodeSuggestion/Model/SuggestionViewModel.swift"
             ],
             plugins: [
                 .plugin(name: "SwiftLint", package: "SwiftLintPlugin")
@@ -52,6 +76,7 @@ let package = Package(
             name: "CodeEditSourceEditorTests",
             dependencies: [
                 "CodeEditSourceEditor",
+                "CodeEditHighlighting",
                 "CodeEditLanguages",
                 .product(name: "CustomDump", package: "swift-custom-dump")
             ],

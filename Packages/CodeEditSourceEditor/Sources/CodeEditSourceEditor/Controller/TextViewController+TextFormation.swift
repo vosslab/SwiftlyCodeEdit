@@ -76,13 +76,7 @@ extension TextViewController {
     }
 
     private func setUpTagFilter() {
-        guard let treeSitterClient, language.id.shouldProcessTags() else { return }
-        textFilters.append(TagFilter(
-            language: self.language,
-            indentOption: configuration.behavior.indentOption,
-            lineEnding: textView.layoutManager.detectedLineEnding,
-            treeSitterClient: treeSitterClient
-        ))
+        return
     }
 
     /// Determines whether or not a text mutation should be applied.

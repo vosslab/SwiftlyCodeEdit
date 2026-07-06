@@ -1,6 +1,6 @@
 # CodeEdit for macOS
 
-CodeEdit is a native macOS code editor for people building and testing the app on Apple hardware. This fork keeps the project focused on a local Xcode workflow and points deeper contributor guidance into `docs/`.
+CodeEdit is a native macOS code editor for Apple Silicon Macs running Tahoe or newer, with the repo now moving toward a SwiftPM-first, source-first build.
 
 ## Documentation
 

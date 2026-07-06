@@ -1,12 +1,12 @@
 # ``CodeEditLanguages``
 
-A collection of `tree-sitter` languages for syntax highlighting.
+A collection of language metadata and syntax-definition assets for syntax highlighting.
 
 ## Overview
 
 CodeEditLanguages logo
 
-This package includes a binary framework `CodeLanguagesContainer.xcframework` which bundles all `tree-sitter` languages in a single binary to greatly reduce SPM package resolution times.
+This package focuses on bundled language metadata and syntax-definition resources.
 
 The languages are then served as a ``CodeLanguage``.
 

@@ -37,7 +37,7 @@ extension NSRange {
     // swiftlint:disable line_length
     /// Modifies the range to account for an edit.
     /// Largely based on code from
-    /// [tree-sitter](https://github.com/tree-sitter/tree-sitter/blob/ddeaa0c7f534268b35b4f6cb39b52df082754413/lib/src/subtree.c#L691-L720)
+    /// Source reference for input edit behavior in the upstream parser implementation.
     mutating func applyInputEdit(_ edit: InputEdit) {
         // swiftlint:enable line_length
         let endIndex = NSMaxRange(self)

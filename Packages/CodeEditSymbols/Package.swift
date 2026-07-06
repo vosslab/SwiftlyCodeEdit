@@ -1,11 +1,11 @@
-// swift-tools-version: 5.5
+// swift-tools-version: 6.3
 
 import PackageDescription
 
 let package = Package(
     name: "CodeEditSymbols",
     platforms: [
-        .macOS(.v12),
+        .macOS(.v26),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -15,7 +15,6 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            name: "SnapshotTesting",
             url: "https://github.com/pointfreeco/swift-snapshot-testing.git",
             from: "1.9.0"
         ),

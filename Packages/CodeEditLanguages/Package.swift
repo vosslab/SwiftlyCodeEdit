@@ -1,41 +1,47 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "CodeEditLanguages",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v26)],
     products: [
         .library(
             name: "CodeEditLanguages",
             targets: ["CodeEditLanguages"]
         ),
     ],
-    dependencies: [
-        .package(
-            url: "https://github.com/ChimeHQ/SwiftTreeSitter.git",
-            from: "0.9.0"
-        ),
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "CodeEditLanguages",
-            dependencies: ["CodeLanguagesContainer", "SwiftTreeSitter"],
+            dependencies: ["CodeLanguagesContainer"],
+            sources: [
+                "CodeLanguage.swift",
+                "CodeLanguage+Definitions.swift",
+                "CodeLanguage+DetectLanguage.swift"
+            ],
             resources: [
                 .copy("Resources")
             ],
             linkerSettings: [.linkedLibrary("c++")]
         ),
 
-        .binaryTarget(
+        .target(
             name: "CodeLanguagesContainer",
-            path: "CodeLanguagesContainer.xcframework"
+            dependencies: [],
+            path: "CodeLanguages-Container/CodeLanguages-Container",
+            sources: ["dummy.c"],
+            publicHeadersPath: "include"
         ),
 
         .testTarget(
             name: "CodeEditLanguagesTests",
-            dependencies: ["CodeEditLanguages"]
+            dependencies: ["CodeEditLanguages"],
+            exclude: [
+                "CodeEditLanguagesTests.swift"
+            ]
         ),
     ]
 )

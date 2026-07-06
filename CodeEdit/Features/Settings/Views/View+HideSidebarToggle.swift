@@ -17,7 +17,7 @@ extension View {
 struct HideSidebarToggleViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .introspect(.window, on: .macOS(.v13, .v14, .v15)) { window in
+            .introspect(.window, on: .macOS(.v26)) { window in
                 if let toolbar = window.toolbar {
                     let sidebarItem = "com.apple.SwiftUI.navigationSplitView.toggleSidebar"
                     let sidebarToggle = toolbar.items.first(where: { $0.itemIdentifier.rawValue == sidebarItem })

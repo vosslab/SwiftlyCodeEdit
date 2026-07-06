@@ -88,9 +88,9 @@ struct TagFilter: Filter {
         }
     }
 
-    // MARK: - tree-sitter Tree Querying
+    // MARK: - Syntax Querying
 
-    /// Queries the tree-sitter syntax tree for necessary information for closing tags.
+    /// Queries the syntax model for necessary information for closing tags.
     /// - Parameters:
     ///   - mutation: The mutation causing the lookup.
     ///   - interface: The interface to retrieve text from.

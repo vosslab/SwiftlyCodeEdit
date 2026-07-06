@@ -84,7 +84,7 @@ let editorController = TextViewController(
         peripherals: .init(showMinimap: showMinimap)
     ),
     cursorPositions: [CursorPosition(line: 0, column: 0)],
-    highlightProviders: [], // Use the tree-sitter syntax highlighting provider by default
+                highlightProviders: [],
     undoManager: nil,
     coordinators: [] // Optionally inject editing behavior or other plugins.
 )

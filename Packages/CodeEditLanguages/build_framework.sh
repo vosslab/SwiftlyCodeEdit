@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# This script builds the CodeLanguagesContainer.xcframework
+# This script refreshes the source-built CodeLanguages-Container support files.
 #
 # Just call it from the root of the project
 # $ ./build_framework.sh
@@ -29,48 +29,12 @@ fi
 # Set pipefail to make sure that the script fails if any of the commands fail
 set -euo pipefail
 
-# build the framework project `CodeLanguages-Container`
-status "Clean Building CodeLanguages-Container.xcodeproj..."
-xcodebuild \
-    -project CodeLanguages-Container/CodeLanguages-Container.xcodeproj \
-    -scheme CodeLanguages-Container \
-    -destination "platform=macOS" \
-    -derivedDataPath DerivedData \
-    -configuration Release \
-    ARCHS="arm64 x86_64" \
-    ONLY_ACTIVE_ARCH=NO \
-    $QUIET_FLAG clean build &> $QUIET_OUTPUT
-status "Build complete!"
+# resolve package dependencies for the package graph
+status "Resolving Swift package dependencies..."
+swift package resolve $QUIET_FLAG &> $QUIET_OUTPUT
+status "Package resolution complete!"
 
-# set path variables
-PRODUCTS_PATH="$PWD/DerivedData/Build/Products/Release"
-FRAMEWORK_PATH="$PRODUCTS_PATH/CodeLanguages_Container.framework"
-OUTPUT_PATH="CodeLanguagesContainer.xcframework"
-
-# remove previous generated files
-rm -rf "$OUTPUT_PATH"
-rm "$OUTPUT_PATH".zip
-status "Removed previous generated files!"
-
-# build the binary framework
-status "Creating CodeLanguagesContainer.xcframework..."
-xcodebuild \
-    -create-xcframework \
-    -framework "$FRAMEWORK_PATH" \
-    -output "$OUTPUT_PATH" &> $QUIET_OUTPUT
-
-# zip the xcframework
-status "Zipping CodeLanguagesContainer.xcframework..."
-zip -r -q -y "$OUTPUT_PATH".zip "$OUTPUT_PATH"
-
-# remove the unzipped xcframework
-rm -rf "$OUTPUT_PATH"
-
-status "CodeLanguagesContainer.xcframework.zip created!"
-
-# copy language queries to package resources
-# set path variables
-CHECKOUTS_PATH="$PWD/DerivedData/SourcePackages/checkouts"
+CHECKOUTS_PATH="$PWD/.build/checkouts"
 RESOURCES_PATH="$PWD/Sources/CodeEditLanguages/Resources"
 
 # remove previous copied files
@@ -78,22 +42,22 @@ status "Copying language queries to package resources..."
 rm -rf "$RESOURCES_PATH"
 
 # find and copy language queries
-LIST=$( echo $CHECKOUTS_PATH/tree-* )
+LIST=$(find "$CHECKOUTS_PATH" -maxdepth 1 -type d -name 'tree-*' | sort)
 
 OLD_PWD="$PWD"
 
 for lang in $LIST ; do
     # determine how many targets a given package has
-    cd $lang
+    cd "$lang"
 
     # get package info as JSON
     manifest=$(swift package dump-package)
 
     # use jq to get the target path
-    targets=$(echo $manifest | jq -r '.targets[] | select(.type != "test") | .path')
+    targets=$(echo "$manifest" | jq -r '.targets[] | select(.type != "test") | .path')
 
     # use jq to count number of targets
-    count=$(echo $manifest | jq '[.targets[] | select(.type != "test")] | length')
+    count=$(echo "$manifest" | jq '[.targets[] | select(.type != "test")] | length')
 
     # Determine if target paths are all '.'
     same=1
@@ -116,16 +80,16 @@ for lang in $LIST ; do
             mkdir -p $RESOURCES_PATH/$target
         fi
 
-        highlights=$( find $lang/$target -type f -name "*.scm" )
+        highlights=$(find "$lang/$target" -type f -name "*.scm")
         for highlight in $highlights ; do
             highlight_name=${highlight##*/}
 
             # if there is only one target, use name
             # otherwise use target
             if [[ $count -eq 1 || ($count -ne 1 && $same -eq 1) ]]; then
-                cp $highlight $RESOURCES_PATH/$name/$highlight_name
+                cp "$highlight" "$RESOURCES_PATH/$name/$highlight_name"
             else
-                cp $highlight $RESOURCES_PATH/$target/$highlight_name
+                cp "$highlight" "$RESOURCES_PATH/$target/$highlight_name"
             fi
         done
 
@@ -137,13 +101,13 @@ for lang in $LIST ; do
 done
 status "Language queries copied to package resources!"
 
-# cleanup derived derived data
+# cleanup derived data
 
 cd $OLD_PWD
 
 if [ -d "$PWD/DerivedData" ]; then
     status "Cleaning up DerivedData..."
-    rm -rf "$PWD/DerivedData"
+    rm -rf "$PWD/.build"
 fi
 
 status "Done!"

@@ -17,8 +17,6 @@ struct CodeFileView: View {
     @ObservedObject private var editorInstance: EditorInstance
     @ObservedObject private var codeFile: CodeFileDocument
 
-    @State private var treeSitterClient: TreeSitterClient = TreeSitterClient()
-
     /// Any coordinators passed to the view.
     private var textViewCoordinators: [TextViewCoordinator]
     private var highlightProviders: [any HighlightProviding] = []
@@ -67,8 +65,6 @@ struct CodeFileView: View {
 
     @ObservedObject private var themeModel: ThemeModel = .shared
 
-    @State private var treeSitter = TreeSitterClient()
-
     private var cancellables = Set<AnyCancellable>()
 
     private let isEditable: Bool
@@ -93,7 +89,7 @@ struct CodeFileView: View {
             editorInstance.cursorPositions = openOptions.cursorPositions
         }
 
-        highlightProviders = [codeFile.languageServerObjects.highlightProvider] + [treeSitterClient]
+        highlightProviders = [codeFile.languageServerObjects.highlightProvider]
 
         codeFile
             .contentCoordinator

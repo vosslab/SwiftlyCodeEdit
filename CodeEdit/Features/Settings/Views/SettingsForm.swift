@@ -46,7 +46,7 @@ struct SettingsForm<Content: View>: View {
                 }
                 content
             }
-            .introspect(.scrollView, on: .macOS(.v10_15, .v11, .v12, .v13, .v14, .v15)) {
+            .introspect(.scrollView, on: .macOS(.v26)) {
                 $0.scrollerInsets.top = 50
             }
             .formStyle(.grouped)

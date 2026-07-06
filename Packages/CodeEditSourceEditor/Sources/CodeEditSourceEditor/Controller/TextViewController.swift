@@ -15,7 +15,7 @@ import TextFormation
 /// # TextViewController
 /// 
 /// A view controller class for managing a source editor. Uses ``CodeEditTextView/TextView`` for input and rendering,
-/// tree-sitter for syntax highlighting, and TextFormation for live editing completions.
+/// editor highlight providers for syntax coloring, and TextFormation for live editing completions.
 public class TextViewController: NSViewController {
     // swiftlint:disable:next line_length
     public static let cursorPositionUpdatedNotification: Notification.Name = .init("TextViewController.cursorPositionNotification")
@@ -170,15 +170,6 @@ public class TextViewController: NSViewController {
 
     var highlighter: Highlighter?
 
-    /// The tree sitter client managed by the source editor.
-    ///
-    /// This will be `nil` if another highlighter provider is passed to the source editor.
-    internal(set) public var treeSitterClient: TreeSitterClient? {
-        didSet {
-            jumpToDefinitionModel?.treeSitterClient = treeSitterClient
-        }
-    }
-
     var foldProvider: LineFoldProvider
 
     /// Filters used when applying edits..
@@ -209,7 +200,7 @@ public class TextViewController: NSViewController {
         language: CodeLanguage,
         configuration: SourceEditorConfiguration,
         cursorPositions: [CursorPosition],
-        highlightProviders: [HighlightProviding] = [TreeSitterClient()],
+        highlightProviders: [HighlightProviding] = [],
         foldProvider: LineFoldProvider? = nil,
         undoManager: CEUndoManager? = nil,
         coordinators: [TextViewCoordinator] = []
@@ -223,11 +214,6 @@ public class TextViewController: NSViewController {
         self.invisibleCharactersCoordinator = InvisibleCharactersCoordinator(configuration: configuration)
 
         super.init(nibName: nil, bundle: nil)
-
-        if let idx = highlightProviders.firstIndex(where: { $0 is TreeSitterClient }),
-           let client = highlightProviders[idx] as? TreeSitterClient {
-            self.treeSitterClient = client
-        }
 
         self.textView = SourceEditorTextView(
             string: string,
@@ -251,7 +237,6 @@ public class TextViewController: NSViewController {
 
         jumpToDefinitionModel = JumpToDefinitionModel(
             controller: self,
-            treeSitterClient: treeSitterClient,
             delegate: nil
         )
     }

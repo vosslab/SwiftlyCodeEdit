@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import CodeEditTextView
+import CodeEditHighlighting
 import CodeEditLanguages
 
 /// A SwiftUI View that provides source editing functionality.
@@ -25,7 +26,7 @@ public struct SourceEditor: NSViewControllerRepresentable {
     ///                    See ``SourceEditorConfiguration``.
     ///   - cursorPositions: The cursor's position in the editor, measured in `(lineNum, columnNum)`
     ///   - highlightProviders: A set of classes you provide to perform syntax highlighting. Leave this as `nil` to use
-    ///                         the default `TreeSitterClient` highlighter.
+    ///                         the editor's current default highlighter.
     ///   - undoManager: The undo manager for the text view. Defaults to `nil`, which will create a new CEUndoManager
     ///   - coordinators: Any text coordinators for the view to use. See ``TextViewCoordinator`` for more information.
     public init(
@@ -58,7 +59,7 @@ public struct SourceEditor: NSViewControllerRepresentable {
     ///                    See ``SourceEditorConfiguration``.
     ///   - cursorPositions: The cursor's position in the editor, measured in `(lineNum, columnNum)`
     ///   - highlightProviders: A set of classes you provide to perform syntax highlighting. Leave this as `nil` to use
-    ///                         the default `TreeSitterClient` highlighter.
+    ///                         the editor's current default highlighter.
     ///   - undoManager: The undo manager for the text view. Defaults to `nil`, which will create a new CEUndoManager
     ///   - coordinators: Any text coordinators for the view to use. See ``TextViewCoordinator`` for more information.
     public init(

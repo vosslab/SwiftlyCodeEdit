@@ -9,7 +9,7 @@ import AppKit
 import CodeEditTextView
 
 /// Manages two things:
-/// - Finding a range to hover when pressing `cmd` using tree-sitter.
+/// - Finding a range to hover when pressing `cmd`.
 /// - Utilizing the `JumpToDefinitionDelegate` object to perform a jump, providing it with ranges and
 ///   strings as necessary.
 /// - Presenting a popover when multiple options exist to jump to.
@@ -18,8 +18,6 @@ final class JumpToDefinitionModel {
     static let emphasisId = "jumpToDefinition"
 
     weak var delegate: JumpToDefinitionDelegate?
-    weak var treeSitterClient: TreeSitterClient?
-
     private weak var controller: TextViewController?
 
     private(set) public var hoveredRange: NSRange?
@@ -33,25 +31,19 @@ final class JumpToDefinitionModel {
         controller?.textView
     }
 
-    init(controller: TextViewController, treeSitterClient: TreeSitterClient?, delegate: JumpToDefinitionDelegate?) {
+    init(controller: TextViewController, delegate: JumpToDefinitionDelegate?) {
         self.controller = controller
-        self.treeSitterClient = treeSitterClient
         self.delegate = delegate
     }
 
-    // MARK: - Tree Sitter
+    // MARK: - Hover Range
 
-    /// Query the tree-sitter client for a valid range to query for definitions.
+    /// Query the current cursor location for a valid range to query for definitions.
     /// - Parameter location: The current cursor location.
     /// - Returns: A range that contains a potential identifier to look up.
     private func findDefinitionRange(at location: Int) async -> NSRange? {
-        guard let nodes = try? await treeSitterClient?.nodesAt(location: location),
-              let node = nodes.first(where: { $0.node.nodeType?.contains("identifier") == true }) else {
-            cancelHover()
-            return nil
-        }
         guard !Task.isCancelled else { return nil }
-        return node.node.range
+        return textView?.layoutManager.textLineForOffset(location)?.range
     }
 
     // MARK: - Jump Action

@@ -16,7 +16,7 @@ extension TextView {
     /// Otherwise it will block the calling thread and execute the block on the main queue, returning control to the
     /// calling queue when the block is finished running.
     ///
-    /// - Returns: A new block for reading contents for tree-sitter.
+    /// - Returns: A new block for reading contents.
     func createReadBlock() -> Parser.ReadBlock {
         return { [weak self] byteOffset, _ in
             let workItem: () -> Data? = {
@@ -24,7 +24,7 @@ extension TextView {
                 let location = byteOffset / 2
                 let end = min(location + (TreeSitterClient.Constants.charsToReadInBlock), limit)
                 if location > end || self == nil {
-                    // Ignore and return nothing, tree-sitter's internal tree can be incorrect in some situations.
+                    // Ignore and return nothing when the read cannot be satisfied.
                     return nil
                 }
                 let range = NSRange(location..<end)
@@ -39,7 +39,7 @@ extension TextView {
     /// Otherwise it will block the calling thread and execute the block on the main queue, returning control to the
     /// calling queue when the block is finished running.
     ///
-    /// - Returns: A new block for reading contents for tree-sitter.
+    /// - Returns: A new block for reading contents.
     func createReadCallback() -> SwiftTreeSitter.Predicate.TextProvider {
         return { [weak self] range, _ in
             let workItem: () -> String? = {

@@ -55,7 +55,7 @@ import OSLog
 /// | Performs edits and sends highlight deltas, as well as calculates syntax captures for ranges
 /// |
 /// +-------------------------------+
-/// |   HighlightProviding Object   |  (tree-sitter, LSP, spellcheck)
+/// |   HighlightProviding Object   |  (parser-backed sources, LSP, spellcheck)
 /// +-------------------------------+
 /// ```
 ///
