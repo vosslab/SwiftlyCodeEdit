@@ -3,25 +3,31 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 SCHEME="${SCHEME:-CodeEdit}"
-DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$REPO_ROOT/.build/derived-data}"
-APP_PATH="${APP_PATH:-$DERIVED_DATA_PATH/Build/Products/Debug/CodeEdit.app}"
+BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-debug}"
+APP_PATH="${APP_PATH:-$REPO_ROOT/.build/$BUILD_CONFIGURATION/CodeEdit}"
 
 cd "$REPO_ROOT"
 
-if [ ! -e /Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/CoreSimulator ]; then
-  echo "Xcode is missing CoreSimulator.framework."
-  echo "Run 'xcodebuild -runFirstLaunch' or reinstall Xcode / the simulator support components."
-  exit 1
-fi
+build_pid=""
+cleanup() {
+  if [ -n "$build_pid" ] && kill -0 "$build_pid" 2>/dev/null; then
+    kill -INT "$build_pid" 2>/dev/null || true
+    wait "$build_pid" 2>/dev/null || true
+  fi
+}
+trap cleanup INT TERM EXIT
 
 echo "Building debug $SCHEME"
-xcodebuild \
-  -project CodeEdit.xcodeproj \
-  -scheme "$SCHEME" \
-  -configuration Debug \
-  -destination "platform=macOS" \
-  -derivedDataPath "$DERIVED_DATA_PATH" \
-  build
+swift build --disable-sandbox -c "$BUILD_CONFIGURATION" &
+build_pid="$!"
+wait "$build_pid"
+build_status="$?"
+build_pid=""
+trap - INT TERM EXIT
+
+if [ "$build_status" -ne 0 ]; then
+  exit "$build_status"
+fi
 
 echo "Launching $APP_PATH"
-open "$APP_PATH"
+"$APP_PATH" &

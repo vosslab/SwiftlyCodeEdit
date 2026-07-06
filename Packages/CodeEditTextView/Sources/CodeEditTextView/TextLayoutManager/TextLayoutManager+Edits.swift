@@ -9,7 +9,8 @@ import AppKit
 
 // MARK: - Edits
 
-extension TextLayoutManager: NSTextStorageDelegate {
+@MainActor
+extension TextLayoutManager: @preconcurrency NSTextStorageDelegate {
     /// Receives edit notifications from the text storage and updates internal data structures to stay in sync with
     /// text content.
     ///

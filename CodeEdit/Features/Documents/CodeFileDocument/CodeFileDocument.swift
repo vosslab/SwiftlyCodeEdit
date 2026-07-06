@@ -9,7 +9,6 @@ import AppKit
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
-import CodeEditSourceEditor
 import CodeEditTextView
 import CodeEditLanguages
 import Combine

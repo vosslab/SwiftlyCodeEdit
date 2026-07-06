@@ -18,6 +18,7 @@ import AppKit
 /// likely that more than one type of emphasis may occur on the document at the same
 /// time, grouping allows each emphasis to be managed separately from the others by
 /// each outside object without knowledge of the other's state.
+@MainActor
 public final class EmphasisManager {
     /// Internal representation of a emphasis layer with its associated text layer
     private struct EmphasisLayer: Equatable {
@@ -71,10 +72,10 @@ public final class EmphasisManager {
 
         // Handle flash animations
         for flashingLayer in emphasisGroups[id, default: []].filter({ $0.emphasis.flash }) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
+            Task { @MainActor [weak self, flashingLayer] in
+                try? await Task.sleep(for: .milliseconds(500))
+                guard let self else { return }
                 self.applyFadeOutAnimation(to: flashingLayer.layer, textLayer: flashingLayer.textLayer) {
-                    // Remove the emphasis from the group if it still exists
                     guard let emphasisIdx = self.emphasisGroups[id, default: []].firstIndex(
                         where: { $0 == flashingLayer }
                     ) else {
@@ -338,7 +339,8 @@ public final class EmphasisManager {
         }
 
         // Remove both layers after animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + fadeAnimation.duration) {
+        Task { @MainActor [layer, textLayer, completion] in
+            try? await Task.sleep(for: .seconds(Double(fadeAnimation.duration)))
             layer.removeFromSuperlayer()
             textLayer?.removeFromSuperlayer()
             completion()

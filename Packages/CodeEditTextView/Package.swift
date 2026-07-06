@@ -14,34 +14,26 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Text mutation, storage helpers
-        .package(
-            url: "https://github.com/ChimeHQ/TextStory",
-            from: "0.9.0"
-        ),
         // Useful data structures
         .package(
             url: "https://github.com/apple/swift-collections.git",
             .upToNextMajor(from: "1.0.0")
         ),
-        // SwiftLint
-        .package(
-            url: "https://github.com/lukepistrol/SwiftLintPlugin",
-            from: "0.52.2"
-        )
     ],
-    targets: [
-        // The main text view target.
+	targets: [
+		// The main text view target.
         .target(
             name: "CodeEditTextView",
             dependencies: [
                 "TextStory",
                 .product(name: "Collections", package: "swift-collections"),
                 "CodeEditTextViewObjC"
-            ],
-            plugins: [
-                .plugin(name: "SwiftLint", package: "SwiftLintPlugin")
             ]
+        ),
+
+        .target(
+            name: "TextStory",
+            dependencies: []
         ),
 
         // ObjC addons
@@ -52,12 +44,9 @@ let package = Package(
 
         // Tests for the text view
         .testTarget(
-            name: "CodeEditTextViewTests",
-            dependencies: [
+			name: "CodeEditTextViewTests",
+			dependencies: [
                 "CodeEditTextView"
-            ],
-            plugins: [
-                .plugin(name: "SwiftLint", package: "SwiftLintPlugin")
             ]
         ),
     ]

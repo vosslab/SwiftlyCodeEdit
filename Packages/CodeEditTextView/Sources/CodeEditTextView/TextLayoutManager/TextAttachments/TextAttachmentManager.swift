@@ -12,10 +12,10 @@ import Foundation
 ///
 /// If two attachments are overlapping, the one placed further along in the document will be
 /// ignored when laying out attachments.
+@MainActor
 public final class TextAttachmentManager {
     private var orderedAttachments: [AnyTextAttachment] = []
     weak var layoutManager: TextLayoutManager?
-    private var selectionObserver: (any NSObjectProtocol)?
 
     public weak var delegate: TextAttachmentManagerDelegate?
 
@@ -148,32 +148,26 @@ public final class TextAttachmentManager {
     ///
     /// - Parameter selectionManager: The selection manager to listen to.
     func setUpSelectionListener(for selectionManager: TextSelectionManager) {
-        if let selectionObserver {
-            NotificationCenter.default.removeObserver(selectionObserver)
-        }
-
-        selectionObserver = NotificationCenter.default.addObserver(
-            forName: TextSelectionManager.selectionChangedNotification,
-            object: selectionManager,
-            queue: .main
-        ) { [weak self] notification in
-            guard let selectionManager = notification.object as? TextSelectionManager else {
-                return
-            }
-            let selectedSet = IndexSet(ranges: selectionManager.textSelections.map({ $0.range }))
-            for attachment in self?.orderedAttachments ?? [] {
-                let isSelected = selectedSet.contains(integersIn: attachment.range)
-                if attachment.attachment.isSelected != isSelected {
-                    self?.layoutManager?.invalidateLayoutForRange(attachment.range)
-                }
-                attachment.attachment.isSelected = isSelected
-            }
-        }
+        NotificationCenter.default.removeObserver(self)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(selectionDidChange(_:)),
+            name: TextSelectionManager.selectionChangedNotification,
+            object: selectionManager
+        )
     }
 
-    deinit {
-        if let selectionObserver {
-            NotificationCenter.default.removeObserver(selectionObserver)
+    @objc private func selectionDidChange(_ notification: Notification) {
+        guard let selectionManager = notification.object as? TextSelectionManager else {
+            return
+        }
+        let selectedSet = IndexSet(ranges: selectionManager.textSelections.map({ $0.range }))
+        for attachment in orderedAttachments {
+            let isSelected = selectedSet.contains(integersIn: attachment.range)
+            if attachment.attachment.isSelected != isSelected {
+                layoutManager?.invalidateLayoutForRange(attachment.range)
+            }
+            attachment.attachment.isSelected = isSelected
         }
     }
 }

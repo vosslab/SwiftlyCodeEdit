@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Sparkle
 
 struct MainCommands: Commands {
     @Environment(\.openWindow)
@@ -19,7 +18,7 @@ struct MainCommands: Commands {
             }
 
             Button("Check for updates...") {
-                NSApp.sendAction(#selector(SPUStandardUpdaterController.checkForUpdates(_:)), to: nil, from: nil)
+                NotificationCenter.default.post(name: SoftwareUpdater.checkForUpdatesRequested, object: nil)
             }
         }
 

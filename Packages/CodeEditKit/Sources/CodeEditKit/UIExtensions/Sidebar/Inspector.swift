@@ -5,10 +5,10 @@
 //  Created by Wouter Hennen on 25/03/2023.
 //
 
-import SwiftUI
-import ExtensionKit
+@preconcurrency import SwiftUI
+@preconcurrency import ExtensionKit
 
-public struct Inspector<Content: View>: Sidebar {
+@preconcurrency public struct Inspector<Content: View>: Sidebar {
     public var body: Never {
         fatalError()
     }

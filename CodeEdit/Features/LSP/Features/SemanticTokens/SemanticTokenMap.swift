@@ -7,7 +7,6 @@
 
 import LanguageClient
 import LanguageServerProtocol
-import CodeEditSourceEditor
 import CodeEditTextView
 
 // swiftlint:disable line_length

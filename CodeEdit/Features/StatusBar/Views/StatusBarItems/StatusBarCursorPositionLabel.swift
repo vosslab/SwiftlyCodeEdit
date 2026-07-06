@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Combine
-import CodeEditSourceEditor
 
 struct StatusBarCursorPositionLabel: View {
     @EnvironmentObject private var utilityAreaViewModel: UtilityAreaViewModel

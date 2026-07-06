@@ -16,6 +16,7 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditSyntaxDefinitions",
+            path: "Sources/CodeEditSyntaxDefinitions",
             resources: [
                 .process("Resources/Kate"),
                 .process("Resources/TextMate"),

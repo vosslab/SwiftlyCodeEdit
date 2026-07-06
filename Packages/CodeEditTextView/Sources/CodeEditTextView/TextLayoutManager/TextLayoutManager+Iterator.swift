@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 public extension TextLayoutManager {
     /// Iterate over all visible lines.
     ///
@@ -46,7 +47,8 @@ public extension TextLayoutManager {
     ///
     /// Next elements are retrieved lazily. Additionally, this iterator uses a stable `index` rather than a y position
     /// or a range to fetch the next line. This means the line storage can be updated during iteration.
-    struct YPositionIterator: LazySequenceProtocol, IteratorProtocol {
+    @MainActor
+    struct YPositionIterator: LazySequenceProtocol, @preconcurrency IteratorProtocol {
         typealias TextLinePosition = TextLineStorage<TextLine>.TextLinePosition
 
         private weak var layoutManager: TextLayoutManager?
@@ -63,6 +65,7 @@ public extension TextLayoutManager {
         /// Iterates over the "visible" text positions.
         ///
         /// See documentation on ``TextLayoutManager/determineVisiblePosition(for:)`` for details.
+        @MainActor
         public mutating func next() -> TextLineStorage<TextLine>.TextLinePosition? {
             if let currentPosition {
                 guard let nextPosition = layoutManager?.lineStorage.getLine(
@@ -86,7 +89,8 @@ public extension TextLayoutManager {
     ///
     /// Next elements are retrieved lazily. Additionally, this iterator uses a stable `index` rather than a y position
     /// or a range to fetch the next line. This means the line storage can be updated during iteration.
-    struct RangeIterator: LazySequenceProtocol, IteratorProtocol {
+    @MainActor
+    struct RangeIterator: LazySequenceProtocol, @preconcurrency IteratorProtocol {
         typealias TextLinePosition = TextLineStorage<TextLine>.TextLinePosition
 
         private weak var layoutManager: TextLayoutManager?
@@ -101,6 +105,7 @@ public extension TextLayoutManager {
         /// Iterates over the "visible" text positions.
         ///
         /// See documentation on ``TextLayoutManager/determineVisiblePosition(for:)`` for details.
+        @MainActor
         public mutating func next() -> TextLineStorage<TextLine>.TextLinePosition? {
             if let currentPosition {
                 guard let nextPosition = layoutManager?.lineStorage.getLine(

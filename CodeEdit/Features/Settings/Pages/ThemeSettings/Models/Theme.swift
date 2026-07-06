@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import CodeEditSourceEditor
 
 // swiftlint:disable file_length
 

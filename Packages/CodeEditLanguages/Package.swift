@@ -16,7 +16,6 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditLanguages",
-            dependencies: ["CodeLanguagesContainer"],
             sources: [
                 "CodeLanguage.swift",
                 "CodeLanguage+Definitions.swift",
@@ -28,20 +27,9 @@ let package = Package(
             linkerSettings: [.linkedLibrary("c++")]
         ),
 
-        .target(
-            name: "CodeLanguagesContainer",
-            dependencies: [],
-            path: "CodeLanguages-Container/CodeLanguages-Container",
-            sources: ["dummy.c"],
-            publicHeadersPath: "include"
-        ),
-
         .testTarget(
             name: "CodeEditLanguagesTests",
             dependencies: ["CodeEditLanguages"],
-            exclude: [
-                "CodeEditLanguagesTests.swift"
-            ]
         ),
     ]
 )

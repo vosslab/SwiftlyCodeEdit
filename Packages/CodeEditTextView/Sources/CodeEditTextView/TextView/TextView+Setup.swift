@@ -47,7 +47,8 @@ extension TextView {
             object: scrollView.contentView,
             queue: .main
         ) { [weak self] _ in
-            self?.updatedViewport(self?.visibleRect ?? .zero)
+            guard let self else { return }
+            self.updatedViewport(self.visibleRect)
         }
 
         NotificationCenter.default.addObserver(
@@ -55,7 +56,8 @@ extension TextView {
             object: scrollView.contentView,
             queue: .main
         ) { [weak self] _ in
-            self?.updatedViewport(self?.visibleRect ?? .zero)
+            guard let self else { return }
+            self.updatedViewport(self.visibleRect)
         }
     }
 

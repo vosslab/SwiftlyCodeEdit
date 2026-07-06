@@ -7,7 +7,6 @@
 
 import AppKit
 import AVKit
-import CodeEditSourceEditor
 import SwiftUI
 
 struct EditorAreaFileView: View {

@@ -7,7 +7,6 @@
 
 import Foundation
 import LanguageServerProtocol
-import CodeEditSourceEditor
 import CodeEditTextView
 import CodeEditLanguages
 

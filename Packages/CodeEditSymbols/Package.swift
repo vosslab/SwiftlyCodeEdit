@@ -22,13 +22,15 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditSymbols",
-            dependencies: []
+            resources: [
+                .process("Symbols.xcassets")
+            ]
         ),
         .testTarget(
             name: "CodeEditSymbolsTests",
             dependencies: [
                 "CodeEditSymbols",
-                "SnapshotTesting"
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ]
         ),
     ]

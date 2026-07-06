@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 extension TextLayoutManager {
     /// Invalidates layout for the given rect.
     /// - Parameter rect: The rect to invalidate.

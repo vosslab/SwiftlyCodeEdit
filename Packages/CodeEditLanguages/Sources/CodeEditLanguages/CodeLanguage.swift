@@ -9,7 +9,7 @@ public enum CodeLanguageID: String, CaseIterable, Hashable, Codable {
 
 public typealias TreeSitterLanguage = CodeLanguageID
 
-public struct CodeLanguage: Hashable {
+public struct CodeLanguage: @unchecked Sendable {
     internal init(
         id: CodeLanguageID,
         tsName: String,
@@ -51,7 +51,61 @@ extension CodeLanguage {
     public static let `default`: CodeLanguage = .swift
 }
 
-public enum DocumentationComments: Hashable {
+extension CodeLanguage: Hashable {
+    public static func == (lhs: CodeLanguage, rhs: CodeLanguage) -> Bool {
+        lhs.id == rhs.id
+            && lhs.tsName == rhs.tsName
+            && lhs.extensions == rhs.extensions
+            && lhs.lineCommentString == rhs.lineCommentString
+            && lhs.rangeCommentStrings.0 == rhs.rangeCommentStrings.0
+            && lhs.rangeCommentStrings.1 == rhs.rangeCommentStrings.1
+            && lhs.documentationCommentStrings == rhs.documentationCommentStrings
+            && lhs.parentQueryURL == rhs.parentQueryURL
+            && lhs.additionalHighlights == rhs.additionalHighlights
+            && lhs.additionalIdentifiers == rhs.additionalIdentifiers
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(tsName)
+        hasher.combine(extensions)
+        hasher.combine(lineCommentString)
+        hasher.combine(rangeCommentStrings.0)
+        hasher.combine(rangeCommentStrings.1)
+        hasher.combine(documentationCommentStrings)
+        hasher.combine(parentQueryURL)
+        hasher.combine(additionalHighlights)
+        hasher.combine(additionalIdentifiers)
+    }
+}
+
+public enum DocumentationComments {
     case single(String)
     case pair((String, String))
+
+}
+
+extension DocumentationComments: Hashable {
+    public static func == (lhs: DocumentationComments, rhs: DocumentationComments) -> Bool {
+        switch (lhs, rhs) {
+        case let (.single(lhsValue), .single(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.pair(lhsValue), .pair(rhsValue)):
+            return lhsValue.0 == rhsValue.0 && lhsValue.1 == rhsValue.1
+        default:
+            return false
+        }
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case let .single(value):
+            hasher.combine(0)
+            hasher.combine(value)
+        case let .pair(value):
+            hasher.combine(1)
+            hasher.combine(value.0)
+            hasher.combine(value.1)
+        }
+    }
 }

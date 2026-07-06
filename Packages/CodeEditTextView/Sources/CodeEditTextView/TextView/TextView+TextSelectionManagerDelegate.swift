@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 extension TextView: TextSelectionManagerDelegate {
     public func setNeedsDisplay() {
         self.setNeedsDisplay(frame)

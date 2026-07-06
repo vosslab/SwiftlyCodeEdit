@@ -7,6 +7,7 @@
 
 import AppKit
 
+@MainActor
 public protocol TextSelectionManagerDelegate: AnyObject {
     var visibleTextRange: NSRange? { get }
 
@@ -18,6 +19,7 @@ public protocol TextSelectionManagerDelegate: AnyObject {
 ///
 /// Draws selections using a draw method similar to the `TextLayoutManager` class, and adds cursor views when
 /// appropriate.
+@MainActor
 public class TextSelectionManager: NSObject {
     // MARK: - Properties
 

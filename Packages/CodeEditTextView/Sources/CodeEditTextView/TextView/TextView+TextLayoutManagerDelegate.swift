@@ -7,7 +7,8 @@
 
 import AppKit
 
-extension TextView: TextLayoutManagerDelegate {
+@MainActor
+extension TextView: @preconcurrency TextLayoutManagerDelegate {
     public func layoutManagerHeightDidUpdate(newHeight: CGFloat) {
         updateFrameIfNeeded()
     }

@@ -182,9 +182,14 @@ extension TextView {
         mouseDragTimer?.invalidate()
         // https://cocoadev.github.io/AutoScrolling/ (fired at ~45Hz)
         mouseDragTimer = Timer.scheduledTimer(withTimeInterval: 0.022, repeats: true) { [weak self] _ in
-            if let event = self?.window?.currentEvent, event.type == .leftMouseDragged {
-                self?.mouseDragged(with: event)
-                self?.autoscroll(with: event)
+            Task { @MainActor [weak self] in
+                guard let self,
+                      let event = self.window?.currentEvent,
+                      event.type == .leftMouseDragged else {
+                    return
+                }
+                self.mouseDragged(with: event)
+                self.autoscroll(with: event)
             }
         }
     }

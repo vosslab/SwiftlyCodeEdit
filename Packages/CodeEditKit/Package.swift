@@ -16,10 +16,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ChimeHQ/ConcurrencyPlus", from: "0.4.1"),
         .package(
-            url: "https://github.com/lukepistrol/SwiftLintPlugin",
-            from: "0.2.2"
-        ),
-        .package(
             url: "https://github.com/Flight-School/AnyCodable",
             from: "0.6.0"
         )
@@ -27,8 +23,7 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditKit",
-            dependencies: ["AnyCodable", "ConcurrencyPlus"],
-            plugins: [.plugin(name: "SwiftLint", package: "SwiftLintPlugin")]
+            dependencies: ["AnyCodable", "ConcurrencyPlus"]
         ),
         .testTarget(
             name: "CodeEditKitTests",

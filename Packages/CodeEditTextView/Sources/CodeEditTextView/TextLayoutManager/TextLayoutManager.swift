@@ -9,6 +9,7 @@ import Foundation
 import AppKit
 
 /// The text layout manager manages laying out lines in a code document.
+@MainActor
 public class TextLayoutManager: NSObject {
     // MARK: - Public Properties
 
@@ -218,9 +219,4 @@ public class TextLayoutManager: NSObject {
     /// ``TextLayoutManager/estimateLineHeight()`` is called.
     private var _estimateLineHeight: CGFloat?
 
-    deinit {
-        lineStorage.removeAll()
-        layoutView = nil
-        delegate = nil
-    }
 }

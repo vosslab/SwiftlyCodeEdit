@@ -25,7 +25,8 @@ import AppKit
 /// **use Xcode as an example of this behavior.*
 ///
 /// All documentation in these methods is from the `NSTextInputClient` documentation, copied here for easy of use.
-extension TextView: NSTextInputClient {
+@MainActor
+extension TextView: @preconcurrency NSTextInputClient {
     // MARK: - Insert Text
 
     /// Converts an `Any` to a valid string type if possible.

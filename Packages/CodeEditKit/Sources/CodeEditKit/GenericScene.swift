@@ -5,14 +5,14 @@
 //  Created by Wouter Hennen on 02/01/2023.
 //
 
-import SwiftUI
-import ExtensionKit
+@preconcurrency import SwiftUI
+@preconcurrency import ExtensionKit
 
 public enum Callbacks: Codable {
     case openWindow(id: String)
 }
 
-struct GenericScene<Content: View>: AppExtensionScene {
+@preconcurrency struct GenericScene<Content: View>: AppExtensionScene {
 
     var sceneID: String
 

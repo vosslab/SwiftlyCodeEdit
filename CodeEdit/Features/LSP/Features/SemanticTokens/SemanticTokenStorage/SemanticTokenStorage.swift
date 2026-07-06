@@ -7,7 +7,6 @@
 
 import Foundation
 import LanguageServerProtocol
-import CodeEditSourceEditor
 
 /// This class provides storage for semantic token data.
 ///

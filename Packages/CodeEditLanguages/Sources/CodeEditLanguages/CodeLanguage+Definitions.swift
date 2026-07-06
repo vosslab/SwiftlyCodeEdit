@@ -457,14 +457,6 @@ public extension CodeLanguage {
         highlights: ["injections"]
     )
 
-    /// The default language (plain text)
-    static let `default`: CodeLanguage = .init(
-        id: .plainText,
-        tsName: "PlainText",
-        extensions: ["txt"],
-        lineCommentString: "",
-        rangeCommentStrings: ("", "")
-    )
 }
 
 // swiftlint:enable file_length

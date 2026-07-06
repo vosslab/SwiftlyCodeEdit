@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "CodeEditSourceEditor",
+    defaultLocalization: "en",
     platforms: [.macOS(.v26)],
     products: [
         // A source editor with useful features for code editing.
@@ -23,11 +24,6 @@ let package = Package(
         .package(path: "../CodeEditLanguages"),
         // CodeEditSymbols
         .package(path: "../CodeEditSymbols"),
-        // SwiftLint
-        .package(
-            url: "https://github.com/lukepistrol/SwiftLintPlugin",
-            from: "0.2.2"
-        ),
         // Rules for indentation, pair completion, whitespace
         .package(
             url: "https://github.com/ChimeHQ/TextFormation",
@@ -48,14 +44,6 @@ let package = Package(
                 "CodeEditSymbols"
             ],
             exclude: [
-                "TreeSitter",
-                "Highlighting/Highlighter.swift",
-                "Highlighting/HighlightProviding",
-                "Highlighting/HighlightRange.swift",
-                "Highlighting/StyledRangeContainer",
-                "Controller/TextViewController+Highlighter.swift",
-                "Controller/TextViewController+TextFormation.swift",
-                "Extensions/TreeSitterLanguage+TagFilter.swift",
                 "Extensions/NSRange+/NSRange+TSRange.swift",
                 "Extensions/NSRange+/NSRange+InputEdit.swift",
                 "Extensions/Node+filterChildren.swift",
@@ -63,11 +51,6 @@ let package = Package(
                 "Extensions/TextView+/TextView+Point.swift",
                 "Extensions/TextView+/TextView+createReadBlock.swift",
                 "Filters/TagFilter.swift",
-                "JumpToDefinition",
-                "CodeSuggestion/Model/SuggestionViewModel.swift"
-            ],
-            plugins: [
-                .plugin(name: "SwiftLint", package: "SwiftLintPlugin")
             ]
         ),
 
@@ -79,9 +62,6 @@ let package = Package(
                 "CodeEditHighlighting",
                 "CodeEditLanguages",
                 .product(name: "CustomDump", package: "swift-custom-dump")
-            ],
-            plugins: [
-                .plugin(name: "SwiftLint", package: "SwiftLintPlugin")
             ]
         ),
     ]

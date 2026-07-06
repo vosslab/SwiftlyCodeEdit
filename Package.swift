@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "CodeEdit",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v26),
     ],
@@ -15,10 +16,9 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "Packages/AboutWindow"),
-        .package(path: "Packages/CodeEditKit"),
         .package(path: "Packages/CodeEditHighlighting"),
         .package(path: "Packages/CodeEditLanguages"),
-        .package(path: "Packages/CodeEditSourceEditor"),
+        .package(path: "Packages/CodeEditTextView"),
         .package(path: "Packages/CodeEditSyntaxDefinitions"),
         .package(path: "Packages/CodeEditSymbols"),
         .package(path: "Packages/WelcomeWindow"),
@@ -28,9 +28,8 @@ let package = Package(
         .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0"),
         .package(url: "https://github.com/groue/GRDB.swift.git", from: "6.0.0"),
         .package(url: "https://github.com/johnsundell/collectionconcurrencykit", from: "0.2.0"),
-        .package(url: "https://github.com/pointfreeco/swift-async-algorithms.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.2.0"),
-        .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.3.0"),
         .package(url: "https://github.com/thecoolwinter/SwiftTerm", branch: "codeedit"),
         .package(url: "https://github.com/Wouter01/LogStream", from: "1.3.0"),
     ],
@@ -39,10 +38,9 @@ let package = Package(
             name: "CodeEdit",
             dependencies: [
                 .product(name: "AboutWindow", package: "AboutWindow"),
-                .product(name: "CodeEditKit", package: "CodeEditKit"),
                 .product(name: "CodeEditHighlighting", package: "CodeEditHighlighting"),
                 .product(name: "CodeEditLanguages", package: "CodeEditLanguages"),
-                .product(name: "CodeEditSourceEditor", package: "CodeEditSourceEditor"),
+                .product(name: "CodeEditTextView", package: "CodeEditTextView"),
                 .product(name: "CodeEditSyntaxDefinitions", package: "CodeEditSyntaxDefinitions"),
                 .product(name: "CodeEditSymbols", package: "CodeEditSymbols"),
                 .product(name: "ConcurrencyPlus", package: "ConcurrencyPlus"),
@@ -54,11 +52,22 @@ let package = Package(
                 .product(name: "CollectionConcurrencyKit", package: "collectionconcurrencykit"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "SwiftUIIntrospect", package: "SwiftUI-Introspect"),
-                .product(name: "Sparkle", package: "Sparkle"),
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
                 .product(name: "LogStream", package: "LogStream"),
             ],
             path: "CodeEdit",
+            exclude: [
+                "Features/Extensions",
+                "Features/InspectorArea/Models/InspectorTab.swift",
+                "Features/NavigatorArea/Models/NavigatorTab.swift",
+                "Features/WindowCommands/ExtensionCommands.swift",
+                "Features/WindowCommands/EditorCommands.swift",
+                "Features/Extensions/ExtensionDiscovery.swift",
+                "Features/Extensions/ExtensionInfo.swift",
+                "Features/Extensions/ExtensionSceneView.swift",
+                "Features/Extensions/ExtensionsManager.swift",
+                "Features/Extensions/ExtensionActivatorView.swift"
+            ],
             resources: [
                 .process("Assets.xcassets"),
             ]

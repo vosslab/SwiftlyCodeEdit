@@ -7,7 +7,7 @@
 
 import Foundation
 import AnyCodable
-import SwiftUI
+@preconcurrency import SwiftUI
 
 public struct _CEEnvironment: Codable, Equatable {
 
@@ -44,7 +44,7 @@ public struct CEEnvironment<Value>: DynamicProperty {
     }
 }
 
-public struct _CEEnvironmentKey: EnvironmentKey {
+@preconcurrency public struct _CEEnvironmentKey: EnvironmentKey {
     public static let defaultValue = _CEEnvironment()
 }
 

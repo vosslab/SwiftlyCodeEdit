@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import SwiftUI
-import ExtensionKit
+@preconcurrency import SwiftUI
+@preconcurrency import ExtensionKit
 
 public protocol SettingsExtension: ObservableObject {
     associatedtype SettingsBody: View

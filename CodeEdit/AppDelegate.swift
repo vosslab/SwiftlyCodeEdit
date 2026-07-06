@@ -7,7 +7,6 @@
 
 import SwiftUI
 import CodeEditSymbols
-import CodeEditSourceEditor
 import OSLog
 
 @MainActor

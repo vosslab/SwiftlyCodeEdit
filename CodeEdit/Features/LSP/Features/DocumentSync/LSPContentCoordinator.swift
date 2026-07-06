@@ -7,7 +7,6 @@
 
 import AppKit
 import AsyncAlgorithms
-import CodeEditSourceEditor
 import CodeEditTextView
 import LanguageServerProtocol
 

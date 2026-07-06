@@ -12,6 +12,7 @@
 - Added a new `CodeEditHighlighting` package skeleton to define the app-facing syntax highlight span model and protocol.
 - Wired `CodeEditSourceEditor` to depend on the new shared highlighting package boundary.
 - Added a resource-only `CodeEditSyntaxDefinitions` package skeleton for declarative syntax definition files.
+- Made the debug and release build scripts interruptible by trapping `INT` and `TERM`.
 - Added a syntax-rule-set comparison note to keep the format decision explicit.
 - Added a removal plan so cleanup can proceed in a bounded order.
 - Added a data-first directory layout for the syntax-definition bundle.
@@ -19,4 +20,6 @@
 - Removed the default parser-backed provider from the editor entry points.
 - Reduced `CodeEditLanguages` to metadata-only source files in the package target.
 - Removed parser references from the source editor package docs and comments.
+- Removed Sparkle and SwiftLintPlugin from the required build graph and stubbed the updater entry point.
+- Switched the debug and release helper scripts from Xcode build invocation to SwiftPM build invocation.
 - Continued the SwiftPM-first, source-first refactor toward a smaller editor/highlighting boundary.

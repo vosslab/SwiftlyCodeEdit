@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import SwiftUI
+@preconcurrency import SwiftUI
 
 public struct CEOpenWindowEnvKey: EnvironmentKey {
-    public static var defaultValue: (String) async throws -> Void = { _ in }
+    public static let defaultValue: @Sendable (String) async throws -> Void = { _ in }
 }
 
 public extension EnvironmentValues {

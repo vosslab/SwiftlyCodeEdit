@@ -33,7 +33,8 @@ import TextStory
 /// [`NSTextInputClient`](https://developer.apple.com/documentation/appkit/nstextinputclient) to work well with system
 /// text interactions such as inserting text and marked text.
 ///
-open class TextView: NSView, NSTextContent {
+@MainActor
+open class TextView: NSView, @preconcurrency NSTextContent {
     // MARK: - Statics
 
     /// The default typing attributes:
@@ -378,9 +379,6 @@ open class TextView: NSView, NSTextContent {
     }
 
     deinit {
-        layoutManager = nil
-        selectionManager = nil
-        textStorage = nil
         NotificationCenter.default.removeObserver(self)
     }
 }

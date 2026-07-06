@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftUI
-import CodeEditSourceEditor
 import CodeEditTextView
 import CodeEditLanguages
 import Combine
@@ -16,10 +15,6 @@ import Combine
 struct CodeFileView: View {
     @ObservedObject private var editorInstance: EditorInstance
     @ObservedObject private var codeFile: CodeFileDocument
-
-    /// Any coordinators passed to the view.
-    private var textViewCoordinators: [TextViewCoordinator]
-    private var highlightProviders: [any HighlightProviding] = []
 
     @AppSettings(\.textEditing.defaultTabWidth)
     var defaultTabWidth
@@ -77,19 +72,12 @@ struct CodeFileView: View {
     ) {
         self._editorInstance = .init(wrappedValue: editorInstance)
         self._codeFile = .init(wrappedValue: codeFile)
-
-        self.textViewCoordinators = textViewCoordinators
-            + [editorInstance.rangeTranslator]
-            + [codeFile.contentCoordinator]
-            + [codeFile.languageServerObjects.textCoordinator]
         self.isEditable = isEditable
 
         if let openOptions = codeFile.openOptions {
             codeFile.openOptions = nil
             editorInstance.cursorPositions = openOptions.cursorPositions
         }
-
-        highlightProviders = [codeFile.languageServerObjects.highlightProvider]
 
         codeFile
             .contentCoordinator
@@ -110,61 +98,20 @@ struct CodeFileView: View {
     private var edgeInsets
 
     var body: some View {
-        SourceEditor(
-            codeFile.content ?? NSTextStorage(),
-            language: codeFile.getLanguage(),
-            configuration: SourceEditorConfiguration(
-                appearance: .init(
-                    theme: currentTheme.editor.editorTheme,
-                    useThemeBackground: useThemeBackground,
-                    font: font,
-                    lineHeightMultiple: lineHeightMultiple,
-                    letterSpacing: letterSpacing,
-                    wrapLines: wrapLinesToEditorWidth,
-                    useSystemCursor: useSystemCursor,
-                    tabWidth: defaultTabWidth,
-                    bracketPairEmphasis: getBracketPairEmphasis()
-                ),
-                behavior: .init(
-                    isEditable: isEditable,
-                    indentOption: indentOption.textViewOption(),
-                    reformatAtColumn: reformatAtColumn
-                ),
-                layout: .init(
-                    editorOverscroll: overscroll.overscrollPercentage,
-                    contentInsets: edgeInsets.nsEdgeInsets,
-                    additionalTextInsets: NSEdgeInsets(top: 2, left: 0, bottom: 0, right: 0)
-                ),
-                peripherals: .init(
-                    showGutter: showGutter,
-                    showMinimap: showMinimap,
-                    showReformattingGuide: showReformattingGuide,
-                    showFoldingRibbon: showFoldingRibbon,
-                    invisibleCharactersConfiguration: invisibleCharactersConfiguration.textViewOption(),
-                    warningCharacters: Set(warningCharacters.characters.keys)
-                )
+        PlainTextEditorView(
+            textStorage: Binding(
+                get: { codeFile.content ?? NSTextStorage() },
+                set: { codeFile.content = $0 }
             ),
-            state: Binding(
-                get: {
-                    SourceEditorState(
-                        cursorPositions: editorInstance.cursorPositions,
-                        scrollPosition: editorInstance.scrollPosition,
-                        findText: editorInstance.findText,
-                        replaceText: editorInstance.replaceText
-                    )
-                },
-                set: { newState in
-                    editorInstance.cursorPositions = newState.cursorPositions ?? []
-                    editorInstance.scrollPosition = newState.scrollPosition
-                    editorInstance.findText = newState.findText
-                    editorInstance.findTextSubject.send(newState.findText)
-                    editorInstance.replaceText = newState.replaceText
-                    editorInstance.replaceTextSubject.send(newState.replaceText)
-                }
-            ),
-            highlightProviders: highlightProviders,
-            undoManager: undoRegistration.manager(forFile: editorInstance.file),
-            coordinators: textViewCoordinators
+            isEditable: isEditable,
+            isSelectable: true,
+            wrapLines: wrapLinesToEditorWidth,
+            useSystemCursor: useSystemCursor,
+            font: font,
+            textColor: currentTheme.editor.text.nsColor,
+            lineHeightMultiplier: lineHeightMultiple,
+            edgeInsets: edgeInsets.horizontalEdgeInsets,
+            textInsets: .init(left: 0, right: 0)
         )
         // This view needs to refresh when the codefile changes. The file URL is too stable.
         .id(ObjectIdentifier(codeFile))
@@ -181,59 +128,5 @@ struct CodeFileView: View {
         .onChange(of: settingsFont) { _, newFontSetting in
             font = newFontSetting.current
         }
-    }
-
-    /// Determines the style of bracket emphasis based on the `bracketEmphasis` setting and the current theme.
-    /// - Returns: The emphasis style to use for bracket pair emphasis.
-    private func getBracketPairEmphasis() -> BracketPairEmphasis? {
-        let color = if Settings[\.textEditing].bracketEmphasis.useCustomColor {
-            Settings[\.textEditing].bracketEmphasis.color.nsColor
-        } else {
-            currentTheme.editor.text.nsColor.withAlphaComponent(0.8)
-        }
-
-        switch Settings[\.textEditing].bracketEmphasis.highlightType {
-        case .disabled:
-            return nil
-        case .flash:
-            return .flash
-        case .bordered:
-            return .bordered(color: color)
-        case .underline:
-            return .underline(color: color)
-        }
-    }
-}
-
-// This extension is kept here because it should not be used elsewhere in the app and may cause confusion
-// due to the similar type name from the CETV module.
-private extension SettingsData.TextEditingSettings.IndentOption {
-    func textViewOption() -> IndentOption {
-        switch self.indentType {
-        case .spaces:
-            return IndentOption.spaces(count: spaceCount)
-        case .tab:
-            return IndentOption.tab
-        }
-    }
-}
-
-private extension SettingsData.TextEditingSettings.InvisibleCharactersConfig {
-    func textViewOption() -> InvisibleCharactersConfiguration {
-        guard self.enabled else { return .empty }
-        var config = InvisibleCharactersConfiguration(
-            showSpaces: self.showSpaces,
-            showTabs: self.showTabs,
-            showLineEndings: self.showLineEndings
-        )
-
-        config.spaceReplacement = self.spaceReplacement
-        config.tabReplacement = self.tabReplacement
-        config.carriageReturnReplacement = self.carriageReturnReplacement
-        config.lineFeedReplacement = self.lineFeedReplacement
-        config.paragraphSeparatorReplacement = self.paragraphSeparatorReplacement
-        config.lineSeparatorReplacement = self.lineSeparatorReplacement
-
-        return config
     }
 }

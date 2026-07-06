@@ -3,9 +3,12 @@
 This document is short on purpose: it lists only non-negotiable rules.
 User must approve any new scope items. Agents are not allowed to edit.
 
+Incorporate as much liquid glass styling as possible.
+
 This builds for macOS 26 Tahoe or newer and Apple Silicon arm based processors M1 or newer.
 
-We are trying for 100% SwiftUI and Swift based code, where possible
+We are trying for 100% SwiftUI and Swift based code, where possible. the code is old, and I want to use modern 
+swift/swiftUI best practices, so fix the architecture and update codebase as needed
 
 We are building a text editor with syntax highlighting, not an IDE.
 

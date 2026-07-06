@@ -14,6 +14,7 @@ import Foundation
 /// Documentation sources:
 /// - [Emacs kill ring](https://www.gnu.org/software/emacs/manual/html_node/emacs/Yanking.html)
 /// - [Cocoa Docs](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/TextDefaultsBindings/TextDefaultsBindings.html)
+@MainActor
 class KillRing {
     static let shared: KillRing = KillRing()
 
