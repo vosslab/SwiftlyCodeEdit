@@ -1,10 +1,14 @@
 # Project Scope
 
+This document is short on purpose: it lists only non-negotiable rules.
+User must approve any new scope items. Agents are not allowed to edit.
+
 This builds for macOS 26 Tahoe or newer and Apple Silicon arm based processors M1 or newer.
 
 We are trying for 100% SwiftUI and Swift based code, where possible
 
 We are building a text editor with syntax highlighting, not an IDE.
+
 
 ## Features of a Quality Code Editor
 
@@ -21,6 +25,9 @@ Here are the must-have features that make a code editor on Mac truly awesome:
 - launch fast and work across languages without hogging memory
 - auto-save and detects changes to files and updates in GUI
 - ability to customize syntax highlighting and add new custom languages like Kate.app
+- Syntax definitions are data files, not compiled parser packages.
+- Users should be able to add syntax files later without rebuilding the app.
+- Themes should also be data files.
 
 ## Possible Goals / Low Priority
 
@@ -35,6 +42,7 @@ These are lower priority because they introduce lag:
 - Git support
 - Cross-platform support
 - heavier IDEs like IntelliJ or PyCharm
+
 
 ## Target Platform
 
