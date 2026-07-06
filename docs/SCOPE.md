@@ -3,6 +3,9 @@
 This document is short on purpose: it lists only non-negotiable rules.
 User must approve any new scope items. Agents are not allowed to edit.
 
+change App name to: SwiftlyCodeEdit
+Tagline: A fast native code editor for macOS.
+
 Incorporate as much liquid glass styling as possible.
 
 This builds for macOS 26 Tahoe or newer and Apple Silicon arm based processors M1 or newer.
