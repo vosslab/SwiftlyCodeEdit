@@ -43,8 +43,6 @@ struct CodeEditApp: App {
                 }
             )
 
-            ExtensionManagerWindow()
-
             AboutWindow(
                 subtitleView: { AboutSubtitleView() },
                 actions: {

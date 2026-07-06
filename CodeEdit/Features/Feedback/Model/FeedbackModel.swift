@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 public class FeedbackModel: ObservableObject {
 
     public static let shared: FeedbackModel = .init()

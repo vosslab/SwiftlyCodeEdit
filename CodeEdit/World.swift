@@ -1,3 +1,4 @@
+@MainActor
 var currentWorld: World = .init()
 
 // Inspired by: https://vimeo.com/291588126

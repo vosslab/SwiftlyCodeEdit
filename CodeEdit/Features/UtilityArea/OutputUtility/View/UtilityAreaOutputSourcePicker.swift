@@ -17,8 +17,6 @@ struct UtilityAreaOutputSourcePicker: View {
 
     @Binding var selectedSource: Sources?
 
-    @ObservedObject var extensionManager = ExtensionManager.shared
-
     @Service var lspService: LSPService
     @State private var updater: UUID = UUID()
     @State private var languageServerClients: [LSPService.LanguageServerType] = []
@@ -43,15 +41,6 @@ struct UtilityAreaOutputSourcePicker: View {
 
             Divider()
 
-            if extensionManager.extensions.isEmpty {
-                Text("No Extensions")
-            } else {
-                ForEach(extensionManager.extensions) { extensionInfo in
-                    Text(Sources.extensions(.init(extensionInfo: extensionInfo)).title)
-                        .tag(Sources.extensions(.init(extensionInfo: extensionInfo)))
-                }
-            }
-
             if showInternalDevelopmentInspector {
                 Divider()
                 Text(Sources.devOutput.title)
@@ -67,9 +56,6 @@ struct UtilityAreaOutputSourcePicker: View {
         }
         .onReceive(lspService.$languageClients) { clients in
             updateLanguageServers(clients)
-        }
-        .onReceive(extensionManager.$extensions) { _ in
-            updater = UUID()
         }
     }
 

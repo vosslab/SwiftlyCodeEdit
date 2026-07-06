@@ -9,6 +9,7 @@ import Foundation
 
 public extension NSRange {
     static let notFound = NSRange(location: NSNotFound, length: 0)
+    static let zero = NSRange(location: 0, length: 0)
 
     var max: Int {
         location + length
@@ -29,8 +30,10 @@ public extension NSRange {
     }
 
     func clamped(to length: Int) -> NSRange {
-        let lower = min(max(location, 0), length)
-        let upper = min(max(location + self.length, lower), length)
+        let safeLength = Swift.max(length, 0)
+        let lower = Swift.min(Swift.max(location, 0), safeLength)
+        let end = location + self.length
+        let upper = Swift.min(Swift.max(end, lower), safeLength)
         return NSRange(location: lower, length: upper - lower)
     }
 }

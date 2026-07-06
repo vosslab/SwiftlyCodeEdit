@@ -29,21 +29,21 @@ enum ArchiveExtractionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cancelledOperation:
-            "Operation cancelled."
+            return "Operation cancelled."
         case .unreadableArchive, .unzipToolUnavailable:
-            "Unreadable archive."
+            return "Unreadable archive."
         case .unwritableArchive:
-            "Unwritable archive."
+            return "Unwritable archive."
         case .invalidEntryPath:
-            "Invalid entry path."
+            return "Invalid entry path."
         case .invalidCompressionMethod:
-            "Invalid compression method."
+            return "Invalid compression method."
         case .invalidCRC32:
-            "Invalid checksum."
+            return "Invalid checksum."
         case .invalidBufferSize:
-            "Invalid buffer size."
+            return "Invalid buffer size."
         case .invalidEntrySize:
-            "Invalid entry size."
+            return "Invalid entry size."
         case .invalidLocalHeaderDataOffset,
                 .invalidLocalHeaderSize,
                 .invalidCentralDirectoryOffset,
@@ -51,9 +51,9 @@ enum ArchiveExtractionError: LocalizedError {
                 .invalidCentralDirectoryEntryCount,
                 .missingEndOfCentralDirectoryRecord,
                 .unzipFailed:
-            "Invalid file detected."
+            return "Invalid file detected."
         case .uncontainedSymlink:
-            "Uncontained symlink detected."
+            return "Uncontained symlink detected."
         }
     }
 

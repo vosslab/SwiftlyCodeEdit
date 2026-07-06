@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
-import CodeEditKit
-import ExtensionFoundation
 
-enum InspectorTab: WorkspacePanelTab {
+enum InspectorTab: String, WorkspacePanelTab {
     case file
     case gitHistory
     case internalDevelopment
-    case uiExtension(endpoint: AppExtensionIdentity, data: ResolvedSidebar.SidebarStore)
+
+    var id: String { rawValue }
 
     var systemImage: String {
         switch self {
@@ -23,16 +22,7 @@ enum InspectorTab: WorkspacePanelTab {
             return "clock"
         case .internalDevelopment:
             return "hammer"
-        case .uiExtension(_, let data):
-            return data.icon ?? "e.square"
         }
-    }
-
-    var id: String {
-        if case .uiExtension(let endpoint, let data) = self {
-            return endpoint.bundleIdentifier + data.sceneID
-        }
-        return title
     }
 
     var title: String {
@@ -43,8 +33,6 @@ enum InspectorTab: WorkspacePanelTab {
             return "History Inspector"
         case .internalDevelopment:
             return "Internal Development"
-        case .uiExtension(_, let data):
-            return data.help ?? data.sceneID
         }
     }
 
@@ -56,8 +44,6 @@ enum InspectorTab: WorkspacePanelTab {
             HistoryInspectorView()
         case .internalDevelopment:
             InternalDevelopmentInspectorView()
-        case let .uiExtension(endpoint, data):
-            ExtensionSceneView(with: endpoint, sceneID: data.sceneID)
         }
     }
 }

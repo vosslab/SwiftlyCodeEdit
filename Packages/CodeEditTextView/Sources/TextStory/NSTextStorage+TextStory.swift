@@ -8,6 +8,14 @@
 import AppKit
 
 public extension NSTextStorage {
+    func substring(from range: NSRange) -> String? {
+        guard NSLocationInRange(range.location, NSRange(location: 0, length: length)),
+              range.location + range.length <= length else {
+            return nil
+        }
+        return (string as NSString).substring(with: range)
+    }
+
     func inverseMutation(for mutation: TextMutation) -> TextMutation {
         let replacement = (string as NSString).substring(with: mutation.range)
         return TextMutation(string: replacement, range: NSRange(location: mutation.range.location, length: mutation.string.utf16.count), limit: length)
@@ -45,4 +53,3 @@ public extension NSTextStorage {
         return length
     }
 }
-

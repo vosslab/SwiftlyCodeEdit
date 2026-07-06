@@ -10,7 +10,6 @@ import SwiftUI
 struct InspectorAreaView: View {
     @EnvironmentObject private var workspace: WorkspaceDocument
     @EnvironmentObject private var editorManager: EditorManager
-    @ObservedObject private var extensionManager = ExtensionManager.shared
     @ObservedObject public var viewModel: InspectorAreaViewModel
 
     @AppSettings(\.general.inspectorTabBarPosition)
@@ -31,17 +30,7 @@ struct InspectorAreaView: View {
             tabs.append(.internalDevelopment)
         }
 
-        viewModel.tabItems = tabs + extensionManager
-            .extensions
-            .map { ext in
-                ext.availableFeatures.compactMap {
-                    if case .sidebarItem(let data) = $0, data.kind == .inspector {
-                        return InspectorTab.uiExtension(endpoint: ext.endpoint, data: data)
-                    }
-                    return nil
-                }
-            }
-            .joined()
+        viewModel.tabItems = tabs
     }
 
     var body: some View {

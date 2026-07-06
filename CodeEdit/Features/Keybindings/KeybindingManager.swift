@@ -7,6 +7,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 final class KeybindingManager {
     /// Array which contains all available keyboard shortcuts
     var keyboardShortcuts = [String: KeyboardShortcutWrapper]()

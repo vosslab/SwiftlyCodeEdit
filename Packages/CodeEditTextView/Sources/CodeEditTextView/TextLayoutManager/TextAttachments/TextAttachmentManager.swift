@@ -161,9 +161,15 @@ public final class TextAttachmentManager {
         guard let selectionManager = notification.object as? TextSelectionManager else {
             return
         }
-        let selectedSet = IndexSet(ranges: selectionManager.textSelections.map({ $0.range }))
+        let selectedSet = IndexSet(
+            selectionManager.textSelections.flatMap { selection in
+                Array(selection.range.location..<(selection.range.location + selection.range.length))
+            }
+        )
         for attachment in orderedAttachments {
-            let isSelected = selectedSet.contains(integersIn: attachment.range)
+            let isSelected = selectedSet.contains(
+                integersIn: attachment.range.location..<(attachment.range.location + attachment.range.length)
+            )
             if attachment.attachment.isSelected != isSelected {
                 layoutManager?.invalidateLayoutForRange(attachment.range)
             }

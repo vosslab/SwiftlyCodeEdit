@@ -141,9 +141,11 @@ public class CEUndoManager: UndoManager {
                 )
             }
         } else {
-            let mergedRanges = mutations.reduce(into: IndexSet(), { set, mutation in
-                set.insert(range: mutation.range)
-            })
+            let mergedRanges = IndexSet(
+                mutations.flatMap { mutation in
+                    Array(mutation.range.location..<(mutation.range.location + mutation.range.length))
+                }
+            )
             textView?.selectionManager.setSelectedRanges(mergedRanges.rangeView.map { NSRange($0) })
         }
     }

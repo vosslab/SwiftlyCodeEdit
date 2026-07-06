@@ -86,13 +86,6 @@ final class CodeEditSplitViewController: NSSplitViewController {
 
         addSplitViewItem(mainContent)
 
-        let inspector = makeInspector(view: SettingsInjector {
-            InspectorAreaView(viewModel: InspectorAreaViewModel())
-                .environmentObject(workspace)
-                .environmentObject(editorManager)
-        })
-
-        addSplitViewItem(inspector)
     }
 
     private func makeNavigator(view: some View) -> NSSplitViewItem {
@@ -104,16 +97,6 @@ final class CodeEditSplitViewController: NSSplitViewController {
         navigator.minimumThickness = Self.minSidebarWidth
         navigator.collapseBehavior = .useConstraints
         return navigator
-    }
-
-    private func makeInspector(view: some View) -> NSSplitViewItem {
-        let inspector = NSSplitViewItem(inspectorWithViewController: NSHostingController(rootView: view))
-        inspector.titlebarSeparatorStyle = .none
-        inspector.minimumThickness = Self.minSidebarWidth
-        inspector.maximumThickness = .greatestFiniteMagnitude
-        inspector.collapseBehavior = .useConstraints
-        inspector.isSpringLoaded = true
-        return inspector
     }
 
     override func viewWillAppear() {
@@ -128,12 +111,6 @@ final class CodeEditSplitViewController: NSSplitViewController {
             firstSplitView.isCollapsed = workspace.getFromWorkspaceState(
                 .navigatorCollapsed
             ) as? Bool ?? false
-        }
-
-        if let lastSplitView = splitViewItems.last {
-            lastSplitView.isCollapsed = workspace.getFromWorkspaceState(
-                .inspectorCollapsed
-            ) as? Bool ?? true
         }
 
         workspace.notificationPanel.updateToolbarItem()
