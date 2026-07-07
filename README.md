@@ -19,6 +19,11 @@ CodeEdit is a native macOS code editor for Apple Silicon Macs running Tahoe or n
 2. Run `./build_release.sh` to make a release build, with optional install to `/Applications` via `INSTALL_TO_APPLICATIONS=1`.
 3. Open `CodeEdit.xcodeproj` in Xcode if you want to run or debug interactively.
 
+## Screenshots
+
+<!-- screenshots:begin (managed by screenshot-docs) -->
+<!-- screenshots:end -->
+
 ## Notes
 
 - This fork does not currently ship separate `docs/INSTALL.md`, `docs/USAGE.md`, or `docs/TROUBLESHOOTING.md` files.

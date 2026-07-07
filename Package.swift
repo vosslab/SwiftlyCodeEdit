@@ -54,6 +54,9 @@ let package = Package(
             path: "CodeEdit",
             exclude: [
                 "AppDelegate.swift",
+                "CodeEdit.entitlements",
+                "Info.plist",
+                "Preview Content",
                 "Features/ActivityViewer",
                 "Features/CEWorkspace",
                 "Features/CEWorkspaceSettings",
@@ -96,6 +99,7 @@ let package = Package(
                 "Features/Extensions/ExtensionsManager.swift",
                 "Features/Extensions/ExtensionActivatorView.swift",
                 "Features/Welcome",
+                "ShellIntegration",
                 "Utils/Compatibility",
                 "Utils/DependencyInjection",
                 "Utils/Environment",
@@ -106,6 +110,7 @@ let package = Package(
             ],
             resources: [
                 .process("Assets.xcassets"),
+                .process("Features/Keybindings/default_keybindings.json"),
             ]
         ),
     ]

@@ -10,6 +10,16 @@ import SwiftUI
 import CodeEditTextView
 
 struct PlainTextEditorView: NSViewControllerRepresentable {
+    final class EditorViewController: NSViewController {
+        weak var textView: TextView?
+
+        override func viewDidAppear() {
+            super.viewDidAppear()
+            guard let textView else { return }
+            view.window?.makeFirstResponder(textView)
+        }
+    }
+
     final class Coordinator: NSObject, TextViewDelegate {
         weak var textView: TextView?
         var onTextChange: (() -> Void)?
@@ -58,10 +68,14 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         scrollView.documentView = textView
         textView.setUpScrollListeners(scrollView: scrollView)
 
-        let controller = NSViewController()
+        let controller = EditorViewController()
         controller.view = scrollView
+        controller.textView = textView
         context.coordinator.textView = textView
         context.coordinator.onTextChange = onTextChange
+        #if DEBUG
+        debugRuntimeLog("PlainTextEditorView created editable=\(isEditable) length=\(textStorage.length)")
+        #endif
 
         return controller
     }
@@ -88,5 +102,9 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
         textView.updatedViewport(scrollView.documentVisibleRect)
+        controller.view.window?.makeFirstResponder(textView)
+        #if DEBUG
+        debugRuntimeLog("PlainTextEditorView requested first responder editable=\(textView.isEditable)")
+        #endif
     }
 }

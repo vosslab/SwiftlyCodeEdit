@@ -74,6 +74,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         fileType
     }
 
+    @MainActor
     override func makeWindowControllers() {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 750, height: 800),
@@ -87,7 +88,13 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         }
         addWindowController(windowController)
 
+        if let fileURL {
+            window.title = fileURL.lastPathComponent
+        }
         window.contentView = NSHostingView(rootView: WindowCodeFileView(codeFile: self))
+        #if DEBUG
+        debugRuntimeLog("Created editor window for \(self.fileURL?.path ?? "<unknown>")")
+        #endif
 
         window.makeKeyAndOrderFront(nil)
 
@@ -98,6 +105,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
 
     // MARK: - Data
 
+    @MainActor
     override func data(ofType _: String) throws -> Data {
         guard let sourceEncoding, let data = (content?.string as NSString?)?.data(using: sourceEncoding.nsValue) else {
             Self.logger.error("Failed to encode contents to \(self.sourceEncoding.debugDescription)")
@@ -132,6 +140,9 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         } else {
             self.content = NSTextStorage(string: nsString as String)
         }
+        #if DEBUG
+        debugRuntimeLog("Loaded file: \(self.fileURL?.path ?? "<unknown>") characters: \(self.content?.length ?? 0)")
+        #endif
         NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
     }
 
@@ -140,6 +151,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     ///
     /// All operations are done with the ``autosaveTimerLock`` acquired (including the scheduled autosave) to ensure
     /// correct timing when scheduling or cancelling timers.
+    @MainActor
     override func scheduleAutosaving() {
         autosaveTimerLock.withLock {
             if self.hasUnautosavedChanges {
@@ -201,11 +213,13 @@ final class CodeFileDocument: NSDocument, ObservableObject {
 
     // MARK: - Close
 
+    @MainActor
     override func close() {
         super.close()
         NotificationCenter.default.post(name: Self.didCloseNotification, object: fileURL)
     }
 
+    @MainActor
     override func save(_ sender: Any?) {
         guard let fileURL else {
             super.save(sender)
@@ -237,6 +251,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// Use ``CodeFileDocument/language`` for the default value before using this. That property is used to override
     /// the file's language.
     /// - Returns: The detected code language.
+    @MainActor
     func getLanguage() -> CodeLanguage {
         guard let url = fileURL else {
             return .default

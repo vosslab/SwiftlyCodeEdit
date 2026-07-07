@@ -5,6 +5,9 @@
 - Moved the plain editor viewport observer back into `CodeEditTextView` and exposed the helper for the app shell.
 - Fixed the remaining Swift 6 concurrency blockers in the plain editor viewport observer and shared static helpers.
 - Replaced the app entry's welcome-window launcher with a minimal plain-editor scene stub.
+- Added a plain-editor launch smoke-run that boots the built executable directly and leaves the app running instead of exiting immediately.
+- Added deterministic runtime logs, a plain-editor smoke harness, and a smoke checklist for the file-backed editor path.
+- Declared the plain-editor runtime resources explicitly and excluded shell-integration/preview artifacts from the required build path.
 - Trimmed the executable manifest to drop the welcome-window package from the app target.
 - Added `docs/RELATED_PROJECTS.md` from local repo evidence and bounded sibling-project discovery.
 - Replaced the upstream README with a shorter fork-focused front page.
