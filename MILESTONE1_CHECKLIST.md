@@ -34,9 +34,9 @@
 ## Editing Behavior
 
 - [x] Confirm the editor accepts keyboard focus.
-- [ ] Confirm typing changes the document model.
-- [ ] Confirm Undo works.
-- [ ] Confirm Redo works.
+- [x] Confirm typing changes the document model.
+- [x] Confirm Undo works.
+- [x] Confirm Redo works.
 - [ ] Confirm Cut works.
 - [ ] Confirm Copy works.
 - [ ] Confirm Paste works.

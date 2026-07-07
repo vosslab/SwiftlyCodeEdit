@@ -92,6 +92,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
             useSystemCursor: useSystemCursor
         )
         textView.setTextStorage(textStorage)
+        applyFont(to: textStorage)
         onTextStorageReady?(textStorage)
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
@@ -134,8 +135,9 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
 
         if textView.string != textStorage.string {
             textView.setTextStorage(textStorage)
-            onTextStorageReady?(textStorage)
         }
+        applyFont(to: textStorage)
+        onTextStorageReady?(textStorage)
 
         textView.isEditable = isEditable
         textView.isSelectable = isSelectable
@@ -153,5 +155,11 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         #if DEBUG
         debugRuntimeLog("PlainTextEditorView requested first responder editable=\(textView.isEditable)")
         #endif
+    }
+
+    private func applyFont(to storage: NSTextStorage) {
+        let range = NSRange(location: 0, length: storage.length)
+        guard range.length > 0 else { return }
+        storage.addAttribute(.font, value: font, range: range)
     }
 }

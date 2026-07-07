@@ -38,5 +38,6 @@ This repository is driven by a small set of scripts. Use these first.
 - the app launches through the file-backed plain editor path
 - the default source file opens
 - the top command bar is present
+- the editor font controls are mounted and report their persisted settings
 - the bottom status bar is present
 - the editor stays visible long enough for a screenshot capture

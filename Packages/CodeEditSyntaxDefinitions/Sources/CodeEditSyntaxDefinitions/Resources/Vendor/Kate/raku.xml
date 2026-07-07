@@ -34,7 +34,7 @@
   <!ENTITY allnopodfmt3 "(?:[^&podfmt;&lt;>]+|[&podfmt;](?![&lt;"])|>(?!>)|&lt;(?!&lt;))+">
 
   <!ENTITY quotingform_q "(?:q?(?::?[xsahfcb]|:?ww?|:(?:v|exec|words|quotewords|scalar|array|hash|function|closure|backslash|to|heredoc)|)(?::[xsahfcbv]|ww?|exec|words|quotewords|scalar|array|hash|function|closure|backslash|to|heredoc)*)">
-  <!ENTITY quotingform_q_assert "(?:\s+(?=\()|\s*(?=[^()>｣\]}a-zA-Z0-9]|$))">
+  <!ENTITY quotingform_q_assert "(?:\s+(?=\()|\s*(?=[^()>&#xFF63;\]}a-zA-Z0-9]|$))">
   <!ENTITY quotingconstruct "q&quotingform_q;&quotingform_q_assert;">
 
   <!ENTITY int10 "(?:[0-9]++(?:_[0-9]++)*+)">
@@ -52,16 +52,16 @@
   -->
   <!ENTITY method_ops "\.([=^?+*:]|&amp;(?![?][_\p{L}]))?">
 
-  <!ENTITY postfix_ops "⚛?(\+\+|\-\-)">
+  <!ENTITY postfix_ops "&#x269B;?(\+\+|\-\-)">
 
-  <!ENTITY prefix_unary_ops "(\+\+⚛?|\-\-⚛?|//|[+~?]\^|[-+~|?!^⚛]|\b(not|so)\b)">
+  <!ENTITY prefix_unary_ops "(\+\+&#x269B;?|\-\-&#x269B;?|//|[+~?]\^|[-+~|?!^&#x269B;]|\b(not|so)\b)">
 
-  <!ENTITY _infix_simple_ops "\*\*|&#37;&#37;|[+~][&amp;&lt;>|^]|\?[&amp;^|]|=>|==>|&lt;==|::?=|//|\^\^|\([-+&amp;.|]\)|\^?...\^?|\^?\.\.\.\^?|[-+*/&#37;~∘&amp;&cap;⊍|&cup;⊎^⊖=]|\b(div|mod|gcd|lcm|xx?|min|max|minmax|andthen|notandthen|orelse|o)\b">
-  <!ENTITY _infix_chaining_ops "\((elem|cont|[=&lt;>]=|[&lt;>])\)|\.\.[\^]?|\^\.\.\^?|&lt;=>|===|=:=|=~=|~~|[=&lt;>]=|[⩵=<=>=⩶&isin;&isin;&equiv;&equiv;&ni;&ni;&sub;&sub;&sube;&sube;&sup;&sup;&supe;&supe;]|&lt;(?!&lt;)|>(?!>)|&amp;&amp;|\|\||\b(eq|ne|gt|ge|lt|le|before|after|eqv|and|or|xor)\b">
+  <!ENTITY _infix_simple_ops "\*\*|&#37;&#37;|[+~][&amp;&lt;>|^]|\?[&amp;^|]|=>|==>|&lt;==|::?=|//|\^\^|\([-+&amp;.|]\)|\^?...\^?|\^?\.\.\.\^?|[-+*/&#37;~&#x2218;&amp;&cap;&#x228D;|&cup;&#x228E;^&#x2296;=]|\b(div|mod|gcd|lcm|xx?|min|max|minmax|andthen|notandthen|orelse|o)\b">
+  <!ENTITY _infix_chaining_ops "\((elem|cont|[=&lt;>]=|[&lt;>])\)|\.\.[\^]?|\^\.\.\^?|&lt;=>|===|=:=|=~=|~~|[=&lt;>]=|[&#x2A75;=<=>=&#x2A76;&isin;&isin;&equiv;&equiv;&ni;&ni;&sub;&sub;&sube;&sube;&sup;&sup;&supe;&supe;]|&lt;(?!&lt;)|>(?!>)|&amp;&amp;|\|\||\b(eq|ne|gt|ge|lt|le|before|after|eqv|and|or|xor)\b">
   <!-- "does" is an operator, but also a trait (separate treatment) -->
   <!ENTITY _infix_structural "\b(but|cmp|coll|unicmp|leg)\b">
   <!ENTITY _infix_other_ops "\^fff?\b|\bfff?\^|\bfff?\b|!!|\?\?">
-  <!ENTITY _infix_ops1 "(\b[RXZS]+)?((&_infix_simple_ops;)=?|⚛[-+]?=|\\(?=\s|$)|&_infix_structural;)">
+  <!ENTITY _infix_ops1 "(\b[RXZS]+)?((&_infix_simple_ops;)=?|&#x269B;[-+]?=|\\(?=\s|$)|&_infix_structural;)">
   <!ENTITY _infix_ops2 "\b[RXZS]+does">
   <!ENTITY _infix_ops3 "((\b[RXZS]|!)[RXZS!]*+)?(&_infix_chaining_ops;|=)|[XZ]+">
   <!ENTITY _infix_ops "&_infix_ops1;|&_infix_ops2;|&_infix_ops3;">
@@ -578,7 +578,7 @@
         <DetectChar char=""" context="qq_String"_term" attribute="String Delimiter"/>
         <StringDetect String="&lt;&lt;" context="qq_String&lt;&lt;_term" attribute="String Delimiter"/>
         <DetectChar char="&lt;" context="q_String&lt;_term" attribute="String Delimiter"/>
-        <DetectChar char="｢" context="Q_String｢_term" attribute="String Delimiter"/>
+        <DetectChar char="&#xFF62;" context="Q_String&#xFF62;_term" attribute="String Delimiter"/>
         <DetectChar char="/" context="Pattern/" attribute="Pattern Delimiter" beginRegion="regex"/>
         <DetectChar char=":" context="MaybeAttribute" attribute="Separator Symbol"/>
 
@@ -589,7 +589,7 @@
         <!-- '*' -> Whatever variable: (* + *)(1, 2) == 3 -->
         <RegExpr String="&variable;|\$(&lt;&ident;>)+|[$@](\(\))?|[*]" context="#pop!postfix_op" attribute="Variable"/>
 
-        <RegExpr String="\bQ(\s++(?=['(_]|$)|\s*+(?=[^()>｣\]}'&rangealnum;]|$))" context="Q_String" attribute="String"/>
+        <RegExpr String="\bQ(\s++(?=['(_]|$)|\s*+(?=[^()>&#xFF63;\]}'&rangealnum;]|$))" context="Q_String" attribute="String"/>
 
         <RegExpr String="\.?\p{N}" context="Number" lookAhead="1" minimal="1"/>
 
@@ -1570,9 +1570,9 @@
         <DetectChar char="(" context="#pop!Q_String(" attribute="String Delimiter"/>
         <DetectChar char="[" context="#pop!Q_String[" attribute="String Delimiter"/>
         <DetectChar char="{" context="#pop!Q_String{" attribute="String Delimiter"/>
-        <DetectChar char="｢" context="#pop!Q_String｢" attribute="String Delimiter"/>
+        <DetectChar char="&#xFF62;" context="#pop!Q_String&#xFF62;" attribute="String Delimiter"/>
         <DetectChar char="&lt;" context="#pop!Q_String&lt;" attribute="String Delimiter"/>
-        <RegExpr String="([^()>｣\]}'&rangealnum;])" context="#pop!Q_StringAny" attribute="String Delimiter"/>
+        <RegExpr String="([^()>&#xFF63;\]}'&rangealnum;])" context="#pop!Q_StringAny" attribute="String Delimiter"/>
       </context>
 
       <context name="Q_String(" attribute="String" lineEndContext="#stay">
@@ -1593,17 +1593,17 @@
         <RegExpr String="[^{}]*" context="#stay" attribute="String"/>
       </context>
 
-      <context name="Q_String｢" attribute="String" lineEndContext="#stay">
-        <DetectChar char="｣" context="#pop" attribute="String Delimiter"/>
-        <IncludeRules context="Q_String｢_common"/>
+      <context name="Q_String&#xFF62;" attribute="String" lineEndContext="#stay">
+        <DetectChar char="&#xFF63;" context="#pop" attribute="String Delimiter"/>
+        <IncludeRules context="Q_String&#xFF62;_common"/>
       </context>
-      <context name="Q_String｢_term" attribute="String" lineEndContext="#stay">
-        <DetectChar char="｣" context="#pop!postfix_op" attribute="String Delimiter"/>
-        <IncludeRules context="Q_String｢_common"/>
+      <context name="Q_String&#xFF62;_term" attribute="String" lineEndContext="#stay">
+        <DetectChar char="&#xFF63;" context="#pop!postfix_op" attribute="String Delimiter"/>
+        <IncludeRules context="Q_String&#xFF62;_common"/>
       </context>
-      <context name="Q_String｢_common" attribute="String" lineEndContext="#stay">
-        <DetectChar char="｢" context="Q_String｢" attribute="String Delimiter"/>
-        <RegExpr String="[^｢｣]*" context="#stay" attribute="String"/>
+      <context name="Q_String&#xFF62;_common" attribute="String" lineEndContext="#stay">
+        <DetectChar char="&#xFF62;" context="Q_String&#xFF62;" attribute="String Delimiter"/>
+        <RegExpr String="[^&#xFF62;&#xFF63;]*" context="#stay" attribute="String"/>
       </context>
 
       <context name="Q_String&lt;" attribute="String" lineEndContext="#stay">

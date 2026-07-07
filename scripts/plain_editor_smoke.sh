@@ -48,6 +48,7 @@ wait_for_line "PlainTextEditorView created"
 wait_for_line "PlainTextEditorView requested first responder"
 wait_for_line "Plain editor command ribbon ready"
 wait_for_line "Plain editor status bar ready"
+wait_for_line "Plain editor font settings:"
 wait_for_line "Plain editor status: cursor="
 wait_for_line "Main menu items:"
 

@@ -5,6 +5,8 @@
 - Reworked the KDE XML syntax path to preserve context-scoped rules, context transitions, included contexts, and default context attributes instead of flattening all rules globally.
 - Fixed Swift highlighting regressions where the live editor could show no colors, all white text, or over-broad red styling by selecting the first/root Kate context correctly and preserving KDE `attribute` style names through theme mapping.
 - Added focused syntax tests that prove loaded KDE Swift XML styles classify imports, keywords, strings, numbers, functions, and data types without misclassifying ordinary identifiers as strings.
+- Added a plain-editor font control surface with persisted monospace font family and font-size settings, plus smoke-log evidence for mounted font settings.
+- Added package-smoke tests for plain-editor font defaults, font-size clamping, and invalid-font fallback.
 - Added `docs/DEVELOPER_USAGE.md` to document the primary build, smoke, and inspection scripts for the plain-editor lane.
 - Switched the plain-editor smoke path to use a richer committed Swift sample so live syntax highlighting can prove multiple token colors in the screenshot path with a deterministic fixture.
 - Explicitly show and order the default document window when the plain-editor file document creates it, restoring visible launch for the smoke path.

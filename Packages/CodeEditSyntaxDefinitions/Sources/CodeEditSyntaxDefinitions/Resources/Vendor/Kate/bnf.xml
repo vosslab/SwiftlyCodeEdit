@@ -39,7 +39,7 @@
         <StringDetect attribute="Copulae" context="#stay" String="&lt;="/>
         <StringDetect attribute="Copulae" context="#stay" String="-&gt;"/>
         <StringDetect attribute="Copulae" context="#stay" String="=&gt;"/>
-        <AnyChar attribute="Copulae" context="#stay" String=":=<--><==>≜"/>
+        <AnyChar attribute="Copulae" context="#stay" String=":=<--><==>&#x225C;"/>
 
         <StringDetect attribute="Comment" context="comment inline" String="//"/>
         <StringDetect attribute="Comment" context="comment inline" String="%%"/>

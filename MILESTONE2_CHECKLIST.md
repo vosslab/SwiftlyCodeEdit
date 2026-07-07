@@ -185,19 +185,19 @@ Goal: Let the user customize the editor font family and font size without breaki
 
 Checklist:
 
-- [ ] Add an editor font preference.
-- [ ] Add an editor font-size preference.
+- [x] Add an editor font preference.
+- [x] Add an editor font-size preference.
 - [x] Use a sensible default monospace font.
 - [x] Use a sensible default font size.
-- [ ] Allow the editor font family to be changed from settings or an editor appearance control.
-- [ ] Allow the editor font size to be increased.
-- [ ] Allow the editor font size to be decreased.
-- [ ] Allow the editor font size to be reset to the default.
-- [ ] Persist the selected font family.
-- [ ] Persist the selected font size.
-- [ ] Apply the selected font family to the active editor.
-- [ ] Apply the selected font size to the active editor.
-- [ ] Apply font changes without requiring the document to be reopened where practical.
+- [x] Allow the editor font family to be changed from settings or an editor appearance control.
+- [x] Allow the editor font size to be increased.
+- [x] Allow the editor font size to be decreased.
+- [x] Allow the editor font size to be reset to the default.
+- [x] Persist the selected font family.
+- [x] Persist the selected font size.
+- [x] Apply the selected font family to the active editor.
+- [x] Apply the selected font size to the active editor.
+- [x] Apply font changes without requiring the document to be reopened where practical.
 - [ ] Confirm syntax highlighting remains visible after changing font.
 - [ ] Confirm cursor position and text selection remain usable after changing font.
 - [ ] Confirm line height and scrolling remain usable after changing font.
@@ -205,16 +205,16 @@ Checklist:
 - [ ] Confirm the command bar remains readable after font-size changes.
 - [ ] Confirm light mode remains readable after font changes.
 - [ ] Confirm dark mode remains readable after font changes.
-- [ ] Confirm invalid or unavailable fonts fall back to a safe default.
+- [x] Confirm invalid or unavailable fonts fall back to a safe default.
 - [ ] Confirm large font sizes do not break the editor layout.
 - [ ] Confirm small font sizes do not make the editor unusable by default.
-- [ ] Add smoke/log validation for persisted font settings where practical.
-- [ ] Add screenshot evidence when display access exists.
-- [ ] Update docs to describe editor font and font-size customization.
+- [x] Add smoke/log validation for persisted font settings where practical.
+- [x] Add screenshot evidence when display access exists.
+- [x] Update docs to describe editor font and font-size customization.
 
 Verification:
 
-- [ ] Open a known file.
+- [x] Open a known file.
 - [ ] Change the editor font family.
 - [ ] Confirm the visible editor font changes.
 - [ ] Change the editor font size.
@@ -224,8 +224,8 @@ Verification:
 - [ ] Confirm the selected font size persists.
 - [ ] Reset to the default font settings.
 - [ ] Confirm the editor returns to the default appearance.
-- [ ] Run `./build_debug.sh`.
-- [ ] Run `./scripts/plain_editor_smoke.sh`.
+- [x] Run `./build_debug.sh`.
+- [x] Run `./scripts/plain_editor_smoke.sh`.
 
 ---
 

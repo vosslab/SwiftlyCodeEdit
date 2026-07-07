@@ -482,7 +482,7 @@ enum SyntaxDefinitionLoader {
     }
 
     private static func expandPattern(_ pattern: String, entities: [String: String]) -> String {
-        expandEntities(pattern, entities: entities)
+        decodeNumericEntities(expandEntities(pattern, entities: entities))
             .replacingOccurrences(of: "&quot;", with: "\"")
             .replacingOccurrences(of: "&lt;", with: "<")
             .replacingOccurrences(of: "&gt;", with: ">")
@@ -502,6 +502,35 @@ enum SyntaxDefinitionLoader {
             }
             if !replaced { break }
         }
+        return output
+    }
+
+    private static func decodeNumericEntities(_ text: String) -> String {
+        let pattern = #"&#(?:x([0-9A-Fa-f]+)|([0-9]+));"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return text
+        }
+
+        var output = ""
+        var lastIndex = text.startIndex
+        let fullRange = NSRange(location: 0, length: (text as NSString).length)
+        for match in regex.matches(in: text, range: fullRange) {
+            guard let matchRange = Range(match.range, in: text) else { continue }
+            output.append(contentsOf: text[lastIndex..<matchRange.lowerBound])
+
+            let hexRange = Range(match.range(at: 1), in: text)
+            let decimalRange = Range(match.range(at: 2), in: text)
+            let scalarValue = hexRange
+                .flatMap { UInt32(text[$0], radix: 16) }
+                ?? decimalRange.flatMap { UInt32(text[$0], radix: 10) }
+            if let scalarValue, let scalar = UnicodeScalar(scalarValue) {
+                output.append(Character(scalar))
+            } else {
+                output.append(contentsOf: text[matchRange])
+            }
+            lastIndex = matchRange.upperBound
+        }
+        output.append(contentsOf: text[lastIndex...])
         return output
     }
 

@@ -486,7 +486,7 @@
 
       <DetectChar attribute="Function Infix" context="infix" char="`"/>
       <Detect2Chars attribute="EnumFromTo" context="#stay" char ="." char1="." />
-      <DetectChar attribute="EnumFromTo" context="#stay" char="‥" />
+      <DetectChar attribute="EnumFromTo" context="#stay" char="&#x2025;" />
 
       <RegExpr attribute="Normal" context="Hamlet" String="\[[wxs]?hamlet\|" />
       <StringDetect attribute="Normal" context="Julius" String="[julius|" />

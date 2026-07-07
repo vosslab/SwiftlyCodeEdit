@@ -124,6 +124,7 @@ let package = Package(
             path: "CodeEditTests/PackageSmoke",
             sources: [
                 "CodeFileDocumentLifecycleTests.swift",
+                "PlainEditorFontSettingsTests.swift",
                 "PlainTextCleanerTests.swift",
                 "PlainSyntaxHighlighterTests.swift",
                 "UndoManagerRegistrationTests.swift"

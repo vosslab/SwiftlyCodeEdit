@@ -15,10 +15,15 @@ struct CodeFileView: View {
     @ObservedObject private var codeFile: CodeFileDocument
     @StateObject private var chrome = PlainEditorChromeModel()
     @State private var activeTextView: TextView?
+    @AppStorage("PlainEditor.fontFamily") private var editorFontFamily = PlainEditorFontSettings.defaultFontFamily
+    @AppStorage("PlainEditor.fontSize") private var editorFontSize = PlainEditorFontSettings.defaultFontSize
 
     private let isEditable: Bool
     private let wrapLinesToEditorWidth = true
     private let useSystemCursor = true
+    private var editorFont: NSFont {
+        PlainEditorFontSettings.font(family: editorFontFamily, size: editorFontSize)
+    }
 
     init(codeFile: CodeFileDocument, isEditable: Bool = true) {
         self._codeFile = .init(wrappedValue: codeFile)
@@ -30,7 +35,9 @@ struct CodeFileView: View {
             PlainEditorCommandBar(
                 canSave: codeFile.isDocumentEdited || codeFile.fileURL != nil,
                 canUndo: activeTextView?.undoManager?.canUndo ?? false,
-                canRedo: activeTextView?.undoManager?.canRedo ?? false
+                canRedo: activeTextView?.undoManager?.canRedo ?? false,
+                fontFamily: $editorFontFamily,
+                fontSize: $editorFontSize
             )
 
             ZStack(alignment: .topLeading) {
@@ -43,7 +50,7 @@ struct CodeFileView: View {
                     isSelectable: true,
                     wrapLines: wrapLinesToEditorWidth,
                     useSystemCursor: useSystemCursor,
-                    font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+                    font: editorFont,
                     textColor: .textColor,
                     lineHeightMultiplier: 1,
                     edgeInsets: .init(left: 12, right: 12),
@@ -89,8 +96,45 @@ struct CodeFileView: View {
             debugRuntimeLog("CodeFileView appeared length=\(codeFile.content?.length ?? 0) editable=\(isEditable)")
             debugRuntimeLog("Plain editor command ribbon ready")
             debugRuntimeLog("Plain editor status bar ready")
+            logFontSettings()
             #endif
         }
+        .onChange(of: editorFontFamily) { _, _ in
+            logFontSettings()
+        }
+        .onChange(of: editorFontSize) { _, _ in
+            logFontSettings()
+        }
+    }
+
+    private func logFontSettings() {
+        #if DEBUG
+        debugRuntimeLog("Plain editor font settings: family=\(editorFontFamily) size=\(editorFontSize)")
+        #endif
+    }
+}
+
+enum PlainEditorFontSettings {
+    static let defaultFontFamily = "SF Mono"
+    static let defaultFontSize = 13.0
+    static let minimumFontSize = 9.0
+    static let maximumFontSize = 32.0
+    static let availableFontFamilies = [
+        "SF Mono",
+        "Menlo",
+        "Monaco",
+        "Courier New"
+    ]
+
+    static func font(family: String, size: Double) -> NSFont {
+        let clampedSize = min(max(size, minimumFontSize), maximumFontSize)
+        if family == defaultFontFamily {
+            return .monospacedSystemFont(ofSize: clampedSize, weight: .regular)
+        }
+        guard let font = NSFont(name: family, size: clampedSize), font.isFixedPitch else {
+            return .monospacedSystemFont(ofSize: clampedSize, weight: .regular)
+        }
+        return font
     }
 }
 
@@ -211,6 +255,8 @@ private struct PlainEditorCommandBar: View {
     let canSave: Bool
     let canUndo: Bool
     let canRedo: Bool
+    @Binding var fontFamily: String
+    @Binding var fontSize: Double
 
     var body: some View {
         HStack(spacing: 10) {
@@ -236,6 +282,8 @@ private struct PlainEditorCommandBar: View {
             })
             Divider().frame(height: 16)
             commandButton("Clean Text", isEnabled: false, action: { })
+            Spacer(minLength: 16)
+            fontControls
         }
         .font(.system(size: 12, weight: .medium))
         .padding(.horizontal, 12)
@@ -249,6 +297,35 @@ private struct PlainEditorCommandBar: View {
         Button(title, action: action)
             .buttonStyle(.borderless)
             .disabled(!isEnabled)
+    }
+
+    private var fontControls: some View {
+        HStack(spacing: 8) {
+            Picker("Font", selection: $fontFamily) {
+                ForEach(PlainEditorFontSettings.availableFontFamilies, id: \.self) { family in
+                    Text(family).tag(family)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 132)
+
+            Text("\(Int(fontSize.rounded())) pt")
+                .foregroundStyle(.secondary)
+                .frame(width: 42, alignment: .trailing)
+
+            commandButton("A-", isEnabled: fontSize > PlainEditorFontSettings.minimumFontSize) {
+                fontSize = max(PlainEditorFontSettings.minimumFontSize, fontSize - 1)
+            }
+            commandButton("A+", isEnabled: fontSize < PlainEditorFontSettings.maximumFontSize) {
+                fontSize = min(PlainEditorFontSettings.maximumFontSize, fontSize + 1)
+            }
+            commandButton("Reset") {
+                fontFamily = PlainEditorFontSettings.defaultFontFamily
+                fontSize = PlainEditorFontSettings.defaultFontSize
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Editor font controls")
     }
 }
 

@@ -5,9 +5,9 @@
           <!ENTITY varwithbraces "\$\{[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\.\-]*(\[[a-zA-Z0-9_]*\])*\}">
 ]>
 <!--
-    Copyright (C) 2007 Красимир Беров <k.berov@gmail.com>
+    Copyright (C) 2007 &#x41A;&#x440;&#x430;&#x441;&#x438;&#x43C;&#x438;&#x440; &#x411;&#x435;&#x440;&#x43E;&#x432; <k.berov@gmail.com>
     Put this file in your $KDEDIR/share/apps/katepart/syntax,
-    then restart Кate/KDevelop/Quanta... whatever using katepart.
+    then restart &#x41A;ate/KDevelop/Quanta... whatever using katepart.
     That's it. You have Template Toolkit Syntax highliting.
     Enjoy!!!
     
@@ -17,7 +17,7 @@
     0.02 Added highliting for interpolated variables
         -->
 <language version="10" kateversion="5.0"
-          author="Красимир Беров (k.berov@gmail.com)" license="Artistic"
+          author="&#x41A;&#x440;&#x430;&#x441;&#x438;&#x43C;&#x438;&#x440; &#x411;&#x435;&#x440;&#x43E;&#x432; (k.berov@gmail.com)" license="Artistic"
           name="TT2" section="Markup" extensions="*.tt*;" casesensitive="true">
 <highlighting>
     <list name="control structures">
