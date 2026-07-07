@@ -15,6 +15,8 @@ swift/swiftUI best practices, so fix the architecture and update codebase as nee
 
 We are building a text editor with syntax highlighting, not an IDE.
 
+(1) I want a status bar with word/character count; type of indentation; format; syntax
+(2) I want a top menu with new, open, save, save as..., undo, redo, clean text
 
 ## Features of a Quality Code Editor
 
