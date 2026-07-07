@@ -1279,11 +1279,11 @@
         <keyword attribute="ControlFlow" context="#stay" String="controlFlow"/>
         <keyword attribute="Data Type" context="#stay" String="types"/>
         <RegExpr attribute="Data Type" context="#stay" String="%(bulk_(exceptions|rowcount)|(not)?found|isopen|rowcount|(row)?type)\b" insensitive="true"/>
-        <!-- Highlight the names of functions when they are followed by a “(” character.
+        <!-- Highlight the names of functions when they are followed by a "(" character.
         NOTE Some names are both, function names and data type names. Currently:
         BOX|CIRCLE|LSEG|PATH|POINT|POLYGON|TEXT|TIMESTAMPTZ Those are always
         catched by the above rule as data types. Highlighting them differently when
-        used as function would be tricky… -->
+        used as function would be tricky... -->
         <RegExpr context="HighlightFunction" String="(?&lt;=\b)&functionName;(?=[\t ]*\()" lookAhead="true" insensitive="true"/>
         <Float attribute="Float" context="#stay"/>
         <Int attribute="Decimal" context="#stay"/>
@@ -1318,7 +1318,7 @@
       </context>
       <context attribute="Normal Text" name="HighlightFunction" fallthrough="true" fallthroughContext="#pop" lineEndContext="#pop">
         <!-- Helper context that expects to see a function on its very beginning.
-        If it’s a PostgreSQL or PostGIS function, it is highlighted accordingly.
+        If it's a PostgreSQL or PostGIS function, it is highlighted accordingly.
         If not, by a catch-all, it gets the "Normal Text" attribute. After that,
         it pops back to the previous context. -->
         <keyword attribute="PostgreSQL function" context="#pop" String="functions"/>
@@ -1348,7 +1348,7 @@
       </context>
       <context name="EscapeString" attribute="String" lineEndContext="#stay">
         <Detect2Chars attribute="Escape sequence" context="#stay" char="'" char1="'"/>
-        <!-- Default C style escapes: \n \101 \x41 … : -->
+        <!-- Default C style escapes: \n \101 \x41 ... : -->
         <HlCStringChar attribute="Escape sequence" context="#stay"/>
         <!-- \u escapes: -->
         <RegExpr attribute="Escape sequence" context="#stay" String="\\u&hexDigit;{4}"/>
@@ -1358,7 +1358,7 @@
         <RegExpr attribute="Escape sequence" context="#stay" String="\\U&hexDigit;{8}"/>
         <!-- Incomplete \U escape sequences are errors: -->
         <Detect2Chars attribute="Error" context="#stay" char="\" char1="U"/>
-        <!-- All other escape sequences are interpreted as escape of the concerned character: \y → y -->
+        <!-- All other escape sequences are interpreted as escape of the concerned character: \y -> y -->
         <RegExpr attribute="Escape sequence" context="#stay" String="\\."/>
         <!-- Even an escape sequence with the line break (means: backslash as last character of a line) is possible: -->
         <LineContinue attribute="Escape sequence" context="#stay" char="\"/>
@@ -1379,8 +1379,8 @@
              at capture group #1.
              NOTE The capture group expands literally for the StringDetect and DetectChar
              rules. For the RegExpr rule, special characters (and only special characters)
-             seem to become escaped automatically: The capture “.” is available as “\.”
-             while the capture “t” is available as “t” (and not as “\t” which would mean a
+             seem to become escaped automatically: The capture "." is available as "\."
+             while the capture "t" is available as "t" (and not as "\t" which would mean a
              tabulator character). So this works fine out-of-the-box even for special
              characters.-->
         <!-- four-digit/six-digit escapes: -->

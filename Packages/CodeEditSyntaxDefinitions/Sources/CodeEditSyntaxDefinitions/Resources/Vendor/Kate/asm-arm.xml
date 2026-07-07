@@ -5,7 +5,7 @@ This file contains the XML syntax highlighting description for the ARMv7-A Assem
 For now, only some of the common functions and registers have been implemented, which is useful for people just
 getting into ARM (eg. college classes). Feel free to delete this comment if someone decides to expand on it.
 -->
-<language name="ARM Assembler" version="1" kateversion="5.62" section="Assembler" extensions="*.arm;*.asm-arm" mimetype="text/x-asm;" author="Leo Marušić" license="MIT">
+<language name="ARM Assembler" version="1" kateversion="5.62" section="Assembler" extensions="*.arm;*.asm-arm" mimetype="text/x-asm;" author="Leo Marusic" license="MIT">
   <highlighting>
     <list name="Arithmetic Instructions">
       <item>ADCS</item>

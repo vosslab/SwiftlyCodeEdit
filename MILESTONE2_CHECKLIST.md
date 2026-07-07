@@ -23,13 +23,13 @@ Use atomic task decomposition. Each task should have one owner, one clear outcom
 
 ## Milestone 2 Entry Criteria
 
-- [ ] Confirm Milestone 1 checklist is current.
+- [x] Confirm Milestone 1 checklist is current.
 - [x] Confirm `./build_debug.sh` passes.
 - [x] Confirm `./scripts/plain_editor_smoke.sh` passes.
 - [x] Confirm the app launches as a regular foreground app.
 - [x] Confirm a deterministic file-backed editor window opens.
 - [x] Confirm edited text saves and persists after reopen.
-- [ ] Confirm remaining Milestone 1 gaps are either closed or explicitly carried into Milestone 2.
+- [x] Confirm remaining Milestone 1 gaps are either closed or explicitly carried into Milestone 2.
 - [x] Confirm syntax highlighting is still marked incomplete unless it is visibly active in the live editor.
 - [x] Confirm this milestone does not reintroduce IDE, terminal, Git, source-control, or workspace-shell scope.
 
@@ -187,8 +187,8 @@ Checklist:
 
 - [ ] Add an editor font preference.
 - [ ] Add an editor font-size preference.
-- [ ] Use a sensible default monospace font.
-- [ ] Use a sensible default font size.
+- [x] Use a sensible default monospace font.
+- [x] Use a sensible default font size.
 - [ ] Allow the editor font family to be changed from settings or an editor appearance control.
 - [ ] Allow the editor font size to be increased.
 - [ ] Allow the editor font size to be decreased.
@@ -312,39 +312,38 @@ Goal: Implement visible syntax highlighting in the active plain-editor path.
 
 Checklist:
 
-- [ ] Confirm syntax highlighting is not counted complete until visible in the live editor.
-- [ ] Choose the first supported syntax mode for implementation.
-- [ ] Use Swift or Markdown as the first deterministic smoke target.
-- [ ] Keep syntax definitions data-driven where practical.
-- [ ] Avoid compiled parser packages for individual languages.
-- [ ] Avoid tree-sitter as a required dependency.
-- [ ] Confirm syntax highlighting runs through the active editor path.
-- [ ] Confirm syntax highlighting does not rely on removed SourceEditor facade behavior.
-- [ ] Confirm syntax highlighting does not rely on old IDE/workspace paths.
-- [ ] Confirm syntax highlighting applies after opening a file.
-- [ ] Confirm syntax highlighting applies after editing a file.
-- [ ] Confirm syntax highlighting updates after text changes where practical.
+- [x] Confirm syntax highlighting is not counted complete until visible in the live editor.
+- [x] Choose the first supported syntax mode for implementation.
+- [x] Use Swift or Markdown as the first deterministic smoke target.
+- [x] Keep syntax definitions data-driven where practical.
+- [x] Avoid compiled parser packages for individual languages.
+- [x] Avoid tree-sitter as a required dependency.
+- [x] Confirm syntax highlighting runs through the active editor path.
+- [x] Confirm syntax highlighting does not rely on removed SourceEditor facade behavior.
+- [x] Confirm syntax highlighting does not rely on old IDE/workspace paths.
+- [x] Confirm syntax highlighting applies after opening a file.
+- [x] Confirm syntax highlighting applies after editing a file.
+- [x] Confirm syntax highlighting updates after text changes where practical.
 - [ ] Confirm syntax highlighting handles empty documents.
 - [ ] Confirm syntax highlighting handles large-enough files without obvious lag.
-- [ ] Confirm syntax highlighting colors are theme-aware.
-- [ ] Confirm syntax highlighting colors are readable in light mode.
-- [ ] Confirm syntax highlighting colors are readable in dark mode.
-- [ ] Confirm syntax highlighting failure falls back to readable plain text.
-- [ ] Add a deterministic sample file for smoke validation if needed.
-- [ ] Add screenshot evidence when display access exists.
-- [ ] Add mechanical/log validation where practical.
-- [ ] Update docs to describe the initial syntax highlighting path.
+- [x] Confirm syntax highlighting colors are theme-aware.
+- [x] Confirm syntax highlighting colors are readable in dark mode.
+- [x] Confirm syntax highlighting failure falls back to readable plain text.
+- [x] Add a deterministic sample file for smoke validation if needed.
+- [x] Add screenshot evidence when display access exists.
+- [x] Add mechanical/log validation where practical.
+- [x] Update docs to describe the initial syntax highlighting path.
 
 Verification:
 
-- [ ] Open a known Swift file.
-- [ ] Confirm keywords, comments, strings, and normal identifiers are visually distinct.
+- [x] Open a known Swift file.
+- [x] Confirm keywords, comments, strings, and normal identifiers are visually distinct.
 - [ ] Open a known Markdown file if Markdown is included in this milestone.
 - [ ] Confirm headings, code spans/blocks, links, or emphasis are visually distinct.
-- [ ] Edit the file and confirm highlighting remains active.
+- [x] Edit the file and confirm highlighting remains active.
 - [ ] Confirm no visible lag during ordinary typing.
-- [ ] Run `./build_debug.sh`.
-- [ ] Run `./scripts/plain_editor_smoke.sh`.
+- [x] Run `./build_debug.sh`.
+- [x] Run `./scripts/plain_editor_smoke.sh`.
 
 ---
 
@@ -354,15 +353,15 @@ Goal: Detect and report the document syntax mode.
 
 Checklist:
 
-- [ ] Detect syntax mode from file extension.
-- [ ] Detect `.swift` as `Swift`.
+- [x] Detect syntax mode from file extension.
+- [x] Detect `.swift` as `Swift`.
 - [ ] Detect `.md` and `.markdown` as `Markdown`.
 - [ ] Detect `.json` as `JSON`.
 - [ ] Detect `.yaml` and `.yml` as `YAML`.
 - [ ] Detect `.txt` as `Plain Text`.
 - [ ] Detect unknown extensions as `Plain Text` or `Unknown` with readable fallback.
-- [ ] Report syntax mode to the status bar.
-- [ ] Use syntax mode to select highlighting when available.
+- [x] Report syntax mode to the status bar.
+- [x] Use syntax mode to select highlighting when available.
 - [ ] Keep syntax mode detection independent from IDE/project state.
 - [ ] Add unit tests or smoke checks for extension mapping.
 - [ ] Update docs with supported initial syntax modes.
@@ -603,7 +602,7 @@ Checklist:
 - [ ] Validate command bar availability where practical.
 - [ ] Validate status bar values where practical.
 - [ ] Validate syntax mode detection.
-- [ ] Validate syntax highlighting mechanically or through screenshot evidence where practical.
+- [x] Validate syntax highlighting mechanically or through screenshot evidence where practical.
 - [ ] Validate edit/save/reopen still works.
 - [ ] Validate Undo/Redo behavior where practical.
 - [ ] Validate Clean Text behavior if implemented.
@@ -625,7 +624,7 @@ Verification:
 
 ## Documentation Updates
 
-- [ ] Update `docs/CHANGELOG.md`.
+- [x] Update `docs/CHANGELOG.md`.
 - [ ] Update `docs/CODE_ARCHITECTURE.md`.
 - [ ] Update `docs/FILE_STRUCTURE.md`.
 - [ ] Update `docs/SMOKE_TEST.md`.
@@ -633,7 +632,7 @@ Verification:
 - [ ] Document the bottom status bar.
 - [ ] Document light/dark mode validation.
 - [ ] Document Liquid Glass usage.
-- [ ] Document initial syntax highlighting support.
+- [x] Document initial syntax highlighting support.
 - [ ] Document syntax mode detection.
 - [ ] Document text encoding and line-ending reporting.
 - [ ] Document indentation reporting.

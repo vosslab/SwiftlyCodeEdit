@@ -16,7 +16,7 @@ Use this against a local debug build.
 
 ## File
 
-Open `CodeEdit/CodeEditApp.swift` on debug launch. The window title should show `CodeEditApp.swift`.
+Open `tests/fixtures/syntax_smoke_sample.swift` on debug launch. The window title should show `syntax_smoke_sample.swift`.
 
 ## Expected
 
@@ -28,4 +28,5 @@ Open `CodeEdit/CodeEditApp.swift` on debug launch. The window title should show 
 - The plain-editor window shows a top command bar with New, Open, Save, Save As, Undo, Redo, and Clean Text.
 - The plain-editor window shows a bottom status bar with cursor position, word count, character count, indentation, encoding, line ending, and syntax mode.
 - Syntax highlighting is driven by the bundled KDE XML syntax definitions.
+- The smoke sample includes comments, strings, numbers, keywords, and function/type usage so the live screenshot can prove multi-color highlighting.
 - The smoke script captures `docs/screenshots/codeedit_window.png` when `easy-screenshot` is available.

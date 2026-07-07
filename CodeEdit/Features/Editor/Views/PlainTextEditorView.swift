@@ -73,6 +73,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
     var textInsets: HorizontalEdgeInsets
     var onTextChange: (() -> Void)?
     var onSelectionChange: ((NSRange) -> Void)?
+    var onTextStorageReady: ((NSTextStorage) -> Void)?
     var onTextViewReady: ((TextView) -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -91,6 +92,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
             useSystemCursor: useSystemCursor
         )
         textView.setTextStorage(textStorage)
+        onTextStorageReady?(textStorage)
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
         textView.delegate = context.coordinator
@@ -132,6 +134,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
 
         if textView.string != textStorage.string {
             textView.setTextStorage(textStorage)
+            onTextStorageReady?(textStorage)
         }
 
         textView.isEditable = isEditable

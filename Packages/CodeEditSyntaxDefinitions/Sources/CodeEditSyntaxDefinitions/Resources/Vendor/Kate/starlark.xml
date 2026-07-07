@@ -340,7 +340,7 @@ I recommend you check the diff between the two files to see a full list of chang
 			<!-- escape characters -->
 			<context name="stringescape" attribute="String Char" lineEndContext="#stay">
 				<!-- As this highlighting style is for both, Python 2 and 3,
-				we do not know if a normal string is “unicode” or not. So we -->
+				we do not know if a normal string is "unicode" or not. So we -->
 				<DetectChar char="\" lookAhead="1" context="stringescape2"/>
 			</context>
 			<context name="stringescape2" attribute="String Char" lineEndContext="#pop">

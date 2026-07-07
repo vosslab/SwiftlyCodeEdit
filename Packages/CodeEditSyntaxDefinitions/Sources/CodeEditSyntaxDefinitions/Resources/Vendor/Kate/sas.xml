@@ -32,8 +32,8 @@
         Step boundaries
             - DATA / RUN step regions (fold)
             - Generic PROC step regions (fold)
-            - PROC SQL  — delegates to the SQL language definition
-            - PROC PYTHON / PROC LUA — delegates to the Python / Lua definitions
+            - PROC SQL  - delegates to the SQL language definition
+            - PROC PYTHON / PROC LUA - delegates to the Python / Lua definitions
                 (SUBMIT / INTERACTIVE block triggers the embedded-language context)
         Keywords
             - Control flow          DO END ELSE IF SELECT THEN UNTIL WHEN WHILE ...
@@ -62,8 +62,8 @@
         Operators
             - + - * / ** = ^= ~= >= <= <> >< || =: >: <: ^=: ~=: >=: <=: ||
         Inline data blocks
-            - CARDS / DATALINES / LINES — terminated by lone ;
-            - CARDS4 / DATALINES4 / LINES4 — terminated by ;;;;1
+            - CARDS / DATALINES / LINES - terminated by lone ;
+            - CARDS4 / DATALINES4 / LINES4 - terminated by ;;;;1
             - PARMCARDS / PARMCARDS4
 -->
 <language
@@ -1125,13 +1125,13 @@
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="Normal">
                 <DetectSpaces context="#stay"/>
-                <!-- Proc-specific embedded-language contexts — tested before generic \bproc\b -->
+                <!-- Proc-specific embedded-language contexts - tested before generic \bproc\b -->
                 <RegExpr attribute="Step" context="ProcSQL" String="\bproc\s+(?:sql|fedsql)\b" insensitive="true" beginRegion="datastep"/>
                 <RegExpr attribute="Step" context="ProcPython" String="&proc_py;" insensitive="true" beginRegion="datastep"/>
                 <RegExpr attribute="Step" context="ProcLua" String="&proc_lua;" insensitive="true" beginRegion="datastep"/>
                 <!-- Generic PROC <name> -->
                 <RegExpr attribute="Step" context="ProcHeader" String="\bproc\s+[a-zA-Z]\w*" insensitive="true" beginRegion="datastep"/>
-                <!-- DATA step — negative lookahead prevents firing on `data=` common option -->
+                <!-- DATA step - negative lookahead prevents firing on `data=` common option -->
                 <RegExpr attribute="Step" context="DataBody" String="&datastep;" insensitive="true" beginRegion="datastep"/>
                 <!-- RUN; or QUIT; at global scope -->
                 <RegExpr attribute="Step" context="Statement" String="\brun|quit\s*;" insensitive="true" endRegion="datastep"/>
@@ -1140,10 +1140,10 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	ProcHeader — proc option line (proc <name> <options> ;)
+            	ProcHeader - proc option line (proc <name> <options> ;)
             	Colours option names as SecKeyword:
-            	option=value  — lookahead on = to match only the name
-            	standalone option — DetectIdentifier
+            	option=value  - lookahead on = to match only the name
+            	standalone option - DetectIdentifier
             	On ; transitions to ProcBody
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="ProcHeader">
@@ -1158,7 +1158,7 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	ProcBody — generic proc body, handles each statment by colouring first keyword using
+            	ProcBody - generic proc body, handles each statment by colouring first keyword using
                 helper context (which also exits context), then colouring dataset options, then regular rules
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="ProcBody">
@@ -1170,7 +1170,7 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	ProcStmt — after ; inside a proc body.
+            	ProcStmt - after ; inside a proc body.
             	Exit when run/quit/new statement
             	Skips whitespace/comments, colours the first identifier as SecKeyword, then pops back to ProcBody.
             	 ==== -->
@@ -1187,7 +1187,7 @@
                 <DetectIdentifier attribute="SecKeyword" context="#pop"/>
             </context>
             <!-- ====
-            	DataBody — DATA step body
+            	DataBody - DATA step body
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="DataBody">
                 <DetectSpaces context="#stay"/>
@@ -1213,7 +1213,7 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	FuncCheck — classify word before ( as Function or Normal Text
+            	FuncCheck - classify word before ( as Function or Normal Text
             	 ==== -->
             <context attribute="Normal Text" name="FuncCheck" fallthroughContext="#pop">
                 <keyword attribute="Functions" context="#pop" String="functions"/>
@@ -1221,7 +1221,7 @@
                 <DetectIdentifier attribute="Normal Text" context="#pop"/>
             </context>
             <!-- ====
-            	DatasetOpts — inside (...) after a dataset name
+            	DatasetOpts - inside (...) after a dataset name
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="DatasetOpts">
                 <!-- Nested data set option/value key pairs -->
@@ -1231,7 +1231,7 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	OptionsStmt — after OPTIONS keyword, until ;
+            	OptionsStmt - after OPTIONS keyword, until ;
             	 ==== -->
             <context attribute="Normal Text" lineEndContext="#stay" name="OptionsStmt">
                 <DetectChar attribute="Normal Text" context="#pop" char=";"/>
@@ -1242,7 +1242,7 @@
                 <IncludeRules context="General"/>
             </context>
             <!-- ====
-            	OptValue / OptValueAfterEq — shared by ProcHeader and
+            	OptValue / OptValueAfterEq - shared by ProcHeader and
             	OptionsStmt to consume =<value> without colouring the
             	value as SecKeyword.
             	 ==== -->
@@ -1254,7 +1254,7 @@
                 <DetectSpaces context="#stay"/>
                 <!-- Identifier value (libref.member or plain): consume as Normal Text, pop both -->
                 <RegExpr attribute="Normal Text" context="#pop#pop" String="&identifier;(\.&identifier;)*"/>
-                <!-- Numbers, strings, other values: fall through #pop#pop — caller's General rules colour them -->
+                <!-- Numbers, strings, other values: fall through #pop#pop - caller's General rules colour them -->
             </context>
             <!-- ====
             	Comments

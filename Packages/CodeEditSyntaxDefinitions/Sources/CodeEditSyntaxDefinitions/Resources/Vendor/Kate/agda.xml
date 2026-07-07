@@ -58,8 +58,8 @@
       <context attribute="Normal" lineEndContext="#stay" name="code">
         <RegExpr attribute="Pragma"  context="#stay" String="\{-#.*#-\}" />
         <keyword attribute="Keyword" context="#stay" String="reserved keywords" />
-        <RegExpr attribute="Type"    context="#stay" String="(?:Prop[₀-₉]+|Prop[0-9]*|Set[₀-₉]+|Set[0-9]*)&wordsep;" />
-        <RegExpr attribute="Special" context="#stay" String="(?:\-&gt;|→|∀|λ|:|=|\|)&wordsep;" />
+        <RegExpr attribute="Type"    context="#stay" String="(?:Prop[&#x2080;-&#x2089;]+|Prop[0-9]*|Set[&#x2080;-&#x2089;]+|Set[0-9]*)&wordsep;" />
+        <RegExpr attribute="Special" context="#stay" String="(?:\-&gt;|->|&forall;|&lambda;|:|=|\|)&wordsep;" />
         <RegExpr attribute="Float"   context="#stay" String="\d+(?:(?:\.\d+)?[eE][+-]?\d+|\.\d+)&wordsep;" />
         <RegExpr attribute="Decimal" context="#stay" String="[0-9]+&wordsep;" />
         <DetectChar attribute="Char"   context="char"   char="'" />

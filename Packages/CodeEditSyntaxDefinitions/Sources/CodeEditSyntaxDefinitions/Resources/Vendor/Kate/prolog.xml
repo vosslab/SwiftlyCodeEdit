@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+ <?xml version="1.0" encoding="UTF-8"?>
 <!-- [Purpose & Copyright]
 
     Highlight ISO-Prolog texts or template/include for Prolog dialects
@@ -10,7 +10,7 @@
 
     This file is part of KDE's kate project.
 
-  copyright   : (C) 2012 by Torsten Eichstädt
+  copyright   : (C) 2012 by Torsten Eichstadt
 
  **********************************************************************
  * This library is free software; you can redistribute it and/or      *
@@ -108,7 +108,7 @@ to make the rules more expressive. -->
 	  version="17" kateversion="5.62"
 	  mimetype="text/x-prolog"
 	  extensions="*.prolog;*.dcg;*.pro"
-	  author="Torsten Eichstädt (torsten.eichstaedt@web.de)"
+	  author="Torsten Eichstadt (torsten.eichstaedt@web.de)"
 	  license="LGPLv2+">
 
 <!-- [Terminology & Abbreviations In The Comments]
@@ -227,7 +227,7 @@ DONE- Parse (m)any (!) conforming Prolog texts w/ correct highlighting (LIMITS)
       highlighted as "Warning" 'cause it's more likely a typo than an user-def'd
       op) and is only taken as fullstop and highlighted as "Logic & Control" in
       the outmost term of a clause.
-    - Über-correct handling of quoted, escape seqs and "0'" (char code integer):
+    - Uber-correct handling of quoted, escape seqs and "0'" (char code integer):
 	- detection of valid/invalid newline in quoted 'strings'.
 	- highlight whitespace after esc'd newline in quoted so it differs from
 	  whitespace contained in the quoted 'string'.

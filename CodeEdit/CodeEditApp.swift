@@ -39,14 +39,31 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
 
     private func openDefaultSourceFileIfNeeded() {
         guard NSDocumentController.shared.documents.isEmpty else { return }
-        let repoRoot = repoRootURL()
-        let defaultFile = repoRoot.appendingPathComponent("CodeEdit/CodeEditApp.swift")
+        if let override = smokeSourceFileURL() {
+            openDocument(at: override)
+            return
+        }
+
+        let defaultFile = repoRootURL().appendingPathComponent("CodeEdit/CodeEditApp.swift")
         guard FileManager.default.fileExists(atPath: defaultFile.path) else { return }
         openDocument(at: defaultFile)
     }
 
     private func repoRootURL() -> URL {
         URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    }
+
+    private func smokeSourceFileURL() -> URL? {
+        guard let path = ProcessInfo.processInfo.environment["SOURCE_FILE"],
+              !path.isEmpty else {
+            return nil
+        }
+
+        let url = URL(fileURLWithPath: path)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return nil
+        }
+        return url
     }
 
     #if DEBUG
@@ -171,8 +188,8 @@ private struct PlainEditorCommands: Commands {
             .keyboardShortcut("o")
 
             Button("Open Example Source") {
-                let repoRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                let defaultFile = repoRoot.appendingPathComponent("CodeEdit/CodeEditApp.swift")
+                let defaultFile = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                    .appendingPathComponent("CodeEdit/CodeEditApp.swift")
                 appDelegate.openDocument(at: defaultFile)
             }
         }

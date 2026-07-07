@@ -58,11 +58,11 @@ struct CodeFileView: View {
                     onSelectionChange: { selection in
                         chrome.refresh(document: codeFile, selection: selection)
                     },
+                    onTextStorageReady: { storage in
+                        PlainSyntaxHighlighter.highlight(storage: storage, language: codeFile.getLanguage())
+                    },
                     onTextViewReady: { textView in
                         activeTextView = textView
-                        if let storage = codeFile.content {
-                            PlainSyntaxHighlighter.highlight(storage: storage, language: codeFile.getLanguage())
-                        }
                         chrome.refresh(document: codeFile, selection: textView.selectedRange())
                     }
                 )
@@ -84,9 +84,6 @@ struct CodeFileView: View {
             PlainEditorStatusBar(chrome: chrome)
         }
         .onAppear {
-            if let storage = codeFile.content {
-                PlainSyntaxHighlighter.highlight(storage: storage, language: codeFile.getLanguage())
-            }
             chrome.refresh(document: codeFile, selection: activeTextView?.selectedRange())
             #if DEBUG
             debugRuntimeLog("CodeFileView appeared length=\(codeFile.content?.length ?? 0) editable=\(isEditable)")

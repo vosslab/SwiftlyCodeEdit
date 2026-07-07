@@ -543,7 +543,7 @@
       The definition of a variable is:
         * ASCII letters (a-z and A-Z) and numbers (0-9)
         * The symbols -_:~
-        * Non-ASCII codepoints that are printable, as defined by unicode.IsPrint in Go’s standard library.
+        * Non-ASCII codepoints that are printable, as defined by unicode.IsPrint in Go's standard library.
         - Source (https://elv.sh/ref/language.html#variable)
       -->
       <context attribute="Variable" lineEndContext="#pop" name="Variable" fallthroughContext="#pop">

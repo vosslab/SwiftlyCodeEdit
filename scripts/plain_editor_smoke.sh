@@ -5,14 +5,14 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 APP_PATH="${APP_PATH:-$REPO_ROOT/.build/debug/CodeEdit}"
 LOG_FILE="${LOG_FILE:-/tmp/codeedit_plain_editor_smoke.log}"
 RUNTIME_LOG="${RUNTIME_LOG:-/tmp/codeedit_runtime.log}"
-SOURCE_FILE="${SOURCE_FILE:-$REPO_ROOT/CodeEdit/CodeEditApp.swift}"
+SOURCE_FILE="${SOURCE_FILE:-$REPO_ROOT/tests/fixtures/syntax_smoke_sample.swift}"
 
 cd "$REPO_ROOT"
 
 pkill -x CodeEdit 2>/dev/null || true
 : >"$LOG_FILE"
 : >"$RUNTIME_LOG"
-"$APP_PATH" >"$LOG_FILE" 2>&1 &
+SOURCE_FILE="$SOURCE_FILE" "$APP_PATH" >"$LOG_FILE" 2>&1 &
 APP_PID="$!"
 
 cleanup() {
@@ -53,7 +53,7 @@ wait_for_line "Main menu items:"
 
 if [ -x "$HOME/nsh/easy-screenshot/run.sh" ]; then
   SCREENSHOT_FILE="$REPO_ROOT/docs/screenshots/codeedit_window.png"
-  "$HOME/nsh/easy-screenshot/run.sh" -A CodeEdit -t CodeEditApp.swift -f "$SCREENSHOT_FILE" >>"$RUNTIME_LOG" 2>&1
+  "$HOME/nsh/easy-screenshot/run.sh" -A CodeEdit -t "$(basename "$SOURCE_FILE")" -f "$SCREENSHOT_FILE" >>"$RUNTIME_LOG" 2>&1
   echo "Screenshot captured: $SCREENSHOT_FILE" >>"$RUNTIME_LOG"
   wait_for_line "Screenshot captured: $SCREENSHOT_FILE"
 fi
@@ -63,3 +63,4 @@ wait "$APP_PID" 2>/dev/null || true
 trap - EXIT
 
 echo "Plain editor smoke passed"
+find docs/screenshots/ -type f

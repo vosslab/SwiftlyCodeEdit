@@ -27,7 +27,7 @@
 - [x] Confirm source text reaches `CodeFileView`.
 - [x] Confirm source text reaches `PlainTextEditorView`.
 - [x] Confirm source text appears in `CodeEditTextView.TextView`.
-- [ ] Confirm syntax highlighting is visibly active in the live editor.
+- [x] Confirm syntax highlighting is visibly active in the live editor.
 - [x] Confirm placeholder text appears only when no file text is loaded.
 - [x] Confirm the window title uses the opened file name.
 

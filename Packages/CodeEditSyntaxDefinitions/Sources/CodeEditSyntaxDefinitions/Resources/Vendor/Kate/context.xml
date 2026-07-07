@@ -186,7 +186,7 @@
 		</contexts>
 
 		<itemDatas>
-			<itemData name="Normal Text" defStyleNum="dsNormal"                            /><!--(Hi, I’m text)-->
+			<itemData name="Normal Text" defStyleNum="dsNormal"                            /><!--(Hi, I'm text)-->
 			<itemData name="Comment"     defStyleNum="dsComment"                           /><!--(%Comment)-->
 			<itemData name="Section"     defStyleNum="dsKeyword"                           /><!--\section{(Fancy!)}-->
 			<itemData name="Brace"       defStyleNum="dsChar"         spellChecking="false"/><!--({})-->
@@ -194,7 +194,7 @@
 			<itemData name="Macro"       defStyleNum="dsFunction"     spellChecking="false"/><!--(\foo)-->
 			<itemData name="Block"       defStyleNum="dsRegionMarker" spellChecking="false"/><!--\start(bar), \stop(bar)-->
 			<itemData name="Error"       defStyleNum="dsError"        spellChecking="false"/><!--$($$)-->
-			<itemData name="Verbatim"    defStyleNum="dsString"       spellChecking="false"/><!--\starttyping(eggs)\stoptyping, \definetyping[C] \startC(umm…)\stopC-->
+			<itemData name="Verbatim"    defStyleNum="dsString"       spellChecking="false"/><!--\starttyping(eggs)\stoptyping, \definetyping[C] \startC(umm...)\stopC-->
 		</itemDatas>
 	</highlighting>
 

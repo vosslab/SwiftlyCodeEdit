@@ -7,7 +7,7 @@ License: LGPL version 2.1, or version 3 or later versions approved by the member
 
 <highlighting>
 
-<!-- This list is commented out. We use a simple fallback rule instead …
+<!-- This list is commented out. We use a simple fallback rule instead ...
 <list name="list_keywordsWithNumbersOrFlags">
 
 	<!- - keywords without options: - - >

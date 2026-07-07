@@ -10,7 +10,7 @@
 	<!ENTITY capGroup          "\?(?:&lt;[\=!]|P?&lt;\w+&gt;|&apos;\w+&apos;|[\=!:&gt;\|R&amp;\-#])"> <!-- Capturing & Groups -->
 	<!-- M4 Macros -->
 	<!ENTITY m4Args            "\$(?:[1-9]\d*|0|[\#\*\@]|\{(?:[1-9]\d*|0)\})">
-	<!ENTITY m4Quotes          "`'‘’“”"> <!-- Default Quotes (`') & Other Common Quotes -->
+	<!ENTITY m4Quotes          "`'''"""> <!-- Default Quotes (`') & Other Common Quotes -->
 	<!-- For File Contexts -->
 	<!ENTITY identifierWithArg "(?:[a-zA-Z]|&m4Args;)(?:\.?(?:[\w\-]|&m4Args;))*">
 	<!ENTITY mlsLevel          "&identifierWithArg;(?:\:&identifierWithArg;(?:\s*,\s*&identifierWithArg;)*)?">
@@ -58,7 +58,7 @@
 
    This file is part of the KDE's KSyntaxHighlighting framework.
 
-   SPDX-FileCopyrightText: 2018-2020 Nibaldo González S. <nibgonz@gmail.com>
+   SPDX-FileCopyrightText: 2018-2020 Nibaldo Gonzalez S. <nibgonz@gmail.com>
 
    SPDX-License-Identifier: MIT
 
@@ -87,7 +87,7 @@
       - Update permissions list.
    * Version 2 [09-Sep-2018]:
       - Update itemData's style for the new Solarized color schemes.
-   * Version 1 [28-Aug-2018, by Nibaldo González]:
+   * Version 1 [28-Aug-2018, by Nibaldo Gonzalez]:
       - Initial version. Syntax based on checkpolicy v2.8.
 -->
 
@@ -98,7 +98,7 @@
           extensions="*.te;*.if;*.spt;policy.conf;access_vectors;mls;mcs;mls_macros;te_macros;policy_capabilities;seapp_contexts;port_contexts"
           priority="6"
           mimetype=""
-          author="Nibaldo González (nibgonz@gmail.com)"
+          author="Nibaldo Gonzalez (nibgonz@gmail.com)"
           license="MIT">
 
 <highlighting>

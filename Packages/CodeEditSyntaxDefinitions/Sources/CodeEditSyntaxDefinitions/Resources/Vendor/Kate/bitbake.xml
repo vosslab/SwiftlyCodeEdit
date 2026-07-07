@@ -200,7 +200,7 @@
         dsChar, used for a character.
         dsString, used for strings.
         dsComment, used for comments.
-        dsOthers, used for ‘other’ things.
+        dsOthers, used for 'other' things.
         dsAlert, used for warning messages.
         dsFunction, used for function calls.
         dsRegionMarker, used for region markers.

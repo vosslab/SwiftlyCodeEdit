@@ -755,7 +755,7 @@
 			<!-- escape characters -->
 			<context name="stringescape" attribute="String Char" lineEndContext="#stay">
 				<!-- As this highlighting style is for both, Python 2 and 3,
-				we do not know if a normal string is “unicode” or not. So we -->
+				we do not know if a normal string is "unicode" or not. So we -->
 				<DetectChar char="\" lookAhead="1" context="stringescape2"/>
 			</context>
 			<context name="stringescape2" attribute="String Char" lineEndContext="#pop">
@@ -767,7 +767,7 @@
 			<!-- escape characters -->
 			<context name="bytesescape" attribute="String Char" lineEndContext="#stay">
 				<!-- As this highlighting style is for both, Python 2 and 3,
-				we do not know if a normal string is “unicode” or not. So we
+				we do not know if a normal string is "unicode" or not. So we
 				-->
 				<DetectChar char="\" lookAhead="1" context="bytesescape2"/>
 			</context>
@@ -797,7 +797,7 @@
 			2. apostrophe vs. quotation mark
 			3. static vs. interpolated (f-literal)
 			4. escaped vs. raw
-			Adding byte literals wouldn’t make the current 2⁴ into 2⁵ contexts, as there are no byte f-literals
+			Adding byte literals wouldn't make the current 2&#x2074; into 2&#x2075; contexts, as there are no byte f-literals
 			-->
 
 			<!-- Triple-quoted A-strings -->

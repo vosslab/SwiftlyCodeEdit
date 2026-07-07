@@ -46,7 +46,7 @@
 
       <context name="Keywords" attribute="HeaderText" lineEndContext="#stay">
         <keyword String="steps" attribute="Step" firstNonSpace="true" context="Step"/>
-        <!-- Defining * step word here, as it doesn’t get accepted from steps list. -->
+        <!-- Defining * step word here, as it doesn't get accepted from steps list. -->
         <DetectChar attribute="Step" char="*" firstNonSpace="true" context="Step"/>
 
         <keyword String="keywords" firstNonSpace="true" lookAhead="true" context="#pop"/>
@@ -64,7 +64,7 @@
 
       <context name="ScenarioOutline" attribute="HeaderText" lineEndContext="#stay">
         <keyword String="steps" attribute="Step" firstNonSpace="true" context="Step"/>
-        <!-- Defining * step word here, as it doesn’t get accepted from steps list. -->
+        <!-- Defining * step word here, as it doesn't get accepted from steps list. -->
         <DetectChar attribute="Step" char="*" firstNonSpace="true" context="Step"/>
 
         <keyword String="keywords" firstNonSpace="true" lookAhead="true" context="#pop"/>

@@ -54,7 +54,7 @@
 
 <!-- Author: Dr Orlovsky MA <maxim@orlovsky.info> //-->
 <!-- Modifications (YAML 1.2), values & support for literal/folded style:
-       Nibaldo González S. <nibgonz@gmail.com>
+       Nibaldo Gonzalez S. <nibgonz@gmail.com>
        These modifications are under the MIT license. //-->
 <!-- Derive the MML syntax highlighting from the yaml syntax highlighting:
        Lukas Sommer <sommerluk@gmail.com>
@@ -69,14 +69,14 @@
      NOTE This file is mostly identical to yaml.xml so changes to yaml.xml can and should
      be backported also to this file.
 
-     HACK There are two keys in MML files that have SQL content: “table” and
-     “layer_by_sql”. The good solution would be to recognize these keys and provide
+     HACK There are two keys in MML files that have SQL content: "table" and
+     "layer_by_sql". The good solution would be to recognize these keys and provide
      SQL highlighting for their content (and only their content):
      - folded/literal block:               Yes
      - plain string:                       Possibly. But special treatment for crazy
                                            yaml rules required www.yaml-multiline.info
-                                           says: “:” cannot appear before a space or
-                                           newline, and “#” cannot appear after a space
+                                           says: ":" cannot appear before a space or
+                                           newline, and "#" cannot appear after a space
                                            or newline
      - single-quoted/double-quoted string: No. Too complicate and too confusing: it would
                                            require special SQL highlighting rules that
@@ -89,7 +89,7 @@
 
 <language name="CartoCSS MML" version="2" kateversion="5.44" section="Markup"
           extensions="*.mml"
-          author="Dr Orlovsky MA (dr.orlovsky@gmail.com), Nibaldo González (nibgonz@gmail.com), Lukas Sommer (sommerluk@gmail.com)" license="LGPL">
+          author="Dr Orlovsky MA (dr.orlovsky@gmail.com), Nibaldo Gonzalez (nibgonz@gmail.com), Lukas Sommer (sommerluk@gmail.com)" license="LGPL">
   <highlighting>
     <contexts>
       <context attribute="Attribute" lineEndContext="#stay" name="normal" >
@@ -590,7 +590,7 @@
              with attribute="WHATEVER" of the default <context> of
              "##SQL (PostgreSQL)". This ensures that we get the identical
              highlighting as in SQL even for default text that has no special
-             rule in the “SQL (PostgreSQL)” syntax highlighting. -->
+             rule in the "SQL (PostgreSQL)" syntax highlighting. -->
         <IncludeRules context="##SQL (PostgreSQL)" includeAttrib="true"/>
       </context>
 

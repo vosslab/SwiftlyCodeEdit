@@ -1115,7 +1115,7 @@
       <item>10sec</item>
     </list>
     <list name="timestamping">
-      <item>μs</item>
+      <item>&micro;s</item>
       <item>µs</item>
       <item>usec</item>
       <item>us</item>

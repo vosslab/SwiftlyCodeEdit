@@ -6,7 +6,7 @@
     Dual-Licensed under both GPL and BSD licenses.
 
     Extended 2009 Claes Holmerson. http://github.com/claes/kate-markdown/
-    Extended 2019 Nibaldo González S. <nibgonz@gmail.com> (changes under MIT license).
+    Extended 2019 Nibaldo Gonzalez S. <nibgonz@gmail.com> (changes under MIT license).
 -->
 <!--
     The [^\s]{1} is in the regex to avoid interfering with bullet list which
@@ -45,7 +45,7 @@
 <!ENTITY startlink "(?:https?|ftp)\://">
 <!ENTITY link "&startlink;[^&quot;&gt;\s]+">
 <!-- link in normal text.
-     Keep in sync with reStructuredText’s (rest) StandaloneHyperlink attribute -->
+     Keep in sync with reStructuredText's (rest) StandaloneHyperlink attribute -->
 <!ENTITY implicitlink "\b&startlink;[^&quot;&gt;\s`\)]*[^\s!&quot;&apos;`\(\)\*,\.:;&lt;&gt;\?~\]\}\\](?=[[:punct:]]*(?:[\s\)]|$))">
 <!-- references: [name], [name][id], [name][id] "title", [name](https://example.com) -->
 <!ENTITY refchar "(?:\\.|[^\]\\])">
