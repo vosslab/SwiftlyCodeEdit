@@ -8,14 +8,10 @@
 import Foundation
 import SwiftUI
 import CodeEditTextView
-import CodeEditLanguages
-import Combine
 
-/// CodeFileView is just a wrapper of the `CodeEditor` dependency
+/// CodeFileView is just a wrapper of the `CodeEditor` dependency
 struct CodeFileView: View {
     @ObservedObject private var codeFile: CodeFileDocument
-
-    private var cancellables = Set<AnyCancellable>()
 
     private let isEditable: Bool
     private let wrapLinesToEditorWidth = true
@@ -24,14 +20,6 @@ struct CodeFileView: View {
     init(codeFile: CodeFileDocument, isEditable: Bool = true) {
         self._codeFile = .init(wrappedValue: codeFile)
         self.isEditable = isEditable
-
-        codeFile
-            .contentCoordinator
-            .textUpdatePublisher
-            .sink { [weak codeFile] _ in
-                codeFile?.updateChangeCount(.changeDone)
-            }
-            .store(in: &cancellables)
     }
 
     var body: some View {
@@ -48,7 +36,10 @@ struct CodeFileView: View {
             textColor: .textColor,
             lineHeightMultiplier: 1,
             edgeInsets: .init(left: 12, right: 12),
-            textInsets: .init(left: 0, right: 0)
+            textInsets: .init(left: 0, right: 0),
+            onTextChange: {
+                codeFile.updateChangeCount(.changeDone)
+            }
         )
         // This view needs to refresh when the codefile changes. The file URL is too stable.
         .id(ObjectIdentifier(codeFile))

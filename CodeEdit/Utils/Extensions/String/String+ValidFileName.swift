@@ -9,7 +9,7 @@ import Foundation
 
 extension CharacterSet {
     /// On macOS, valid file names must not contain the `NULL` or `:` characters.
-    static var invalidFileNameCharacters: CharacterSet = CharacterSet(charactersIn: "\0:")
+    static let invalidFileNameCharacters = CharacterSet(charactersIn: "\0:")
 }
 
 extension String {

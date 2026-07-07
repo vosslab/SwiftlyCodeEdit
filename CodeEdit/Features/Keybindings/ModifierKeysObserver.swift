@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct EventModifierEnvironmentKey: EnvironmentKey {
-    static var defaultValue: NSEvent.ModifierFlags = []
+    static let defaultValue: NSEvent.ModifierFlags = []
 }
 
 extension EnvironmentValues {

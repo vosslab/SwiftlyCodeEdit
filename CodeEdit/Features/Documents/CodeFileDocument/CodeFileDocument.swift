@@ -10,9 +10,7 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 import CodeEditLanguages
-import Combine
 import OSLog
-import TextStory
 
 enum CodeFileError: Error {
     case failedToDecode
@@ -22,10 +20,6 @@ enum CodeFileError: Error {
 
 @objc(CodeFileDocument)
 final class CodeFileDocument: NSDocument, ObservableObject {
-    struct OpenOptions {
-        let cursorPositions: [CursorPosition]
-    }
-
     static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "", category: "CodeFileDocument")
 
     /// Sent when the document is opened. The document will be sent in the notification's object.
@@ -39,27 +33,13 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// compare each time the contents are updated, which could cause a hang on each keystroke if the file is large
     /// enough.
     ///
-    /// To receive notifications for content updates, subscribe to one of the publishers on ``contentCoordinator``.
     var content: NSTextStorage?
 
     /// The string encoding of the original file. Used to save the file back to the encoding it was loaded from.
     var sourceEncoding: FileEncoding?
 
-    /// The coordinator to use to subscribe to edit events and cursor location events.
-    /// See ``CodeEditSourceEditor/CombineCoordinator``.
-    @Published var contentCoordinator: CombineCoordinator = CombineCoordinator()
-
     /// Used to override detected languages.
     @Published var language: CodeLanguage?
-
-    /// Document-specific overridden indent option.
-    @Published var indentOption: SettingsData.TextEditingSettings.IndentOption?
-
-    /// Document-specific overridden tab width.
-    @Published var defaultTabWidth: Int?
-
-    /// Document-specific overridden line wrap preference.
-    @Published var wrapLines: Bool?
 
     /// The type of data this file document contains.
     ///
@@ -77,17 +57,6 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         }
 
         return type
-    }
-
-    /// Specify options for opening the file such as the initial cursor positions.
-    /// Nulled by ``CodeFileView`` on first load.
-    var openOptions: OpenOptions?
-
-    private let isDocumentEditedSubject = PassthroughSubject<Bool, Never>()
-
-    /// Publisher for isDocumentEdited property
-    var isDocumentEditedPublisher: AnyPublisher<Bool, Never> {
-        isDocumentEditedSubject.eraseToAnyPublisher()
     }
 
     /// A lock that ensures autosave scheduling happens correctly.
@@ -159,54 +128,11 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         }
         self.sourceEncoding = validEncoding
         if let content {
-            registerContentChangeUndo(fileURL: fileURL, nsString: nsString, content: content)
             content.mutableString.setString(nsString as String)
         } else {
             self.content = NSTextStorage(string: nsString as String)
         }
         NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
-    }
-
-    /// If this file is already open and being tracked by an undo manager, we register an undo mutation
-    /// of the entire contents. This allows the user to undo changes that occurred outside of CodeEdit
-    /// while the file was displayed in CodeEdit.
-    ///
-    /// - Note: This is inefficient memory-wise. We could do a diff of the file and only register the
-    ///         mutations that would recreate the diff. However, that would instead be CPU intensive.
-    ///         Tradeoffs.
-    private func registerContentChangeUndo(fileURL: URL?, nsString: NSString, content: NSTextStorage) {
-        guard let fileURL else { return }
-        // If there's an undo manager, register a mutation replacing the entire contents.
-        let mutation = TextMutation(
-            string: nsString as String,
-            range: NSRange(location: 0, length: content.length),
-            limit: content.length
-        )
-        _ = mutation
-    }
-
-    // MARK: - Autosave
-
-    /// Triggered when change occurred
-    override func updateChangeCount(_ change: NSDocument.ChangeType) {
-        super.updateChangeCount(change)
-
-        if CodeFileDocument.autosavesInPlace {
-            return
-        }
-
-        self.isDocumentEditedSubject.send(self.isDocumentEdited)
-    }
-
-    /// Triggered when changes saved
-    override func updateChangeCount(withToken changeCountToken: Any, for saveOperation: NSDocument.SaveOperationType) {
-        super.updateChangeCount(withToken: changeCountToken, for: saveOperation)
-
-        if CodeFileDocument.autosavesInPlace {
-            return
-        }
-
-        self.isDocumentEditedSubject.send(self.isDocumentEdited)
     }
 
     /// If ``hasUnautosavedChanges`` is `true` and an autosave has not already been scheduled, schedules a new autosave.
@@ -269,7 +195,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// Different from `NSDocument.fileModificationDate`. This returns the *current* modification date, whereas the
     /// alternative stores the date that existed when we last read the file.
     private func getModificationDate() -> Date? {
-        guard let path = fileURL?.absolutePath else { return nil }
+        guard let path = fileURL?.path else { return nil }
         return try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date
     }
 

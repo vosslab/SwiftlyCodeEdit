@@ -2,8 +2,16 @@
 
 ### Fixes and Maintenance
 
+- Moved the plain editor viewport observer back into `CodeEditTextView` and exposed the helper for the app shell.
+- Fixed the remaining Swift 6 concurrency blockers in the plain editor viewport observer and shared static helpers.
+- Replaced the app entry's welcome-window launcher with a minimal plain-editor scene stub.
+- Trimmed the executable manifest to drop the welcome-window package from the app target.
+- Added `docs/RELATED_PROJECTS.md` from local repo evidence and bounded sibling-project discovery.
 - Replaced the upstream README with a shorter fork-focused front page.
 - Linked the README to the docs that already exist in this repository.
+- Wired the plain text editor to report text edits directly so the document can mark changes without the removed content-coordinator bridge.
+- Trimmed `CodeFileDocument` to use only plain file-path state for file-change detection in this lane.
+- Removed the stale `CodeFileView` dependency on the removed content-coordinator subscription.
 - Added a root `build.sh` wrapper for `xcodebuild` on the `CodeEdit` scheme.
 - Split the build helper into `build_debug.sh` and `build_release.sh` to match the app workflow.
 - Added an early Xcode simulator-component check so build scripts fail with a clearer message when Xcode is incomplete.
@@ -17,6 +25,8 @@
 - Added a removal plan so cleanup can proceed in a bounded order.
 - Added a data-first directory layout for the syntax-definition bundle.
 - Added an audit note to bound the remaining cleanup surface.
+- Made the keybindings modifier-key environment default immutable so the plain-editor lane stays Swift 6 concurrency-safe.
+- Switched `LocalizedStringKey.helloWorld` to a computed value so the localization helper stays Swift 6 concurrency-safe.
 - Removed the default parser-backed provider from the editor entry points.
 - Reduced `CodeEditLanguages` to metadata-only source files in the package target.
 - Removed parser references from the source editor package docs and comments.

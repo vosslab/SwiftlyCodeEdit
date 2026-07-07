@@ -11,5 +11,5 @@ extension String {
 }
 
 extension LocalizedStringKey {
-    static let helloWorld = "Hello, world!".localized()
+    @MainActor static let helloWorld = "Hello, world!".localized()
 }

@@ -27,7 +27,7 @@ extension TextView {
         )
     }
 
-    func setUpScrollListeners(scrollView: NSScrollView) {
+    public func setUpScrollListeners(scrollView: NSScrollView) {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(scrollViewWillStartScroll),

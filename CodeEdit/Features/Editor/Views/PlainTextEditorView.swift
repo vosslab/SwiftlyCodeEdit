@@ -10,8 +10,13 @@ import SwiftUI
 import CodeEditTextView
 
 struct PlainTextEditorView: NSViewControllerRepresentable {
-    final class Coordinator {
+    final class Coordinator: NSObject, TextViewDelegate {
         weak var textView: TextView?
+        var onTextChange: (() -> Void)?
+
+        func textView(_ textView: TextView, didReplaceContentsIn range: NSRange, with string: String) {
+            onTextChange?()
+        }
     }
 
     @Binding var textStorage: NSTextStorage
@@ -24,6 +29,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
     var lineHeightMultiplier: CGFloat
     var edgeInsets: HorizontalEdgeInsets
     var textInsets: HorizontalEdgeInsets
+    var onTextChange: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -43,36 +49,19 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         textView.setTextStorage(textStorage)
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
+        textView.delegate = context.coordinator
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.documentView = textView
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        scrollView.contentView.postsFrameChangedNotifications = true
+        textView.setUpScrollListeners(scrollView: scrollView)
 
         let controller = NSViewController()
         controller.view = scrollView
         context.coordinator.textView = textView
-
-        NotificationCenter.default.addObserver(
-            forName: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak textView, weak scrollView] _ in
-            guard let textView, let scrollView else { return }
-            textView.updatedViewport(scrollView.documentVisibleRect)
-        }
-
-        NotificationCenter.default.addObserver(
-            forName: NSView.frameDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak textView, weak scrollView] _ in
-            guard let textView, let scrollView else { return }
-            textView.updatedViewport(scrollView.documentVisibleRect)
-        }
+        context.coordinator.onTextChange = onTextChange
 
         return controller
     }
@@ -82,6 +71,8 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
               let textView = scrollView.documentView as? TextView else {
             return
         }
+
+        context.coordinator.onTextChange = onTextChange
 
         if textView.string != textStorage.string {
             textView.setTextStorage(textStorage)
