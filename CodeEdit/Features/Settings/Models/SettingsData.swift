@@ -15,7 +15,7 @@ import Foundation
 /// A `JSON` representation is persisted in `~/Library/Application Support/CodeEdit/preference.json`.
 /// - Attention: Don't use `UserDefaults` for persisting user accessible settings.
 ///  If a further setting is needed, extend the struct like ``GeneralSettings``,
-///  ``ThemeSettings``,  or ``TerminalSettings`` does.
+///  ``ThemeSettings`` does.
 ///
 /// - Note: Also make sure to implement the ``init(from:)`` initializer, decoding
 ///  all properties with
@@ -37,9 +37,6 @@ struct SettingsData: Codable, Hashable {
 
     /// The global settings for text editing
     var textEditing: TextEditingSettings = .init()
-
-    /// The global settings for the terminal emulator
-    var terminal: TerminalSettings = .init()
 
     /// The global settings for source control
     var sourceControl: SourceControlSettings = .init()
@@ -66,7 +63,6 @@ struct SettingsData: Codable, Hashable {
         self.accounts = try container.decodeIfPresent(AccountsSettings.self, forKey: .accounts) ?? .init()
         self.navigation = try container.decodeIfPresent(NavigationSettings.self, forKey: .navigation) ?? .init()
         self.theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? .init()
-        self.terminal = try container.decodeIfPresent(TerminalSettings.self, forKey: .terminal) ?? .init()
         self.textEditing = try container.decodeIfPresent(TextEditingSettings.self, forKey: .textEditing) ?? .init()
         self.search = try container.decodeIfPresent(SearchSettings.self, forKey: .search) ?? .init()
         self.sourceControl = try container.decodeIfPresent(
@@ -100,8 +96,6 @@ struct SettingsData: Codable, Hashable {
             theme.searchKeys.forEach { settings.append(.init(name, isSetting: true, settingName: $0)) }
         case .textEditing:
             textEditing.searchKeys.forEach { settings.append(.init(name, isSetting: true, settingName: $0)) }
-        case .terminal:
-            terminal.searchKeys.forEach { settings.append(.init(name, isSetting: true, settingName: $0)) }
         case .search:
             search.searchKeys.forEach { settings.append(.init(name, isSetting: true, settingName: $0)) }
         case .sourceControl:

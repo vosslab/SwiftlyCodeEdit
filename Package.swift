@@ -29,6 +29,7 @@ let package = Package(
         .package(url: "https://github.com/johnsundell/collectionconcurrencykit", from: "0.2.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.2.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.6"),
         .package(url: "https://github.com/Wouter01/LogStream", from: "1.3.0"),
     ],
     targets: [
@@ -85,7 +86,6 @@ let package = Package(
                 "Features/SourceControl",
                 "Features/StatusBar",
                 "Features/Tasks",
-                "Features/TerminalEmulator",
                 "Features/UtilityArea",
                 "Features/InspectorArea/Models/InspectorTab.swift",
                 "WorkspaceSheets.swift",
@@ -104,6 +104,7 @@ let package = Package(
                 "Utils/DependencyInjection",
                 "Utils/Environment",
                 "Utils/Extensions/Date",
+                "Utils/Extensions/LocalProcess",
                 "Utils/Extensions/SemanticToken",
                 "Utils/Extensions/TextView",
                 "Utils/Extensions/URL"
@@ -111,6 +112,17 @@ let package = Package(
             resources: [
                 .process("Assets.xcassets"),
                 .process("Features/Keybindings/default_keybindings.json"),
+            ]
+        ),
+        .testTarget(
+            name: "CodeEditTests",
+            dependencies: [
+                "CodeEdit",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            path: "CodeEditTests",
+            sources: [
+                "PackageSmoke/CodeFileDocumentLifecycleTests.swift"
             ]
         ),
     ]

@@ -100,4 +100,38 @@ struct CodeFileDocumentTests {
             #expect(codeFile.isDocumentEdited == false)
         }
     }
+
+    @Test
+    func testLifecyclePersistsSyntheticEdit() throws {
+        try withTempDir { dir in
+            let sourceURL = dir.appending(path: "sample.swift")
+            let savedURL = dir.appending(path: "saved.swift")
+            let originalText = "func sample() {\n    print(\"hello\")\n}\n"
+            let editedText = "func sample() {\n    print(\"hello, world\")\n}\n"
+
+            try originalText.write(to: sourceURL, atomically: true, encoding: .utf8)
+
+            let codeFile = try CodeFileDocument(
+                for: sourceURL,
+                withContentsOf: sourceURL,
+                ofType: "public.source-code"
+            )
+
+            #expect(codeFile.content?.string == originalText)
+
+            codeFile.content?.mutableString.setString(editedText)
+            codeFile.updateChangeCount(.changeDone)
+            codeFile.sourceEncoding = .utf8
+            try codeFile.write(to: savedURL, ofType: "public.source-code")
+
+            let reopened = try CodeFileDocument(
+                for: savedURL,
+                withContentsOf: savedURL,
+                ofType: "public.source-code"
+            )
+
+            #expect(reopened.content?.string == editedText)
+            #expect(reopened.sourceEncoding == .utf8)
+        }
+    }
 }

@@ -14,9 +14,6 @@ struct ThemeSettingsView: View {
     @ObservedObject private var themeModel: ThemeModel = .shared
     @AppSettings(\.theme)
     var settings
-    @AppSettings(\.terminal.darkAppearance)
-    var useDarkTerminalAppearance
-
     @State private var listView: Bool = false
     @State private var themeSearchQuery: String = ""
     @State private var filteredThemes: [Theme] = []
@@ -63,9 +60,6 @@ struct ThemeSettingsView: View {
                 if themeSearchQuery.isEmpty {
                     Section {
                         changeThemeOnSystemAppearance
-                        if settings.matchAppearance {
-                            alwaysUseDarkTerminalAppearance
-                        }
                         useThemeBackground
                     }
                 }
@@ -154,10 +148,6 @@ struct ThemeSettingsView: View {
 private extension ThemeSettingsView {
     private var useThemeBackground: some View {
         Toggle("Use theme background ", isOn: $settings.useThemeBackground)
-    }
-
-    private var alwaysUseDarkTerminalAppearance: some View {
-        Toggle("Always use dark terminal appearance", isOn: $useDarkTerminalAppearance)
     }
 
     private var changeThemeOnSystemAppearance: some View {

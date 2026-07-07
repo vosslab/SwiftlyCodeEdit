@@ -131,19 +131,23 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             usedLossyConversion: nil
         )
         guard let validEncoding = FileEncoding(rawEncoding), let nsString else {
-            Self.logger.error("Failed to read file from data using encoding: \(rawEncoding)")
+            #if DEBUG
+            debugRuntimeLog("Failed to read file from data using encoding: \(rawEncoding)")
+            #endif
             return
         }
-        self.sourceEncoding = validEncoding
-        if let content {
-            content.mutableString.setString(nsString as String)
-        } else {
-            self.content = NSTextStorage(string: nsString as String)
+        MainActor.assumeIsolated {
+            self.sourceEncoding = validEncoding
+            if let content {
+                content.mutableString.setString(nsString as String)
+            } else {
+                self.content = NSTextStorage(string: nsString as String)
+            }
+            #if DEBUG
+            debugRuntimeLog("Loaded file: \(self.fileURL?.path ?? "<unknown>") characters: \(self.content?.length ?? 0)")
+            #endif
+            NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
         }
-        #if DEBUG
-        debugRuntimeLog("Loaded file: \(self.fileURL?.path ?? "<unknown>") characters: \(self.content?.length ?? 0)")
-        #endif
-        NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
     }
 
     /// If ``hasUnautosavedChanges`` is `true` and an autosave has not already been scheduled, schedules a new autosave.
@@ -157,10 +161,13 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             if self.hasUnautosavedChanges {
                 guard autosaveTimer == nil else { return }
                 autosaveTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] timer in
-                    self?.autosaveTimerLock.withLock {
-                        guard timer.isValid else { return }
-                        self?.autosaveTimer = nil
-                        self?.autosave(withDelegate: nil, didAutosave: nil, contextInfo: nil)
+                    let shouldAutosave = timer.isValid
+                    Task { @MainActor [weak self] in
+                        self?.autosaveTimerLock.withLock {
+                            guard shouldAutosave else { return }
+                            self?.autosaveTimer = nil
+                            self?.autosave(withDelegate: nil, didAutosave: nil, contextInfo: nil)
+                        }
                     }
                 }
             } else {
@@ -180,33 +187,28 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// To determine if we can reload the file, we check if the document has outstanding edits. If not, we reload the
     /// file.
     override func presentedItemDidChange() {
-        if fileModificationDate != getModificationDate() {
-            guard isDocumentEdited else {
-                fileModificationDate = getModificationDate()
-                if let fileURL, let fileType {
-                    // This blocks the presented item thread intentionally. If we don't wait, we'll receive more updates
-                    // that the file has changed and we'll end up dispatching multiple reads.
-                    // The presented item thread expects this operation to by synchronous anyways.
+        let currentModificationDate = getModificationDate()
 
-                    // https://github.com/CodeEditApp/CodeEdit/issues/2091
-                    // We can't use `.asyncAndWait` on Ventura as it seems the symbol is missing on that platform.
-                    // Could be just for x86 machines.
-                    DispatchQueue.main.sync {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            if fileModificationDate != currentModificationDate {
+                guard isDocumentEdited else {
+                    fileModificationDate = currentModificationDate
+                    if let fileURL, let fileType {
+                        // Reload on the main actor so we keep AppKit state isolated correctly.
                         try? self.read(from: fileURL, ofType: fileType)
                     }
+                    return
                 }
-                return
             }
         }
-
-        super.presentedItemDidChange()
     }
 
     /// Helper to find the last modified date of the represented file item.
     /// 
     /// Different from `NSDocument.fileModificationDate`. This returns the *current* modification date, whereas the
     /// alternative stores the date that existed when we last read the file.
-    private func getModificationDate() -> Date? {
+    nonisolated private func getModificationDate() -> Date? {
         guard let path = fileURL?.path else { return nil }
         return try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date
     }
@@ -241,10 +243,12 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         forType typeName: String,
         saveOperation: NSDocument.SaveOperationType
     ) -> String? {
-        guard let fileTypeName = Self.fileTypeExtension[typeName] else {
-            return super.fileNameExtension(forType: typeName, saveOperation: saveOperation)
+        MainActor.assumeIsolated {
+            guard let fileTypeName = Self.fileTypeExtension[typeName] else {
+                return super.fileNameExtension(forType: typeName, saveOperation: saveOperation)
+            }
+            return fileTypeName
         }
-        return fileTypeName
     }
 
     /// Determines the code language of the document.

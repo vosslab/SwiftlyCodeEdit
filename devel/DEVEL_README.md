@@ -51,7 +51,7 @@ release publishing helpers and TypeScript setup/rendering helpers.
 For Python scripts, use the repo bootstrap environment:
 
 ```bash
-source source_me.sh && python3 devel/<script>.py
+python3 devel/<script>.py
 ```
 
 Run individual scripts with `--help` for current options. Keep command details

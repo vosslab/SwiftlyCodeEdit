@@ -42,7 +42,3 @@ A collection of all the views that make up the main app window.
 ### Tab Bar
 
 - ``TabBarView``
-
-### Terminal Emulator
-
-- ``TerminalEmulatorView``

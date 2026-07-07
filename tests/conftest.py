@@ -65,8 +65,6 @@ REPO_HYGIENE_FILTERS = {}
 # Prevents matplotlib from writing to the home-directory config cache during
 # tests, which can cause cross-repo pollution or permission errors in CI.
 # Set MPLCONFIGDIR to a writable tmp path before matplotlib is imported.
-# Note: PYTHONUNBUFFERED and PYTHONDONTWRITEBYTECODE are handled by
-# source_me.sh and belong there, not here.
 #
 #	import os
 #	import tempfile

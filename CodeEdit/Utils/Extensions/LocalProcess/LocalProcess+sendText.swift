@@ -5,8 +5,6 @@
 //  Created by Khan Winter on 7/15/25.
 //
 
-import SwiftTerm
-
 extension LocalProcess {
     func send(text: String) {
         let array = Array(text.utf8)

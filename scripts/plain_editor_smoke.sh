@@ -9,6 +9,7 @@ SOURCE_FILE="${SOURCE_FILE:-$REPO_ROOT/CodeEdit/CodeEditApp.swift}"
 
 cd "$REPO_ROOT"
 
+pkill -x CodeEdit 2>/dev/null || true
 : >"$LOG_FILE"
 : >"$RUNTIME_LOG"
 "$APP_PATH" >"$LOG_FILE" 2>&1 &
@@ -45,6 +46,7 @@ wait_for_line "Loaded file: $SOURCE_FILE"
 wait_for_line "Created editor window for $SOURCE_FILE"
 wait_for_line "PlainTextEditorView created"
 wait_for_line "PlainTextEditorView requested first responder"
+wait_for_line "Main menu items:"
 
 kill "$APP_PID" 2>/dev/null || true
 wait "$APP_PID" 2>/dev/null || true

@@ -19,7 +19,6 @@
 		5E4485612DF600D9008BBE69 /* AboutWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 5E4485602DF600D9008BBE69 /* AboutWindow */; };
 		5EACE6222DF4BF08005E08B8 /* WelcomeWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 5EACE6212DF4BF08005E08B8 /* WelcomeWindow */; };
 		6C0617D62BDB4432008C9C42 /* LogStream in Frameworks */ = {isa = PBXBuildFile; productRef = 6C0617D52BDB4432008C9C42 /* LogStream */; };
-		6C0824A12C5C0C9700A0751E /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 6C0824A02C5C0C9700A0751E /* SwiftTerm */; };
 		6C147C4529A329350089B630 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 6C147C4429A329350089B630 /* OrderedCollections */; };
 		6C315FC82E05E33D0011BFC5 /* CodeEditSourceEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 6C315FC72E05E33D0011BFC5 /* CodeEditSourceEditor */; };
 		6C66C31329D05CDC00DE9ED2 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 6C66C31229D05CDC00DE9ED2 /* GRDB */; };
@@ -40,10 +39,7 @@
 		6CB94D032CA1205100E8651C /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 6CB94D022CA1205100E8651C /* AsyncAlgorithms */; };
 		6CC00A8B2CBEF150004E8134 /* CodeEditSourceEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 6CC00A8A2CBEF150004E8134 /* CodeEditSourceEditor */; };
 		6CC17B4F2C432AE000834E2C /* CodeEditSourceEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 6CC17B4E2C432AE000834E2C /* CodeEditSourceEditor */; };
-		6CCF6DD32E26D48F00B94F75 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 6CCF6DD22E26D48F00B94F75 /* SwiftTerm */; };
-		6CCF73D02E26DE3200B94F75 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 6CCF73CF2E26DE3200B94F75 /* SwiftTerm */; };
 		6CD3CA552C8B508200D83DCD /* CodeEditSourceEditor in Frameworks */ = {isa = PBXBuildFile; productRef = 6CD3CA542C8B508200D83DCD /* CodeEditSourceEditor */; };
-		6CE21E872C650D2C0031B056 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 6CE21E862C650D2C0031B056 /* SwiftTerm */; };
 		B6FF04782B6C08AC002C2C78 /* DefaultThemes in Resources */ = {isa = PBXBuildFile; fileRef = B6FF04772B6C08AC002C2C78 /* DefaultThemes */; };
 /* End PBXBuildFile section */
 
@@ -173,15 +169,12 @@
 				6C66C31329D05CDC00DE9ED2 /* GRDB in Frameworks */,
 				58F2EB1E292FB954004A9BDE /* Sparkle in Frameworks */,
 				6C147C4529A329350089B630 /* OrderedCollections in Frameworks */,
-				6CE21E872C650D2C0031B056 /* SwiftTerm in Frameworks */,
 				6C76D6D42E15B91E00EF52C3 /* CodeEditSourceEditor in Frameworks */,
-				6CCF73D02E26DE3200B94F75 /* SwiftTerm in Frameworks */,
 				6C315FC82E05E33D0011BFC5 /* CodeEditSourceEditor in Frameworks */,
 				6CC00A8B2CBEF150004E8134 /* CodeEditSourceEditor in Frameworks */,
 				6CD3CA552C8B508200D83DCD /* CodeEditSourceEditor in Frameworks */,
 				6C0617D62BDB4432008C9C42 /* LogStream in Frameworks */,
 				6CC17B4F2C432AE000834E2C /* CodeEditSourceEditor in Frameworks */,
-				6CCF6DD32E26D48F00B94F75 /* SwiftTerm in Frameworks */,
 				30CB64912C16CA8100CC8A9E /* LanguageServerProtocol in Frameworks */,
 				5E4485612DF600D9008BBE69 /* AboutWindow in Frameworks */,
 				6C6BD6F429CD142C00235D17 /* CollectionConcurrencyKit in Frameworks */,
@@ -192,7 +185,6 @@
 				30CB64942C16CA9100CC8A9E /* LanguageClient in Frameworks */,
 				5EACE6222DF4BF08005E08B8 /* WelcomeWindow in Frameworks */,
 				6C6BD6F829CD14D100235D17 /* CodeEditKit in Frameworks */,
-				6C0824A12C5C0C9700A0751E /* SwiftTerm in Frameworks */,
 				6C81916B29B41DD300B75C92 /* DequeModule in Frameworks */,
 				6CB94D032CA1205100E8651C /* AsyncAlgorithms in Frameworks */,
 				6C9DB9E42D55656300ACD86E /* CodeEditSourceEditor in Frameworks */,
@@ -322,8 +314,6 @@
 				6C85BB3F2C2105ED00EB5DEF /* CodeEditKit */,
 				6C85BB432C210EFD00EB5DEF /* SwiftUIIntrospect */,
 				6CC17B4E2C432AE000834E2C /* CodeEditSourceEditor */,
-				6C0824A02C5C0C9700A0751E /* SwiftTerm */,
-				6CE21E862C650D2C0031B056 /* SwiftTerm */,
 				6CD3CA542C8B508200D83DCD /* CodeEditSourceEditor */,
 				6CB94D022CA1205100E8651C /* AsyncAlgorithms */,
 				6CC00A8A2CBEF150004E8134 /* CodeEditSourceEditor */,
@@ -332,8 +322,6 @@
 				5E4485602DF600D9008BBE69 /* AboutWindow */,
 				6C315FC72E05E33D0011BFC5 /* CodeEditSourceEditor */,
 				6C76D6D32E15B91E00EF52C3 /* CodeEditSourceEditor */,
-				6CCF6DD22E26D48F00B94F75 /* SwiftTerm */,
-				6CCF73CF2E26DE3200B94F75 /* SwiftTerm */,
 			);
 			productName = CodeEdit;
 			productReference = B658FB2C27DA9E0F00EA4DBD /* CodeEdit.app */;
@@ -438,7 +426,6 @@
 				5EACE6202DF4BF08005E08B8 /* XCLocalSwiftPackageReference "WelcomeWindow" */,
 				5E44855F2DF600D9008BBE69 /* XCLocalSwiftPackageReference "AboutWindow" */,
 				6C76D6D22E15B91E00EF52C3 /* XCLocalSwiftPackageReference "CodeEditSourceEditor" */,
-				6CCF73CE2E26DE3200B94F75 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
 			preferredProjectObjectVersion = 55;
 			productRefGroup = B658FB2D27DA9E0F00EA4DBD /* Products */;
@@ -1794,14 +1781,6 @@
 				version = 1.0.1;
 			};
 		};
-		6CCF73CE2E26DE3200B94F75 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/thecoolwinter/SwiftTerm";
-			requirement = {
-				branch = codeedit;
-				kind = branch;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1844,10 +1823,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6C0617D42BDB4432008C9C42 /* XCRemoteSwiftPackageReference "LogStream" */;
 			productName = LogStream;
-		};
-		6C0824A02C5C0C9700A0751E /* SwiftTerm */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SwiftTerm;
 		};
 		6C147C4429A329350089B630 /* OrderedCollections */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1923,22 +1898,9 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CodeEditSourceEditor;
 		};
-		6CCF6DD22E26D48F00B94F75 /* SwiftTerm */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SwiftTerm;
-		};
-		6CCF73CF2E26DE3200B94F75 /* SwiftTerm */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6CCF73CE2E26DE3200B94F75 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
-			productName = SwiftTerm;
-		};
 		6CD3CA542C8B508200D83DCD /* CodeEditSourceEditor */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CodeEditSourceEditor;
-		};
-		6CE21E862C650D2C0031B056 /* SwiftTerm */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SwiftTerm;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

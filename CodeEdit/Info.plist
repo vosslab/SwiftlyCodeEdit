@@ -315,6 +315,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>swift</string>
 				<string>htm</string>
 				<string>html</string>
 				<string>xhtml</string>
@@ -1237,6 +1238,31 @@
 			<string>CodeFileDocument</string>
 		</dict>
 		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>swift</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Swift source code</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.swift-source</string>
+			</array>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>TEXT</string>
+				<string>utxt</string>
+				<string>TUTX</string>
+				<string>****</string>
+			</array>
+			<key>NSDocumentClass</key>
+			<string>CodeFileDocument</string>
+		</dict>
+		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Workspace Folder</string>
 			<key>CFBundleTypeRole</key>
@@ -1262,7 +1288,7 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.6</string>
+	<string>26.07</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -11,10 +11,10 @@ import SwiftUI
 
 /// # Theme
 ///
-/// The model structure of themes for the editor & terminal emulator
+/// The model structure of themes for the editor.
 struct Theme: Identifiable, Codable, Equatable, Hashable, Loopable {
     enum CodingKeys: String, CodingKey {
-        case author, license, distributionURL, name, displayName, editor, terminal, version
+        case author, license, distributionURL, name, displayName, editor, version
         case appearance = "type"
         case metadataDescription = "description"
     }
@@ -61,12 +61,8 @@ struct Theme: Identifiable, Codable, Equatable, Hashable, Loopable {
     /// Editor colors of the theme
     var editor: EditorColors
 
-    /// Terminal colors of the theme
-    var terminal: TerminalColors
-
     init(
         editor: EditorColors,
-        terminal: TerminalColors,
         author: String,
         license: String,
         metadataDescription: String,
@@ -87,7 +83,6 @@ struct Theme: Identifiable, Codable, Equatable, Hashable, Loopable {
         self.appearance = appearance
         self.version = version
         self.editor = editor
-        self.terminal = terminal
     }
 }
 
@@ -275,163 +270,6 @@ extension Theme {
             self.strings = strings
             self.characters = characters
             self.comments = comments
-        }
-    }
-}
-
-extension Theme {
-    /// The terminal emulator colors of the theme
-    struct TerminalColors: Codable, Hashable, Loopable {
-        var text: Attributes
-        var boldText: Attributes
-        var cursor: Attributes
-        var background: Attributes
-        var selection: Attributes
-        var black: Attributes
-        var red: Attributes
-        var green: Attributes
-        var yellow: Attributes
-        var blue: Attributes
-        var magenta: Attributes
-        var cyan: Attributes
-        var white: Attributes
-        var brightBlack: Attributes
-        var brightRed: Attributes
-        var brightGreen: Attributes
-        var brightYellow: Attributes
-        var brightBlue: Attributes
-        var brightMagenta: Attributes
-        var brightCyan: Attributes
-        var brightWhite: Attributes
-
-        var ansiColors: [String] {
-            [
-                black.color,
-                red.color,
-                green.color,
-                yellow.color,
-                blue.color,
-                magenta.color,
-                cyan.color,
-                white.color,
-                brightBlack.color,
-                brightRed.color,
-                brightGreen.color,
-                brightYellow.color,
-                brightBlue.color,
-                brightMagenta.color,
-                brightCyan.color,
-                brightWhite.color,
-            ]
-        }
-
-        /// Allows to look up properties by their name
-        ///
-        /// **Example:**
-        /// ```swift
-        /// terminal["text"]
-        /// // equal to calling
-        /// terminal.text
-        /// ```
-        subscript(key: String) -> Attributes {
-            get {
-                switch key {
-                case "text": return self.text
-                case "boldText": return self.boldText
-                case "cursor": return self.cursor
-                case "background": return self.background
-                case "selection": return self.selection
-                case "black": return self.black
-                case "red": return self.red
-                case "green": return self.green
-                case "yellow": return self.yellow
-                case "blue": return self.blue
-                case "magenta": return self.magenta
-                case "cyan": return self.cyan
-                case "white": return self.white
-                case "brightBlack": return self.brightBlack
-                case "brightRed": return self.brightRed
-                case "brightGreen": return self.brightGreen
-                case "brightYellow": return self.brightYellow
-                case "brightBlue": return self.brightBlue
-                case "brightMagenta": return self.brightMagenta
-                case "brightCyan": return self.brightCyan
-                case "brightWhite": return self.brightWhite
-                default: fatalError("Invalid key")
-                }
-            }
-            set {
-                switch key {
-                case "text": self.text = newValue
-                case "boldText": self.boldText = newValue
-                case "cursor": self.cursor = newValue
-                case "background": self.background = newValue
-                case "selection": self.selection = newValue
-                case "black": self.black = newValue
-                case "red": self.red = newValue
-                case "green": self.green = newValue
-                case "yellow": self.yellow = newValue
-                case "blue": self.blue = newValue
-                case "magenta": self.magenta = newValue
-                case "cyan": self.cyan = newValue
-                case "white": self.white = newValue
-                case "brightBlack": self.brightBlack = newValue
-                case "brightRed": self.brightRed = newValue
-                case "brightGreen": self.brightGreen = newValue
-                case "brightYellow": self.brightYellow = newValue
-                case "brightBlue": self.brightBlue = newValue
-                case "brightMagenta": self.brightMagenta = newValue
-                case "brightCyan": self.brightCyan = newValue
-                case "brightWhite": self.brightWhite = newValue
-                default: fatalError("Invalid key")
-                }
-            }
-        }
-
-        init(
-            text: Attributes,
-            boldText: Attributes,
-            cursor: Attributes,
-            background: Attributes,
-            selection: Attributes,
-            black: Attributes,
-            red: Attributes,
-            green: Attributes,
-            yellow: Attributes,
-            blue: Attributes,
-            magenta: Attributes,
-            cyan: Attributes,
-            white: Attributes,
-            brightBlack: Attributes,
-            brightRed: Attributes,
-            brightGreen: Attributes,
-            brightYellow: Attributes,
-            brightBlue: Attributes,
-            brightMagenta: Attributes,
-            brightCyan: Attributes,
-            brightWhite: Attributes
-        ) {
-            self.text = text
-            self.boldText = boldText
-            self.cursor = cursor
-            self.background = background
-            self.selection = selection
-            self.black = black
-            self.red = red
-            self.green = green
-            self.yellow = yellow
-            self.blue = blue
-            self.magenta = magenta
-            self.cyan = cyan
-            self.white = white
-            self.brightBlack = brightBlack
-            self.brightRed = brightRed
-            self.brightGreen = brightGreen
-            self.brightYellow = brightYellow
-            self.brightBlue = brightBlue
-            self.brightMagenta = brightMagenta
-            self.brightCyan = brightCyan
-            self.brightWhite = brightWhite
         }
     }
 }

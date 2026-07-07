@@ -26,6 +26,8 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         #if DEBUG
         debugRuntimeLog("Plain editor launch path ready: file-backed editor, open/save commands registered")
+        logRuntimeBundleState()
+        logMenuState()
         #endif
         DispatchQueue.main.async {
             self.openDefaultSourceFileIfNeeded()
@@ -41,21 +43,40 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func repoRootURL() -> URL {
-        Bundle.main.bundleURL
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
+        URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     }
+
+    #if DEBUG
+    private func logRuntimeBundleState() {
+        debugRuntimeLog("Bundle.main.bundleURL: \(Bundle.main.bundleURL.path)")
+
+        if let infoDictionary = Bundle.main.infoDictionary,
+           let documentTypes = infoDictionary["CFBundleDocumentTypes"] {
+            debugRuntimeLog("Bundle.main.infoDictionary[CFBundleDocumentTypes]: \(documentTypes)")
+        } else {
+            debugRuntimeLog("Bundle.main.infoDictionary[CFBundleDocumentTypes]: <missing>")
+        }
+
+        debugRuntimeLog("NSDocumentController.documentClassNames: \(NSDocumentController.shared.documentClassNames)")
+
+        if let swiftType = UTType(filenameExtension: "swift") {
+            debugRuntimeLog("UTType(swift): \(swiftType.identifier)")
+            debugRuntimeLog("UTType(swift) conformsTo sourceCode=\(swiftType.conforms(to: .sourceCode)) text=\(swiftType.conforms(to: .text))")
+        } else {
+            debugRuntimeLog("UTType(swift): <missing>")
+        }
+
+        let infoPlistURL = Bundle.main.bundleURL.appendingPathComponent("Info.plist")
+        debugRuntimeLog("Bundle Info.plist exists: \(FileManager.default.fileExists(atPath: infoPlistURL.path))")
+    }
+    #endif
 
     func openDocument(at url: URL) {
         do {
-            let document = CodeFileDocument()
-            document.setValue(url, forKey: "fileURL")
-            let data = try Data(contentsOf: url)
-            let fileType = UTType(filenameExtension: url.pathExtension)?.identifier ?? UTType.text.identifier
-            try document.read(from: data, ofType: fileType)
+            let documentType = UTType(filenameExtension: url.pathExtension)?.identifier ?? UTType.sourceCode.identifier
+            let document = try CodeFileDocument(for: url, withContentsOf: url, ofType: documentType)
             NSDocumentController.shared.addDocument(document)
             document.makeWindowControllers()
-            document.showWindows()
             NSApp.activate(ignoringOtherApps: true)
             #if DEBUG
             debugRuntimeLog("Loaded document: \(url.path)")
@@ -64,6 +85,22 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
             NSAlert(error: error).runModal()
         }
     }
+
+    #if DEBUG
+    private func logMenuState() {
+        guard let mainMenu = NSApp.mainMenu else {
+            debugRuntimeLog("Main menu unavailable")
+            return
+        }
+
+        let titles = mainMenu.items.compactMap { item -> String? in
+            guard let submenu = item.submenu else { return item.title }
+            let subitems = submenu.items.map(\.title).joined(separator: ", ")
+            return "\(item.title): [\(subitems)]"
+        }
+        debugRuntimeLog("Main menu items: \(titles.joined(separator: " | "))")
+    }
+    #endif
 }
 
 private struct PlainEditorCommands: Commands {
@@ -82,9 +119,7 @@ private struct PlainEditorCommands: Commands {
             .keyboardShortcut("o")
 
             Button("Open Example Source") {
-                let repoRoot = Bundle.main.bundleURL
-                    .deletingLastPathComponent()
-                    .deletingLastPathComponent()
+                let repoRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 let defaultFile = repoRoot.appendingPathComponent("CodeEdit/CodeEditApp.swift")
                 (NSApp.delegate as? PlainEditorAppDelegate)?.openDocument(at: defaultFile)
             }

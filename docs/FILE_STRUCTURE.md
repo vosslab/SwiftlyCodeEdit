@@ -27,7 +27,6 @@
 - [`CodeEdit/Features/NavigatorArea/`](../CodeEdit/Features/NavigatorArea/): legacy navigator shell, still being simplified.
 - [`CodeEdit/Features/InspectorArea/`](../CodeEdit/Features/InspectorArea/): legacy inspector shell, still being simplified.
 - [`CodeEdit/Features/SourceControl/`](../CodeEdit/Features/SourceControl/): IDE-era source control support, outside this milestone.
-- [`CodeEdit/Features/TerminalEmulator/`](../CodeEdit/Features/TerminalEmulator/): utility surface outside the required build path.
 
 ## Generated artifacts
 
@@ -64,5 +63,4 @@ These areas are still being simplified and should be treated as transitional:
 - `CodeEdit/Features/ActivityViewer/`
 - `CodeEdit/Features/Notifications/`
 - `CodeEdit/Features/Tasks/`
-- `CodeEdit/Features/TerminalEmulator/`
 - `CodeEdit/Features/CEWorkspace/`

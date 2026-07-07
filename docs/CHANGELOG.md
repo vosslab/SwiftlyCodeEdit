@@ -2,11 +2,21 @@
 
 ### Fixes and Maintenance
 
+- Removed the terminal utility UI test from the active UI-test tree because the milestone excludes terminal behavior.
+- Removed the terminal-emulator source tree, the SwiftTerm utility extension, and the Xcode package references so the active repo surface matches the plain-editor scope.
+- Added a SwiftPM debug-lane direct-open path that initializes `CodeFileDocument` from a known source URL instead of depending on `NSDocumentController` document registration.
+- Logged the live bundle metadata, Swift UTType mapping, and document-controller class list so the plain-editor smoke path can prove the runtime document-type state.
+- Made the plain-editor smoke harness start from a clean `CodeEdit` process so it validates a single deterministic launch lane.
+- Added a SwiftPM package smoke test target for the `CodeFileDocument` lifecycle path so save/reopen verification runs on the Swift build path.
+- Logged the live menu bar during debug launch so the plain-editor smoke run can verify command registration from runtime evidence.
+- Captured a live CodeEdit screenshot at `test-results/gui_smoke/editor_window.png` after verifying the app window stayed open long enough for helper-based capture.
+- Fixed the plain-editor launch crash by moving `presentedItemDidChange()` back onto the main actor instead of forcing isolated access from the file-presenter queue.
 - Moved the plain editor viewport observer back into `CodeEditTextView` and exposed the helper for the app shell.
 - Fixed the remaining Swift 6 concurrency blockers in the plain editor viewport observer and shared static helpers.
 - Replaced the app entry's welcome-window launcher with a minimal plain-editor scene stub.
 - Added a plain-editor launch smoke-run that boots the built executable directly and leaves the app running instead of exiting immediately.
 - Added deterministic runtime logs, a plain-editor smoke harness, and a smoke checklist for the file-backed editor path.
+- Added a focused CodeFileDocument lifecycle test covering load, synthetic edit, save, and reopen persistence.
 - Declared the plain-editor runtime resources explicitly and excluded shell-integration/preview artifacts from the required build path.
 - Trimmed the executable manifest to drop the welcome-window package from the app target.
 - Added `docs/RELATED_PROJECTS.md` from local repo evidence and bounded sibling-project discovery.
