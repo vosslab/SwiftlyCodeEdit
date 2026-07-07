@@ -7,14 +7,8 @@
 
 import Cocoa
 import SwiftUI
-import WelcomeWindow
 
 final class CodeEditDocumentController: NSDocumentController {
-    @Environment(\.openWindow)
-    private var openWindow
-
-    @Service var lspService: LSPService
-
     private let fileManager = FileManager.default
 
     @MainActor
@@ -80,10 +74,6 @@ final class CodeEditDocumentController: NSDocumentController {
         display displayDocument: Bool,
         completionHandler: @escaping (NSDocument?, Bool, Error?) -> Void
     ) {
-        guard !openFileInExistingWorkspace(url: url) else {
-            return
-        }
-
         super.openDocument(withContentsOf: url, display: displayDocument) { document, documentWasAlreadyOpen, error in
             MainActor.assumeIsolated {
                 if let document {
@@ -99,45 +89,11 @@ final class CodeEditDocumentController: NSDocumentController {
         }
     }
 
-    /// Attempt to open the file URL in an open workspace, finding the nearest workspace to open it in if possible.
-    /// - Parameter url: The file URL to open.
-    /// - Returns: True, if the document was opened in a workspace.
-    private func openFileInExistingWorkspace(url: URL) -> Bool {
-        guard !url.isFolder else { return false }
-        let workspaces = documents.compactMap({ $0 as? WorkspaceDocument })
-
-        // Check open workspaces for the file being opened. Sorted by shared components with the url so we
-        // open the nearest workspace possible.
-        for workspace in workspaces.sorted(by: {
-            ($0.fileURL?.sharedComponents(url) ?? 0) > ($1.fileURL?.sharedComponents(url) ?? 0)
-        }) {
-            // createIfNotFound will still return `nil` if the files don't share a common ancestor.
-            if let newFile = workspace.workspaceFileManager?.getFile(url.absolutePath, createIfNotFound: true) {
-                workspace.editorManager?.openTab(item: newFile)
-                workspace.showWindows()
-                return true
-            }
-        }
-        return false
-    }
-
     override func removeDocument(_ document: NSDocument) {
         super.removeDocument(document)
 
-        if let workspace = document as? WorkspaceDocument, let path = workspace.fileURL?.absoluteURL.path() {
-            lspService.closeWorkspace(path)
-        }
-
         if CodeEditDocumentController.shared.documents.isEmpty {
-            switch Settings[\.general].reopenWindowAfterClose {
-            case .showWelcomeWindow:
-                // Opens the welcome window
-                openWindow(sceneID: .welcome)
-            case .quit:
-                // Quits CodeEdit
-                NSApplication.shared.terminate(nil)
-            case .doNothing: break
-            }
+            NSApplication.shared.terminate(nil)
         }
     }
 }

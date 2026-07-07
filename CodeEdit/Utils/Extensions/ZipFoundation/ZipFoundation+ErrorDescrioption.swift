@@ -60,17 +60,17 @@ enum ArchiveExtractionError: LocalizedError {
     var failureReason: String? {
         switch self {
         case .invalidLocalHeaderDataOffset:
-            "Invalid local header data offset."
+            return "Invalid local header data offset."
         case .invalidLocalHeaderSize:
-            "Invalid local header size."
+            return "Invalid local header size."
         case .invalidCentralDirectoryOffset:
-            "Invalid central directory offset."
+            return "Invalid central directory offset."
         case .invalidCentralDirectorySize:
-            "Invalid central directory size."
+            return "Invalid central directory size."
         case .invalidCentralDirectoryEntryCount:
-            "Invalid central directory entry count."
+            return "Invalid central directory entry count."
         case .missingEndOfCentralDirectoryRecord:
-            "Missing end of central directory record."
+            return "Missing end of central directory record."
         case .unzipFailed(let terminationStatus, let output):
             let outputDescription = output.isEmpty ? "No output." : output
             return "unzip exited with status \(terminationStatus): \(outputDescription)"

@@ -23,3 +23,6 @@
 - Removed Sparkle and SwiftLintPlugin from the required build graph and stubbed the updater entry point.
 - Switched the debug and release helper scripts from Xcode build invocation to SwiftPM build invocation.
 - Continued the SwiftPM-first, source-first refactor toward a smaller editor/highlighting boundary.
+- Added `docs/CODE_ARCHITECTURE.md` and `docs/FILE_STRUCTURE.md` to explain the plain-editor cutover and repo layout.
+- Removed `SwiftTerm` from the executable dependency graph because the milestone scope excludes a built-in terminal.
+- Continued cutting the executable target away from the legacy workspace shell so the app can boot through the plain editor path.

@@ -9,7 +9,6 @@ import AppKit
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
-import CodeEditTextView
 import CodeEditLanguages
 import Combine
 import OSLog
@@ -62,9 +61,6 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// Document-specific overridden line wrap preference.
     @Published var wrapLines: Bool?
 
-    /// Set up by ``LanguageServer``, conforms this type to ``LanguageServerDocument``.
-    @Published var languageServerObjects: LanguageServerDocumentObjects<CodeFileDocument> = .init()
-
     /// The type of data this file document contains.
     ///
     /// If its text content is not nil, a `text` UTType is returned.
@@ -102,13 +98,11 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     // MARK: - NSDocument
 
     override static var autosavesInPlace: Bool {
-        Settings.shared.preferences.general.isAutoSaveOn
+        true
     }
 
     override var autosavingFileType: String? {
-        Settings.shared.preferences.general.isAutoSaveOn
-            ? fileType
-            : nil
+        fileType
     }
 
     override func makeWindowControllers() {
@@ -124,9 +118,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         }
         addWindowController(windowController)
 
-        window.contentView = NSHostingView(rootView: SettingsInjector {
-            WindowCodeFileView(codeFile: self)
-        })
+        window.contentView = NSHostingView(rootView: WindowCodeFileView(codeFile: self))
 
         window.makeKeyAndOrderFront(nil)
 
@@ -190,8 +182,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             range: NSRange(location: 0, length: content.length),
             limit: content.length
         )
-        let undoManager = self.findWorkspace()?.undoRegistration.managerIfExists(forFile: fileURL)
-        undoManager?.registerMutation(mutation)
+        _ = mutation
     }
 
     // MARK: - Autosave
@@ -331,21 +322,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         )
     }
 
-    func findWorkspace() -> WorkspaceDocument? {
-        fileURL?.findWorkspace()
-    }
 }
-
-// MARK: LanguageServerDocument
-
-extension CodeFileDocument: LanguageServerDocument {
-    /// A stable string to use when identifying documents with language servers.
-    /// Needs to be a valid URI, so always returns with the `file://` prefix to indicate it's a file URI.
-    var languageServerURI: String? {
-        fileURL?.lspURI
-    }
-}
-
 private extension CodeFileDocument {
 
     static let fileTypeExtension: [String: String?] = [

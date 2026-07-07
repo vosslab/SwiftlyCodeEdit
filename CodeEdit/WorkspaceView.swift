@@ -20,9 +20,6 @@ struct WorkspaceView: View {
     @AppSettings(\.theme.matchAppearance)
     var matchAppearance
 
-    @AppSettings(\.sourceControl.general.sourceControlIsEnabled)
-    var sourceControlIsEnabled
-
     @EnvironmentObject private var workspace: WorkspaceDocument
     @EnvironmentObject private var editorManager: EditorManager
     @EnvironmentObject private var utilityAreaViewModel: UtilityAreaViewModel
@@ -79,32 +76,6 @@ struct WorkspaceView: View {
                             themeModel.selectedTheme = newValue == .dark
                             ? themeModel.selectedDarkTheme
                             : themeModel.selectedLightTheme
-                        }
-                    }
-
-                    // MARK: - Source Control
-
-                    .task {
-                        // Only refresh git data if source control is enabled
-                        guard sourceControlIsEnabled else { return }
-                        
-                        do {
-                            try await sourceControlManager.refreshRemotes()
-                            try await sourceControlManager.refreshStashEntries()
-                        } catch {
-                            await sourceControlManager.showAlertForError(
-                                title: "Error refreshing Git data",
-                                error: error
-                            )
-                        }
-                    }
-                    .onChange(of: sourceControlIsEnabled) { _, newValue in
-                        if newValue {
-                            Task {
-                                await sourceControlManager.refreshCurrentBranch()
-                            }
-                        } else {
-                            sourceControlManager.currentBranch = nil
                         }
                     }
 
