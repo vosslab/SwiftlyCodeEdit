@@ -87,6 +87,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             windowController.windowFrameAutosaveName = fileURL.path
         }
         addWindowController(windowController)
+        windowController.showWindow(nil)
 
         if let fileURL {
             window.title = fileURL.lastPathComponent
@@ -97,6 +98,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         #endif
 
         window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
 
         if let fileURL, UserDefaults.standard.object(forKey: "NSWindow Frame \(fileURL.path)") == nil {
             window.center()

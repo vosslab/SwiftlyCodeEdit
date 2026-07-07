@@ -1,4 +1,5 @@
 import AppKit
+import CodeEditTextView
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -11,13 +12,15 @@ struct CodeEditApp: App {
             EmptyView()
         }
         .commands {
-            PlainEditorCommands()
+            PlainEditorCommands(appDelegate: appDelegate)
         }
     }
 }
 
 @MainActor
 final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
+    let actionRouter = PlainEditorActionRouter.shared
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
     }
@@ -86,6 +89,38 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func saveActiveDocument() {
+        NSApp.sendAction(#selector(NSDocument.save(_:)), to: nil, from: nil)
+    }
+
+    func saveActiveDocumentAs() {
+        NSApp.sendAction(#selector(NSDocument.saveAs(_:)), to: nil, from: nil)
+    }
+
+    func undo() {
+        NSApp.sendAction(#selector(UndoManager.undo), to: nil, from: nil)
+    }
+
+    func redo() {
+        NSApp.sendAction(#selector(UndoManager.redo), to: nil, from: nil)
+    }
+
+    func cut() {
+        NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+    }
+
+    func copy() {
+        NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+    }
+
+    func paste() {
+        NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+    }
+
+    func selectAll() {
+        NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+    }
+
     #if DEBUG
     private func logMenuState() {
         guard let mainMenu = NSApp.mainMenu else {
@@ -103,9 +138,26 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
     #endif
 }
 
+@MainActor
+final class PlainEditorActionRouter: ObservableObject {
+    static let shared = PlainEditorActionRouter()
+
+    @Published var canSave = false
+    @Published var canUndo = false
+    @Published var canRedo = false
+    @Published var canCleanText = false
+}
+
 private struct PlainEditorCommands: Commands {
+    let appDelegate: PlainEditorAppDelegate
+
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
+            Button("New") {
+                NSDocumentController.shared.newDocument(nil)
+            }
+            .keyboardShortcut("n")
+
             Button("Open...") {
                 let panel = NSOpenPanel()
                 panel.canChooseFiles = true
@@ -113,7 +165,7 @@ private struct PlainEditorCommands: Commands {
                 panel.allowsMultipleSelection = false
                 panel.begin { response in
                     guard response == .OK, let url = panel.url else { return }
-                    (NSApp.delegate as? PlainEditorAppDelegate)?.openDocument(at: url)
+                    appDelegate.openDocument(at: url)
                 }
             }
             .keyboardShortcut("o")
@@ -121,7 +173,7 @@ private struct PlainEditorCommands: Commands {
             Button("Open Example Source") {
                 let repoRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 let defaultFile = repoRoot.appendingPathComponent("CodeEdit/CodeEditApp.swift")
-                (NSApp.delegate as? PlainEditorAppDelegate)?.openDocument(at: defaultFile)
+                appDelegate.openDocument(at: defaultFile)
             }
         }
 
@@ -130,12 +182,12 @@ private struct PlainEditorCommands: Commands {
                 #if DEBUG
                 debugRuntimeLog("Save command available")
                 #endif
-                NSApp.sendAction(#selector(NSDocument.save(_:)), to: nil, from: nil)
+                appDelegate.saveActiveDocument()
             }
             .keyboardShortcut("s")
 
             Button("Save As...") {
-                NSApp.sendAction(#selector(NSDocument.saveAs(_:)), to: nil, from: nil)
+                appDelegate.saveActiveDocumentAs()
             }
             .keyboardShortcut("s", modifiers: [.shift, .command])
 
@@ -147,34 +199,34 @@ private struct PlainEditorCommands: Commands {
 
         CommandGroup(replacing: .undoRedo) {
             Button("Undo") {
-                NSApp.sendAction(#selector(UndoManager.undo), to: nil, from: nil)
+                appDelegate.undo()
             }
             .keyboardShortcut("z")
 
             Button("Redo") {
-                NSApp.sendAction(#selector(UndoManager.redo), to: nil, from: nil)
+                appDelegate.redo()
             }
             .keyboardShortcut("z", modifiers: [.shift, .command])
         }
 
         CommandGroup(after: .undoRedo) {
             Button("Cut") {
-                NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                appDelegate.cut()
             }
             .keyboardShortcut("x")
 
             Button("Copy") {
-                NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+                appDelegate.copy()
             }
             .keyboardShortcut("c")
 
             Button("Paste") {
-                NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+                appDelegate.paste()
             }
             .keyboardShortcut("v")
 
             Button("Select All") {
-                NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+                appDelegate.selectAll()
             }
             .keyboardShortcut("a")
         }
@@ -194,7 +246,8 @@ private struct PlainEditorCommands: Commands {
         }
 
         CommandGroup(after: .saveItem) {
-            EmptyView()
+            Button("Clean Text") { }
+                .disabled(true)
         }
     }
 }

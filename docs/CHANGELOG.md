@@ -1,3 +1,17 @@
+## 2026-07-07
+
+### Fixes and Maintenance
+
+- Explicitly show and order the default document window when the plain-editor file document creates it, restoring visible launch for the smoke path.
+- Extended `scripts/plain_editor_smoke.sh` with an optional `~/nsh/easy-screenshot/run.sh --application CodeEdit --preview` confirmation so smoke validation proves a window is actually visible.
+- Split the plain-editor work into foundation and product-UI milestones so the remaining behavior gaps stay explicit.
+- Added a shared plain-editor action router scaffold and routed the plain-editor commands through the same document action methods used by the app shell.
+- Added a `New` command to the plain-editor command group and kept `Clean Text` disabled as a placeholder until the real text-cleaning action exists.
+- Added a visible top command ribbon and bottom status bar scaffold to the plain-editor file view so the app has the intended product shell shape.
+- Added provisional status values for cursor position, word count, character count, indentation, encoding, line ending, and syntax mode.
+- Added runtime log evidence for the plain-editor command ribbon and status bar so smoke validation can assert the visible shell exists.
+- Extended `scripts/plain_editor_smoke.sh` to check the new ribbon and status-bar runtime markers.
+
 ## 2026-07-06
 
 ### Fixes and Maintenance

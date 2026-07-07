@@ -12,20 +12,52 @@ import CodeEditTextView
 struct PlainTextEditorView: NSViewControllerRepresentable {
     final class EditorViewController: NSViewController {
         weak var textView: TextView?
+        var didRequestInitialFirstResponder = false
 
         override func viewDidAppear() {
             super.viewDidAppear()
             guard let textView else { return }
+            guard !didRequestInitialFirstResponder else { return }
+            didRequestInitialFirstResponder = true
             view.window?.makeFirstResponder(textView)
         }
     }
 
-    final class Coordinator: NSObject, TextViewDelegate {
+    @MainActor
+    final class Coordinator: NSObject, @preconcurrency TextViewDelegate {
         weak var textView: TextView?
         var onTextChange: (() -> Void)?
+        var onSelectionChange: ((NSRange) -> Void)?
 
         func textView(_ textView: TextView, didReplaceContentsIn range: NSRange, with string: String) {
             onTextChange?()
+        }
+
+        func attachNotifications(to textView: TextView) {
+            NotificationCenter.default.removeObserver(self)
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleSelectionChanged(_:)),
+                name: TextSelectionManager.selectionChangedNotification,
+                object: textView.selectionManager
+            )
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleTextChanged(_:)),
+                name: TextView.textDidChangeNotification,
+                object: textView
+            )
+        }
+
+        @objc func handleSelectionChanged(_ notification: Notification) {
+            guard let textView else { return }
+            onSelectionChange?(textView.selectedRange())
+        }
+
+        @objc func handleTextChanged(_ notification: Notification) {
+            guard let textView else { return }
+            onTextChange?()
+            onSelectionChange?(textView.selectedRange())
         }
     }
 
@@ -40,6 +72,8 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
     var edgeInsets: HorizontalEdgeInsets
     var textInsets: HorizontalEdgeInsets
     var onTextChange: (() -> Void)?
+    var onSelectionChange: ((NSRange) -> Void)?
+    var onTextViewReady: ((TextView) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -60,6 +94,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
         textView.delegate = context.coordinator
+        context.coordinator.attachNotifications(to: textView)
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
@@ -73,6 +108,8 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         controller.textView = textView
         context.coordinator.textView = textView
         context.coordinator.onTextChange = onTextChange
+        context.coordinator.onSelectionChange = onSelectionChange
+        onTextViewReady?(textView)
         #if DEBUG
         debugRuntimeLog("PlainTextEditorView created editable=\(isEditable) length=\(textStorage.length)")
         #endif
@@ -87,6 +124,11 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         }
 
         context.coordinator.onTextChange = onTextChange
+        context.coordinator.onSelectionChange = onSelectionChange
+        if context.coordinator.textView != nil {
+            let textView = context.coordinator.textView!
+            context.coordinator.attachNotifications(to: textView)
+        }
 
         if textView.string != textStorage.string {
             textView.setTextStorage(textStorage)
@@ -102,7 +144,9 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         textView.edgeInsets = edgeInsets
         textView.textInsets = textInsets
         textView.updatedViewport(scrollView.documentVisibleRect)
-        controller.view.window?.makeFirstResponder(textView)
+        if controller.view.window?.firstResponder !== textView {
+            controller.view.window?.makeFirstResponder(textView)
+        }
         #if DEBUG
         debugRuntimeLog("PlainTextEditorView requested first responder editable=\(textView.isEditable)")
         #endif

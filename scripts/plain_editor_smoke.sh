@@ -46,7 +46,16 @@ wait_for_line "Loaded file: $SOURCE_FILE"
 wait_for_line "Created editor window for $SOURCE_FILE"
 wait_for_line "PlainTextEditorView created"
 wait_for_line "PlainTextEditorView requested first responder"
+wait_for_line "Plain editor command ribbon ready"
+wait_for_line "Plain editor status bar ready"
+wait_for_line "Plain editor status: cursor="
 wait_for_line "Main menu items:"
+
+if [ -x "$HOME/nsh/easy-screenshot/run.sh" ]; then
+  "$HOME/nsh/easy-screenshot/run.sh" --application CodeEdit --preview >>"$RUNTIME_LOG" 2>&1
+  echo "Screenshot confirmation captured" >>"$RUNTIME_LOG"
+  wait_for_line "Screenshot confirmation captured"
+fi
 
 kill "$APP_PID" 2>/dev/null || true
 wait "$APP_PID" 2>/dev/null || true
