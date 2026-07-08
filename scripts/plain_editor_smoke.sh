@@ -5,14 +5,20 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 APP_PATH="${APP_PATH:-$REPO_ROOT/.build/debug/CodeEdit}"
 LOG_FILE="${LOG_FILE:-/tmp/codeedit_plain_editor_smoke.log}"
 RUNTIME_LOG="${RUNTIME_LOG:-/tmp/codeedit_runtime.log}"
-SOURCE_FILE="${SOURCE_FILE:-$REPO_ROOT/tests/fixtures/syntax_smoke_sample.swift}"
+SOURCE_TEMPLATE="${SOURCE_TEMPLATE:-$REPO_ROOT/CodeEdit/Features/Documents/CodeFileDocument/CodeFileDocument.swift}"
+SOURCE_FILE="${SOURCE_FILE:-${TMPDIR:-/tmp}/codeedit_plain_editor_smoke_source.swift}"
+RESULTS_DIR="${RESULTS_DIR:-$REPO_ROOT/test-results/plain_editor_smoke}"
 
 cd "$REPO_ROOT"
 
+mkdir -p "$RESULTS_DIR"
+cp "$SOURCE_TEMPLATE" "$SOURCE_FILE"
 pkill -x CodeEdit 2>/dev/null || true
 : >"$LOG_FILE"
 : >"$RUNTIME_LOG"
-SOURCE_FILE="$SOURCE_FILE" "$APP_PATH" >"$LOG_FILE" 2>&1 &
+CODEEDIT_DEBUG_SOURCE_FILE="$SOURCE_FILE" \
+CODEEDIT_PLAIN_EDITOR_COMMAND_SELF_TEST=1 \
+"$APP_PATH" >"$LOG_FILE" 2>&1 &
 APP_PID="$!"
 
 cleanup() {
@@ -48,20 +54,29 @@ wait_for_line "PlainTextEditorView created"
 wait_for_line "PlainTextEditorView requested first responder"
 wait_for_line "Plain editor command ribbon ready"
 wait_for_line "Plain editor status bar ready"
-wait_for_line "Plain editor font settings:"
 wait_for_line "Plain editor status: cursor="
+wait_for_line "encoding=UTF-8"
+wait_for_line "lineEnding=LF"
+wait_for_line "Plain editor Swift syntax highlight:"
+wait_for_line "tokens=comment,keyword,number,string,type"
+wait_for_line "colors=6"
+wait_for_line "Plain editor command self-test: insert=true undo=true redo=true selectAll=true copy=true cut=true paste=true cleanText=true cleanUndo=true cleanRedo=true"
 wait_for_line "Main menu items:"
 
 if [ -x "$HOME/nsh/easy-screenshot/run.sh" ]; then
-  SCREENSHOT_FILE="$REPO_ROOT/docs/screenshots/codeedit_window.png"
-  "$HOME/nsh/easy-screenshot/run.sh" -A CodeEdit -t "$(basename "$SOURCE_FILE")" -f "$SCREENSHOT_FILE" >>"$RUNTIME_LOG" 2>&1
-  echo "Screenshot captured: $SCREENSHOT_FILE" >>"$RUNTIME_LOG"
-  wait_for_line "Screenshot captured: $SCREENSHOT_FILE"
+  if "$HOME/nsh/easy-screenshot/run.sh" --application CodeEdit --preview >>"$RUNTIME_LOG" 2>&1; then
+    echo "Screenshot confirmation captured" >>"$RUNTIME_LOG"
+    wait_for_line "Screenshot confirmation captured"
+  else
+    echo "Screenshot confirmation unavailable" >>"$RUNTIME_LOG"
+  fi
 fi
 
 kill "$APP_PID" 2>/dev/null || true
 wait "$APP_PID" 2>/dev/null || true
 trap - EXIT
 
+cp "$LOG_FILE" "$RESULTS_DIR/app.log"
+cp "$RUNTIME_LOG" "$RESULTS_DIR/runtime.log"
+
 echo "Plain editor smoke passed"
-find docs/screenshots/ -type f

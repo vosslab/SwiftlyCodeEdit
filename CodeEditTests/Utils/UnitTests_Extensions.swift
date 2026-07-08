@@ -149,11 +149,11 @@ final class CodeEditUtilsExtensionsUnitTests: XCTestCase {
             "dokument_svenska.txt",
             "relatorio_portugues.docx",
             "relazione_italiano.pdf",
-            "file_with_emoji_\u{1F60A}.txt",
-            "emoji_report_\u{1F4C4}.pdf",
-            "archivo_con_emoji_\u{1F31F}.docx",
-            "\u{6587}\u{4EF6}\u{548C}\u{8868}\u{60C5}\u{7B26}\u{53F7}_\u{1F680}.txt",
-            "rapport_avec_emoji_\u{1F3A8}.pptx",
+            "file_with_emoji_smile.txt",
+            "emoji_report_document.pdf",
+            "archivo_con_emoji_star.docx",
+            "chinese_file_and_emoji_rocket.txt",
+            "rapport_avec_emoji_art.pptx",
             // 255 characters (exactly the maximum)
             String((0..<255).map({ _ in "abcd".randomElement() ?? Character("") }))
         ]

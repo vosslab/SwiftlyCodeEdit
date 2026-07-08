@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="Swift" section="Sources" extensions="*.swift" version="1" kateversion="5.0">
+  <highlighting>
+    <list name="keywords">
+      <item>actor</item>
+      <item>as</item>
+      <item>associatedtype</item>
+      <item>async</item>
+      <item>await</item>
+      <item>break</item>
+      <item>case</item>
+      <item>catch</item>
+      <item>class</item>
+      <item>continue</item>
+      <item>default</item>
+      <item>defer</item>
+      <item>do</item>
+      <item>else</item>
+      <item>enum</item>
+      <item>extension</item>
+      <item>false</item>
+      <item>for</item>
+      <item>func</item>
+      <item>guard</item>
+      <item>if</item>
+      <item>import</item>
+      <item>in</item>
+      <item>init</item>
+      <item>inout</item>
+      <item>let</item>
+      <item>nil</item>
+      <item>operator</item>
+      <item>private</item>
+      <item>protocol</item>
+      <item>public</item>
+      <item>return</item>
+      <item>self</item>
+      <item>static</item>
+      <item>struct</item>
+      <item>subscript</item>
+      <item>switch</item>
+      <item>throw</item>
+      <item>true</item>
+      <item>try</item>
+      <item>typealias</item>
+      <item>var</item>
+      <item>where</item>
+      <item>while</item>
+    </list>
+    <contexts>
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <Detect2Chars char="/" char1="/" attribute="Comment" context="Line Comment"/>
+        <Detect2Chars char="/" char1="*" attribute="Comment" context="Block Comment"/>
+        <DetectChar char="&quot;" attribute="String" context="String"/>
+        <RegExpr String="\b[0-9]+(\.[0-9]+)?\b" attribute="Number"/>
+        <keyword String="keywords" attribute="Keyword"/>
+        <RegExpr String="\b[A-Z][A-Za-z0-9_]*\b" attribute="Type"/>
+      </context>
+      <context name="Line Comment" attribute="Comment" lineEndContext="#pop"/>
+      <context name="Block Comment" attribute="Comment" lineEndContext="#stay">
+        <Detect2Chars char="*" char1="/" attribute="Comment" context="#pop"/>
+      </context>
+      <context name="String" attribute="String" lineEndContext="#pop">
+        <HlCStringChar attribute="String"/>
+        <DetectChar char="&quot;" attribute="String" context="#pop"/>
+      </context>
+    </contexts>
+  </highlighting>
+  <itemDatas>
+    <itemData name="Normal Text" defStyleNum="dsNormal"/>
+    <itemData name="Keyword" defStyleNum="dsKeyword"/>
+    <itemData name="Comment" defStyleNum="dsComment"/>
+    <itemData name="String" defStyleNum="dsString"/>
+    <itemData name="Number" defStyleNum="dsDecVal"/>
+    <itemData name="Type" defStyleNum="dsDataType"/>
+  </itemDatas>
+</language>

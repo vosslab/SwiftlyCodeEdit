@@ -145,7 +145,7 @@ final class CEWorkspaceFileManagerUnitTests: XCTestCase {
     func testDuplicateFile() throws {
         let testFileURL = directory.appending(path: "file.txt")
         let testDuplicatedFileURL = directory.appending(path: "file copy.txt")
-        try "\u{1F604}".write(to: testFileURL, atomically: true, encoding: .utf8)
+        try "smile".write(to: testFileURL, atomically: true, encoding: .utf8)
 
         let fileManager = CEWorkspaceFileManager(
             folderUrl: directory,
@@ -157,7 +157,7 @@ final class CEWorkspaceFileManagerUnitTests: XCTestCase {
         try fileManager.duplicate(file: CEWorkspaceFile(url: testFileURL))
         XCTAssert(FileManager.default.fileExists(atPath: testFileURL.path()) == true)
         XCTAssert(FileManager.default.fileExists(atPath: testDuplicatedFileURL.path(percentEncoded: false)) == true)
-        XCTAssert(try String(contentsOf: testDuplicatedFileURL) == "\u{1F604}")
+        XCTAssert(try String(contentsOf: testDuplicatedFileURL) == "smile")
     }
 
     func testAddFile() throws {

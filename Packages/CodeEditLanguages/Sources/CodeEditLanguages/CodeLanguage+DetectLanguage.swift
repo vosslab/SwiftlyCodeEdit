@@ -31,7 +31,7 @@ public extension CodeLanguage {
                   ) {
             return modelineLanguage
         } else {
-            return .default
+            return .plainText
         }
     }
 

@@ -35,7 +35,7 @@ final class FindTests: XCTestCase {
 
         // Add a few files
         let folder1 = directory.appending(path: "Folder 2")
-        let folder2 = directory.appending(path: "Longer Folder With Some 100 Special Chars !")
+        let folder2 = directory.appending(path: "Longer Folder With Some 100 Special Chars")
         try FileManager.default.createDirectory(at: folder1, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: folder2, withIntermediateDirectories: true)
 

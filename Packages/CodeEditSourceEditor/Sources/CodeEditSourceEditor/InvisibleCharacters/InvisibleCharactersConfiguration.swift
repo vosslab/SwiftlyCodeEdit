@@ -29,13 +29,13 @@ public struct InvisibleCharactersConfiguration: Equatable, Hashable, Sendable, C
     /// Replacement when drawing the tab character, enabled by ``showTabs``.
     public var tabReplacement: String = "->"
     /// Replacement when drawing the carriage return character, enabled by ``showLineEndings``.
-    public var carriageReturnReplacement: String = "\u{21B5}"
+    public var carriageReturnReplacement: String = "CR"
     /// Replacement when drawing the line feed character, enabled by ``showLineEndings``.
-    public var lineFeedReplacement: String = "\u{00AC}"
+    public var lineFeedReplacement: String = "LF"
     /// Replacement when drawing the paragraph separator character, enabled by ``showLineEndings``.
-    public var paragraphSeparatorReplacement: String = "\u{00B6}"
+    public var paragraphSeparatorReplacement: String = "PS"
     /// Replacement when drawing the line separator character, enabled by ``showLineEndings``.
-    public var lineSeparatorReplacement: String = "\u{23CE}"
+    public var lineSeparatorReplacement: String = "LS"
 
     public init(showSpaces: Bool, showTabs: Bool, showLineEndings: Bool) {
         self.showSpaces = showSpaces

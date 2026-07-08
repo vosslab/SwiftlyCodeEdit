@@ -241,7 +241,7 @@ Also make sure to add test cases for your new language in `Tests/CodeEditLanguag
 
 ### Run Tests locally
 
-Once you added your unit test cases run all tests locally on your machine by going to `Product>Test` or pressing `\u{2318}+U` to make sure everything is working as intended.
+Once you added your unit test cases run all tests locally on your machine by going to `Product>Test` or pressing `Command-U` to make sure everything is working as intended.
    `unit test results`
 
 ## Documentation

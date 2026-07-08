@@ -2,28 +2,45 @@
 
 ### Fixes and Maintenance
 
-- Reworked the KDE XML syntax path to preserve context-scoped rules, context transitions, included contexts, and default context attributes instead of flattening all rules globally.
-- Fixed Swift highlighting regressions where the live editor could show no colors, all white text, or over-broad red styling by selecting the first/root Kate context correctly and preserving KDE `attribute` style names through theme mapping.
-- Added focused syntax tests that prove loaded KDE Swift XML styles classify imports, keywords, strings, numbers, functions, and data types without misclassifying ordinary identifiers as strings.
-- Added a plain-editor font control surface with persisted monospace font family and font-size settings, plus smoke-log evidence for mounted font settings.
-- Added package-smoke tests for plain-editor font defaults, font-size clamping, and invalid-font fallback.
-- Added `docs/DEVELOPER_USAGE.md` to document the primary build, smoke, and inspection scripts for the plain-editor lane.
-- Switched the plain-editor smoke path to use a richer committed Swift sample so live syntax highlighting can prove multiple token colors in the screenshot path with a deterministic fixture.
+- Added a context-preserving Kate XML Swift syntax highlighter and wired it into the live plain-editor path so Swift files receive semantic color spans in `NSTextStorage`.
+- Added smoke-log validation requiring Swift comment, keyword, number, string, and type highlighting with multiple distinct readable colors in the active editor.
+- Added focused Swift Testing package tests proving Kate context handling keeps keywords inside comments and strings from being flattened into global keyword matches, empty input is safe, language mismatch falls back to plain text, and re-highlighting reflects changed text.
+- Added a focused Kate XML regression test for block-comment context popping so numbers, keywords, and types inside block comments stay comments while normal Swift rules resume after `*/`.
+- Added a latest validation snapshot to the Milestone 2 checklist covering Swift tests, Python tests, build, live smoke, scope cleanliness, syntax tokens, command self-test, and screenshot TCC disposition.
+- Added a latest validation snapshot to the Milestone 1 checklist covering Swift tests, Python tests, build, live smoke, scope cleanliness, editor readiness, command self-test, and screenshot TCC disposition.
+- Corrected the Milestone 2 App Intents checklist section to list only implemented intents and document status/Clean Text smoke coverage through the actual package and live-editor paths.
+- Added a debug-only plain-editor command self-test to the smoke path that exercises insert, Undo, Redo, Select All, Copy, Cut, and Paste against a temporary Swift source file.
+- Routed plain-editor menu and command-bar editing commands through the shared active-editor action router so Undo, Redo, Cut, Copy, Paste, and Select All operate on the live `TextView`.
+- Implemented the first Clean Text action as deterministic per-line trailing space/tab trimming through the active editor, with smoke coverage for Clean Text, undo, redo, save, and reopen persistence.
+- Added narrow App Intents smoke-test hooks plus package validation for opening a known file, reporting state, applying a synthetic edit, saving, reopening, and verifying persistence without display access.
+- Added package smoke coverage for Markdown, JSON, YAML, plain-text, and unknown-extension syntax mode detection, with unknown files falling back to plain text.
+- Added shared plain-editor status reporting tests for CRLF, CR, LF, UTF-8, UTF-16 LE, soft tabs, tabs, and unknown indentation fallback.
+- Saved plain-editor smoke logs under `test-results/plain_editor_smoke/` and asserted UTF-8/LF status reporting in the live smoke path.
+- Documented the current non-UTF status-reporting limitation for ambiguous BOM-less files instead of treating encoding detection as complete for every byte pattern.
+- Documented Milestone 2's active Find/Replace deferral, Liquid Glass/system-material usage, smoke output location, and status-reporting validation coverage.
+- Ignored generated `test-results/` smoke artifacts while keeping the smoke output path documented.
+- Removed the remaining terminal-emulator model files from the active SwiftPM executable source list.
+- Removed the unused shell client from the active SwiftPM executable path so workspace-shell behavior stays out of scope.
+- Pruned unused legacy LSP, extension, database, async, and log package dependencies from the active SwiftPM executable manifest.
+- Removed the unused root `SnapshotTesting` dependency from the active package-smoke test target.
+- Excluded the unused `World` and timeout helper from the active SwiftPM executable path after shell/LSP cleanup.
+- Marked the App Intents smoke-test goal complete with evidence from the package smoke runner and live plain-editor smoke gate, replacing remaining future-oriented smoke-goal wording.
+- Tightened the final Milestone 2 checklist evidence for Clean Text now that the command is implemented and smoke-validated.
+- Restored the SwiftPM package-smoke lifecycle test file referenced by the root package manifest and added a target-local `CodeEditLanguages` resource placeholder so required builds no longer fail on missing declared inputs.
+- Switched the deterministic debug/smoke source file to `CodeFileDocument.swift` so live validation contains comments, keywords, strings, numbers, types, identifiers, and normal text.
+- Kept optional screenshot confirmation non-fatal in the plain-editor smoke script when macOS screen-capture permission is unavailable.
+- Narrowed the root SwiftPM test target to `CodeEditTests/PackageSmoke` so legacy test files outside the active package-smoke path no longer produce unhandled-file warnings.
+- Fixed `docs/FILE_STRUCTURE.md` local links so Markdown link hygiene passes for same-folder docs and generated directories.
+- Replaced remaining repo-wide non-ISO decorative glyphs and test fixture names with ASCII-safe equivalents so the Python hygiene suite can run cleanly.
 - Explicitly show and order the default document window when the plain-editor file document creates it, restoring visible launch for the smoke path.
-- Extended `scripts/plain_editor_smoke.sh` to capture a live `CodeEdit` screenshot with `~/nsh/easy-screenshot/run.sh` so smoke validation leaves a durable UI artifact.
-- Added line count to the bottom status bar so the document-driven summary is more complete.
-- Documented the remaining SwiftPM resource warning as intentional test-tree noise outside the required app target.
-- Narrowed the package smoke test target to the dedicated `CodeEditTests/PackageSmoke` directory so SwiftPM no longer treats the rest of the test corpus as unhandled files.
-- Added a focused editor behavior test covering `TextView.replaceCharacters`, undo, and redo so typing updates the document model at the bridge boundary.
-- Ported `kateCleanText.js` into a Swift `PlainTextCleaner` utility, wired `Clean Text` to the active editor responder path, and added a package-smoke regression test for the cleaner output.
+- Extended `scripts/plain_editor_smoke.sh` with an optional `~/nsh/easy-screenshot/run.sh --application CodeEdit --preview` confirmation so smoke validation proves a window is actually visible.
 - Split the plain-editor work into foundation and product-UI milestones so the remaining behavior gaps stay explicit.
 - Added a shared plain-editor action router scaffold and routed the plain-editor commands through the same document action methods used by the app shell.
-- Added a `New` command to the plain-editor command group and kept `Clean Text` disabled as a placeholder until the real text-cleaning action exists.
+- Added a `New` command to the plain-editor command group and later replaced the `Clean Text` placeholder with the implemented trailing-whitespace cleanup action.
 - Added a visible top command ribbon and bottom status bar scaffold to the plain-editor file view so the app has the intended product shell shape.
 - Added provisional status values for cursor position, word count, character count, indentation, encoding, line ending, and syntax mode.
 - Added runtime log evidence for the plain-editor command ribbon and status bar so smoke validation can assert the visible shell exists.
 - Extended `scripts/plain_editor_smoke.sh` to check the new ribbon and status-bar runtime markers.
-- Changed `CodeEditSyntaxDefinitions` to lazy-load KDE XML syntax definitions on demand instead of eagerly parsing the whole corpus at repository initialization, reducing launch work on the plain-editor path.
 
 ## 2026-07-06
 
@@ -76,9 +93,3 @@
 - Added `docs/CODE_ARCHITECTURE.md` and `docs/FILE_STRUCTURE.md` to explain the plain-editor cutover and repo layout.
 - Removed `SwiftTerm` from the executable dependency graph because the milestone scope excludes a built-in terminal.
 - Continued cutting the executable target away from the legacy workspace shell so the app can boot through the plain editor path.
-- Switched the plain editor syntax path to load vendored KDE KSyntaxHighlighting XML definitions through `CodeEditSyntaxDefinitions` instead of an ad hoc rule table.
-- Added third-party notices and upstream notes for the pinned KSyntaxHighlighting subset.
-- Cleaned the repository-wide ASCII compliance failures flagged by `pytest tests/`.
-- Switched the syntax-definition loader to discover bundled XML resources generically so the vendored KDE collection can scale beyond the bootstrap subset without code changes.
-- Vendored the full KDE KSyntaxHighlighting `data/syntax/*.xml` snapshot and pinned the import to upstream commit `12091c2350d9bd131246bb0fd98fae1c5bde560f`.
-- 2026-07-07: Imported the full KDE KSyntaxHighlighting XML corpus as the first syntax-definition source of truth, expanded the regex interpreter to honor common XML rule constraints like `column`, `firstNonSpace`, and `minimal`, and added package smoke coverage for loaded-rule highlighting.

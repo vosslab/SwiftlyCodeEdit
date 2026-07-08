@@ -21,16 +21,6 @@ let package = Package(
         .package(path: "Packages/CodeEditTextView"),
         .package(path: "Packages/CodeEditSyntaxDefinitions"),
         .package(path: "Packages/CodeEditSymbols"),
-        .package(url: "https://github.com/ChimeHQ/ConcurrencyPlus", from: "0.4.1"),
-        .package(url: "https://github.com/ChimeHQ/LanguageClient", from: "0.8.2"),
-        .package(url: "https://github.com/ChimeHQ/LanguageServerProtocol", from: "0.13.2"),
-        .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0"),
-        .package(url: "https://github.com/groue/GRDB.swift.git", from: "6.0.0"),
-        .package(url: "https://github.com/johnsundell/collectionconcurrencykit", from: "0.2.0"),
-        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.2.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.6"),
-        .package(url: "https://github.com/Wouter01/LogStream", from: "1.3.0"),
     ],
     targets: [
         .executableTarget(
@@ -42,15 +32,6 @@ let package = Package(
                 .product(name: "CodeEditTextView", package: "CodeEditTextView"),
                 .product(name: "CodeEditSyntaxDefinitions", package: "CodeEditSyntaxDefinitions"),
                 .product(name: "CodeEditSymbols", package: "CodeEditSymbols"),
-                .product(name: "ConcurrencyPlus", package: "ConcurrencyPlus"),
-                .product(name: "LanguageClient", package: "LanguageClient"),
-                .product(name: "LanguageServerProtocol", package: "LanguageServerProtocol"),
-                .product(name: "AnyCodable", package: "AnyCodable"),
-                .product(name: "GRDB", package: "GRDB.swift"),
-                .product(name: "CollectionConcurrencyKit", package: "collectionconcurrencykit"),
-                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-                .product(name: "SwiftUIIntrospect", package: "SwiftUI-Introspect"),
-                .product(name: "LogStream", package: "LogStream"),
             ],
             path: "CodeEdit",
             exclude: [
@@ -58,6 +39,7 @@ let package = Package(
                 "CodeEdit.entitlements",
                 "Info.plist",
                 "Preview Content",
+                "World.swift",
                 "Features/ActivityViewer",
                 "Features/CEWorkspace",
                 "Features/CEWorkspaceSettings",
@@ -86,6 +68,7 @@ let package = Package(
                 "Features/SourceControl",
                 "Features/StatusBar",
                 "Features/Tasks",
+                "Features/TerminalEmulator",
                 "Features/UtilityArea",
                 "Features/InspectorArea/Models/InspectorTab.swift",
                 "WorkspaceSheets.swift",
@@ -104,10 +87,13 @@ let package = Package(
                 "Utils/DependencyInjection",
                 "Utils/Environment",
                 "Utils/Extensions/Date",
+                "Utils/Extensions/LanguageIdentifier",
                 "Utils/Extensions/LocalProcess",
                 "Utils/Extensions/SemanticToken",
                 "Utils/Extensions/TextView",
-                "Utils/Extensions/URL"
+                "Utils/Extensions/URL",
+                "Utils/ShellClient",
+                "Utils/withTimeout.swift"
             ],
             resources: [
                 .process("Assets.xcassets"),
@@ -118,16 +104,10 @@ let package = Package(
             name: "CodeEditTests",
             dependencies: [
                 "CodeEdit",
-                .product(name: "CodeEditSyntaxDefinitions", package: "CodeEditSyntaxDefinitions"),
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             path: "CodeEditTests/PackageSmoke",
             sources: [
-                "CodeFileDocumentLifecycleTests.swift",
-                "PlainEditorFontSettingsTests.swift",
-                "PlainTextCleanerTests.swift",
-                "PlainSyntaxHighlighterTests.swift",
-                "UndoManagerRegistrationTests.swift"
+                "CodeFileDocumentLifecycleTests.swift"
             ]
         ),
     ]

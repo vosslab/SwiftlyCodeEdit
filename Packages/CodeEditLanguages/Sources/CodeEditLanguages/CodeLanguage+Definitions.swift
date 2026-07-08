@@ -53,7 +53,8 @@ public extension CodeLanguage {
         .typescript,
         .verilog,
         .yaml,
-        .zig
+        .zig,
+        .plainText
     ]
 
     /// A language structure for `Agda`
@@ -455,6 +456,15 @@ public extension CodeLanguage {
         rangeCommentStrings: ("", ""),
         documentationCommentStrings: [.single("///"), .single("//!")],
         highlights: ["injections"]
+    )
+
+    /// A language structure for plain text.
+    static let plainText: CodeLanguage = .init(
+        id: .plainText,
+        tsName: "plain-text",
+        extensions: ["txt", "text"],
+        lineCommentString: "",
+        rangeCommentStrings: ("", "")
     )
 
 }

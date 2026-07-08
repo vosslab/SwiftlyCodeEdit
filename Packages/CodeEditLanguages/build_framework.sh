@@ -14,7 +14,7 @@
 status () {
     local GREEN='\033[0;32m'
     local NC='\033[0m' # No Color
-    printf "%b%s%b\n" "${GREEN}" "$1" "${NC}"
+    echo "${GREEN}* $1${NC}"
 }
 
 # If --debug set -quiet flag and redirect output to /dev/null

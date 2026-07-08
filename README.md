@@ -1,6 +1,6 @@
-# CodeEdit for macOS
+# SwiftlyCodeEdit
 
-CodeEdit is a native macOS code editor for Apple Silicon Macs running Tahoe or newer, with the repo now moving toward a SwiftPM-first, source-first build.
+A fast native code editor for macOS. It is a lightweight Swift/SwiftUI-first text and code editor for Apple Silicon Macs running Tahoe or newer, with a SwiftPM-first build path.
 
 ## Documentation
 
@@ -15,7 +15,7 @@ CodeEdit is a native macOS code editor for Apple Silicon Macs running Tahoe or n
 
 ## Quick start
 
-1. Run `./build_debug.sh` to build and launch the `CodeEdit` app from Xcode.
+1. Run `./build_debug.sh` to build and launch the debug app with SwiftPM.
 2. Run `./build_release.sh` to make a release build, with optional install to `/Applications` via `INSTALL_TO_APPLICATIONS=1`.
 3. Open `CodeEdit.xcodeproj` in Xcode if you want to run or debug interactively.
 

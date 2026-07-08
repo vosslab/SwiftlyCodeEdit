@@ -9,6 +9,19 @@ public enum CodeEditSyntaxDefinitions {
     public static func debugSummary(language: String) -> String {
         SyntaxDefinitionRepository.shared.debugSummary(language: language)
     }
+
+    public static func kateDefinitionXML(named name: String) throws -> String {
+        let url = Bundle.module.url(forResource: name, withExtension: "xml", subdirectory: "Kate")
+            ?? Bundle.module.url(forResource: name, withExtension: "xml")
+        guard let url else {
+            throw SyntaxDefinitionError.missingDefinition(name: name)
+        }
+        return try String(contentsOf: url, encoding: .utf8)
+    }
+}
+
+public enum SyntaxDefinitionError: Error, Equatable {
+    case missingDefinition(name: String)
 }
 
 public struct SyntaxDefinition: Sendable {

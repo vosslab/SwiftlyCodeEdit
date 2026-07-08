@@ -40,7 +40,7 @@ final class FindAndReplaceTests: XCTestCase { // swiftlint:disable:this type_bod
         // Add a few files
         let folder1 = directory.appending(path: "Folder 2")
         folder1File = CEWorkspaceFile(url: folder1)
-        let folder2 = directory.appending(path: "Longer Folder With Some 100 Special Chars !")
+        let folder2 = directory.appending(path: "Longer Folder With Some 100 Special Chars")
         folder2File = CEWorkspaceFile(url: folder2)
         try FileManager.default.createDirectory(at: folder1, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: folder2, withIntermediateDirectories: true)

@@ -1,5 +1,16 @@
 # App Intents Smoke Test Goal
 
+## Status
+
+Complete for the current milestone.
+
+Evidence:
+
+- `CodeEdit/Features/SmokeTesting/PlainEditorSmokeIntents.swift` defines the narrow smoke intent surface.
+- `CodeEditTests/PackageSmoke/CodeFileDocumentLifecycleTests.swift` runs the same smoke runner without display access.
+- `swift test` validates the package smoke suite.
+- `./scripts/plain_editor_smoke.sh` remains the live app smoke gate.
+
 ## Purpose
 
 Use App Intents as narrow smoke-test hooks for the plain editor path.
@@ -19,7 +30,7 @@ Add a small App Intents smoke-test surface that can prove the editor can:
 
 The App Intents should exercise the same document and editor path used by the app. They should not create a separate fake validation path.
 
-## Candidate Smoke-Test Intents
+## Implemented Smoke-Test Intents
 
 - `OpenKnownFileIntent`
 - `ReportEditorStateIntent`
@@ -44,9 +55,9 @@ Useful return values include:
 - reopened character count
 - persisted-edit result
 
-## Smoke Script Use
+## Smoke Flow
 
-The smoke script should be able to run the validation without human interaction.
+The smoke path runs validation without human interaction.
 
 A successful smoke flow should:
 
@@ -78,7 +89,7 @@ The current milestone remains a working plain text editor:
 
 ## Success Condition
 
-This goal is complete when the repo has an automated smoke path that proves:
+This goal is complete. The repo has an automated smoke path that proves:
 
 - a known text/source file opens
 - the document receives non-empty text

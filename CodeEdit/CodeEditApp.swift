@@ -44,7 +44,10 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let defaultFile = repoRootURL().appendingPathComponent("CodeEdit/CodeEditApp.swift")
+        let repoRoot = repoRootURL()
+        let defaultFile = repoRoot.appendingPathComponent(
+            "CodeEdit/Features/Documents/CodeFileDocument/CodeFileDocument.swift"
+        )
         guard FileManager.default.fileExists(atPath: defaultFile.path) else { return }
         openDocument(at: defaultFile)
     }
@@ -54,8 +57,9 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func smokeSourceFileURL() -> URL? {
-        guard let path = ProcessInfo.processInfo.environment["SOURCE_FILE"],
-              !path.isEmpty else {
+        let environment = ProcessInfo.processInfo.environment
+        let path = environment["CODEEDIT_DEBUG_SOURCE_FILE"] ?? environment["SOURCE_FILE"]
+        guard let path, !path.isEmpty else {
             return nil
         }
 
@@ -115,27 +119,31 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func undo() {
-        NSApp.sendAction(#selector(UndoManager.undo), to: nil, from: nil)
+        _ = actionRouter.undo()
     }
 
     func redo() {
-        NSApp.sendAction(#selector(UndoManager.redo), to: nil, from: nil)
+        _ = actionRouter.redo()
     }
 
     func cut() {
-        NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+        _ = actionRouter.cut()
     }
 
     func copy() {
-        NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+        _ = actionRouter.copy()
     }
 
     func paste() {
-        NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+        _ = actionRouter.paste()
     }
 
     func selectAll() {
-        NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+        _ = actionRouter.selectAll()
+    }
+
+    func cleanText() {
+        _ = actionRouter.cleanText()
     }
 
     #if DEBUG
@@ -163,6 +171,60 @@ final class PlainEditorActionRouter: ObservableObject {
     @Published var canUndo = false
     @Published var canRedo = false
     @Published var canCleanText = false
+
+    private weak var activeTextView: TextView?
+
+    func register(textView: TextView) {
+        activeTextView = textView
+    }
+
+    func undo() -> Bool {
+        guard let undoManager = activeTextView?.undoManager, undoManager.canUndo else { return false }
+        undoManager.undo()
+        return true
+    }
+
+    func redo() -> Bool {
+        guard let undoManager = activeTextView?.undoManager, undoManager.canRedo else { return false }
+        undoManager.redo()
+        return true
+    }
+
+    func cut() -> Bool {
+        guard let activeTextView else { return false }
+        activeTextView.cut(activeTextView)
+        return true
+    }
+
+    func copy() -> Bool {
+        guard let activeTextView else { return false }
+        activeTextView.copy(activeTextView)
+        return true
+    }
+
+    func paste() -> Bool {
+        guard let activeTextView else { return false }
+        activeTextView.paste(activeTextView)
+        return true
+    }
+
+    func selectAll() -> Bool {
+        guard let activeTextView else { return false }
+        activeTextView.selectAll(nil)
+        return true
+    }
+
+    func cleanText() -> Bool {
+        guard let activeTextView, activeTextView.isEditable else { return false }
+        let original = activeTextView.string
+        let cleaned = PlainEditorTextCleaner.trimTrailingHorizontalWhitespace(in: original)
+        guard cleaned != original else { return false }
+        activeTextView.replaceCharacters(
+            in: NSRange(location: 0, length: (original as NSString).length),
+            with: cleaned
+        )
+        return true
+    }
 }
 
 private struct PlainEditorCommands: Commands {
@@ -188,8 +250,10 @@ private struct PlainEditorCommands: Commands {
             .keyboardShortcut("o")
 
             Button("Open Example Source") {
-                let defaultFile = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                    .appendingPathComponent("CodeEdit/CodeEditApp.swift")
+                let repoRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                let defaultFile = repoRoot.appendingPathComponent(
+                    "CodeEdit/Features/Documents/CodeFileDocument/CodeFileDocument.swift"
+                )
                 appDelegate.openDocument(at: defaultFile)
             }
         }
@@ -264,7 +328,7 @@ private struct PlainEditorCommands: Commands {
 
         CommandGroup(after: .saveItem) {
             Button("Clean Text") {
-                NSApp.sendAction(#selector(TextView.cleanText(_:)), to: nil, from: nil)
+                appDelegate.cleanText()
             }
         }
     }
@@ -273,7 +337,7 @@ private struct PlainEditorCommands: Commands {
 extension TextView {
     @objc func cleanText(_ sender: Any?) {
         guard isEditable else { return }
-        let cleaned = PlainTextCleaner.clean(string)
+        let cleaned = PlainEditorTextCleaner.trimTrailingHorizontalWhitespace(in: string)
         guard cleaned != string else { return }
         replaceCharacters(
             in: NSRange(location: 0, length: string.utf16.count),

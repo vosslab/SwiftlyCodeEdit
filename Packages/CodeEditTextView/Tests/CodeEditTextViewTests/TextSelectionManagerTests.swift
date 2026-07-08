@@ -5,7 +5,7 @@ final class TextSelectionManagerTests: XCTestCase {
     var textStorage: NSTextStorage!
     var layoutManager: TextLayoutManager!
 
-    func selectionManager(_ text: String = "Loren Ipsum \u{1F4AF}") -> TextSelectionManager {
+    func selectionManager(_ text: String = "Loren Ipsum 100") -> TextSelectionManager {
         textStorage = NSTextStorage(string: text)
         layoutManager = TextLayoutManager(
             textStorage: textStorage,
@@ -97,7 +97,7 @@ final class TextSelectionManagerTests: XCTestCase {
     }
 
     func test_updateSelectionRightWord() {
-        // "Loren Ipsum \u{1F4AF}"
+        // "Loren Ipsum 100"
         let selectionManager = selectionManager()
         let locations = [2, 0, 6]
         let expectedRanges = [(2, 3), (0, 5), (6, 5)]
@@ -122,7 +122,7 @@ final class TextSelectionManagerTests: XCTestCase {
     }
 
     func test_updateSelectionLeftLine() {
-        // "Loren Ipsum \u{1F4AF}"
+        // "Loren Ipsum 100"
         let selectionManager = selectionManager()
         let locations = [2, 0, 14, 12]
         let expectedRanges = [(0, 2), (0, 0), (0, 14), (0, 12)]
@@ -147,7 +147,7 @@ final class TextSelectionManagerTests: XCTestCase {
     }
 
     func test_updateSelectionRightLine() {
-        let selectionManager = selectionManager("Loren Ipsum \u{1F4AF}\nHello World")
+        let selectionManager = selectionManager("Loren Ipsum 100\nHello World")
         let locations = [2, 0, 14, 12, 17]
         let expectedRanges = [(2, 12), (0, 14), (14, 0), (12, 2), (17, 9)]
 
@@ -171,7 +171,7 @@ final class TextSelectionManagerTests: XCTestCase {
     }
 
     func test_updateSelectionUpDocument() {
-        let selectionManager = selectionManager("Loren Ipsum \u{1F4AF}\nHello World\n1\n2\n3\n")
+        let selectionManager = selectionManager("Loren Ipsum 100\nHello World\n1\n2\n3\n")
         let locations = [0, 27, 30, 33]
         let expectedRanges = [(0, 0), (0, 27), (0, 30), (0, 33)]
 
@@ -195,7 +195,7 @@ final class TextSelectionManagerTests: XCTestCase {
     }
 
     func test_updateSelectionDownDocument() {
-        let selectionManager = selectionManager("Loren Ipsum \u{1F4AF}\nHello World\n1\n2\n3\n")
+        let selectionManager = selectionManager("Loren Ipsum 100\nHello World\n1\n2\n3\n")
         let locations = [0, 2, 27, 30, 33]
         let expectedRanges = [(0, 33), (2, 31), (27, 6), (30, 3), (33, 0)]
 

@@ -9,6 +9,8 @@ import Foundation
 import SwiftUI
 import CodeEditTextView
 import CodeEditLanguages
+import CodeEditHighlighting
+import CodeEditSyntaxDefinitions
 
 /// CodeFileView is just a wrapper of the `CodeEditor` dependency
 struct CodeFileView: View {
@@ -36,6 +38,7 @@ struct CodeFileView: View {
                 canSave: codeFile.isDocumentEdited || codeFile.fileURL != nil,
                 canUndo: activeTextView?.undoManager?.canUndo ?? false,
                 canRedo: activeTextView?.undoManager?.canRedo ?? false,
+                canCleanText: activeTextView?.isEditable ?? false,
                 fontFamily: $editorFontFamily,
                 fontSize: $editorFontSize
             )
@@ -70,7 +73,9 @@ struct CodeFileView: View {
                     },
                     onTextViewReady: { textView in
                         activeTextView = textView
+                        PlainEditorActionRouter.shared.register(textView: textView)
                         chrome.refresh(document: codeFile, selection: textView.selectedRange())
+                        PlainEditorCommandSelfTest.scheduleIfRequested(textView: textView)
                     }
                 )
                 // This view needs to refresh when the codefile changes. The file URL is too stable.
@@ -138,6 +143,77 @@ enum PlainEditorFontSettings {
     }
 }
 
+#if DEBUG
+@MainActor
+private enum PlainEditorCommandSelfTest {
+    private static var didSchedule = false
+
+    static func scheduleIfRequested(textView: TextView) {
+        guard ProcessInfo.processInfo.environment["CODEEDIT_PLAIN_EDITOR_COMMAND_SELF_TEST"] == "1",
+              !didSchedule else {
+            return
+        }
+        didSchedule = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            run(textView: textView)
+        }
+    }
+
+    private static func run(textView: TextView) {
+        let originalText = textView.string
+        let originalPasteboard = NSPasteboard.general.string(forType: .string)
+        let marker = "let plainEditorCommandSelfTestValue = 123\n"
+
+        textView.window?.makeFirstResponder(textView)
+        textView.selectionManager.setSelectedRange(NSRange(location: 0, length: 0))
+        textView.replaceCharacters(in: NSRange(location: 0, length: 0), with: marker)
+        let inserted = textView.string.hasPrefix(marker)
+
+        let undoSent = PlainEditorActionRouter.shared.undo()
+        let undoWorked = undoSent && textView.string == originalText
+
+        let redoSent = PlainEditorActionRouter.shared.redo()
+        let redoWorked = redoSent && textView.string.hasPrefix(marker)
+
+        let selectAllSent = PlainEditorActionRouter.shared.selectAll()
+        let selectedAll = selectAllSent && textView.selectedRange().length == (textView.string as NSString).length
+
+        let copySent = PlainEditorActionRouter.shared.copy()
+        let copied = copySent && NSPasteboard.general.string(forType: .string) == textView.string
+
+        let cutSent = PlainEditorActionRouter.shared.cut()
+        let cut = cutSent && textView.string.isEmpty
+
+        let pasteSent = PlainEditorActionRouter.shared.paste()
+        let pasted = pasteSent && textView.string.hasPrefix(marker)
+
+        let dirtyLine = "let cleanTextSmokeValue = 1    \n"
+        textView.selectionManager.setSelectedRange(NSRange(location: 0, length: 0))
+        textView.replaceCharacters(in: NSRange(location: 0, length: 0), with: dirtyLine)
+        let cleanSent = PlainEditorActionRouter.shared.cleanText()
+        let cleanWorked = cleanSent && textView.string.hasPrefix("let cleanTextSmokeValue = 1\n")
+        let cleanUndoSent = PlainEditorActionRouter.shared.undo()
+        let cleanUndoWorked = cleanUndoSent && textView.string.hasPrefix(dirtyLine)
+        let cleanRedoSent = PlainEditorActionRouter.shared.redo()
+        let cleanRedoWorked = cleanRedoSent && textView.string.hasPrefix("let cleanTextSmokeValue = 1\n")
+
+        let currentFullRange = NSRange(location: 0, length: (textView.string as NSString).length)
+        textView.replaceCharacters(in: currentFullRange, with: originalText)
+        textView.selectionManager.setSelectedRange(NSRange(location: 0, length: min(originalText.count, textView.textStorage.length)))
+
+        NSPasteboard.general.clearContents()
+        if let originalPasteboard {
+            NSPasteboard.general.setString(originalPasteboard, forType: .string)
+        }
+
+        debugRuntimeLog(
+            "Plain editor command self-test: insert=\(inserted) undo=\(undoWorked) redo=\(redoWorked) selectAll=\(selectedAll) copy=\(copied) cut=\(cut) paste=\(pasted) cleanText=\(cleanWorked) cleanUndo=\(cleanUndoWorked) cleanRedo=\(cleanRedoWorked)"
+        )
+    }
+}
+#endif
+
 @MainActor
 final class PlainEditorChromeModel: ObservableObject {
     @Published var cursorPosition = "--"
@@ -154,14 +230,14 @@ final class PlainEditorChromeModel: ObservableObject {
         let nsText = text as NSString
         let selectedRange = selection ?? NSRange(location: 0, length: 0)
 
-        cursorPosition = Self.cursorLabel(text: text, selection: selectedRange)
+        cursorPosition = PlainEditorStatusReporter.cursorLabel(text: text, selection: selectedRange)
         lineCount = "\(max(1, text.components(separatedBy: .newlines).count)) lines"
-        wordCount = "\(Self.wordCount(in: text)) words"
+        wordCount = "\(PlainEditorStatusReporter.wordCount(in: text)) words"
         characterCount = "\(nsText.length) characters"
-        indentation = Self.indentationLabel(in: text)
-        encoding = Self.encodingLabel(document.sourceEncoding)
-        lineEnding = Self.lineEndingLabel(in: text)
-        syntaxMode = Self.languageLabel(document.getLanguage())
+        indentation = PlainEditorStatusReporter.indentationLabel(in: text)
+        encoding = PlainEditorStatusReporter.encodingLabel(document.sourceEncoding)
+        lineEnding = PlainEditorStatusReporter.lineEndingLabel(in: text)
+        syntaxMode = PlainEditorStatusReporter.languageLabel(document.getLanguage())
         #if DEBUG
         debugRuntimeLog(
             "Plain editor status: cursor=\(cursorPosition) lines=\(lineCount) words=\(wordCount) chars=\(characterCount) indent=\(indentation) encoding=\(encoding) lineEnding=\(lineEnding) syntax=\(syntaxMode)"
@@ -169,92 +245,13 @@ final class PlainEditorChromeModel: ObservableObject {
         #endif
     }
 
-    private static func cursorLabel(text: String, selection: NSRange) -> String {
-        let nsText = text as NSString
-        let cappedLocation = max(0, min(selection.location, nsText.length))
-        let lineRange = nsText.lineRange(for: NSRange(location: cappedLocation, length: 0))
-        let lineNumber = nsText.substring(to: cappedLocation).components(separatedBy: .newlines).count
-        let currentLine = nsText.substring(with: lineRange)
-        let column = currentLine.prefix(max(0, cappedLocation - lineRange.location)).count + 1
-        return "\(lineNumber)/\(nsText.components(separatedBy: .newlines).count):\(column)"
-    }
-
-    private static func wordCount(in text: String) -> Int {
-        text.split { !$0.isLetter && !$0.isNumber && $0 != "_" }.count
-    }
-
-    private static func indentationLabel(in text: String) -> String {
-        let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
-        let sample = lines.prefix(50)
-        var tabCount = 0
-        var spaceCounts: [Int: Int] = [:]
-
-        for line in sample {
-            if line.hasPrefix("\t") {
-                tabCount += 1
-            } else if let count = line.prefix(while: { $0 == " " }).count.nonZero {
-                spaceCounts[count, default: 0] += 1
-            }
-        }
-
-        if tabCount > spaceCounts.values.reduce(0, +) {
-            return "Tabs"
-        }
-
-        if let best = spaceCounts.max(by: { $0.value < $1.value })?.key {
-            return "Soft Tabs: \(best)"
-        }
-
-        return "Unknown"
-    }
-
-    private static func lineEndingLabel(in text: String) -> String {
-        if text.contains("\r\n") {
-            return "CRLF"
-        } else if text.contains("\r") {
-            return "CR"
-        } else if text.contains("\n") {
-            return "LF"
-        } else {
-            return "Unknown"
-        }
-    }
-
-    private static func encodingLabel(_ encoding: FileEncoding?) -> String {
-        guard let encoding else {
-            return "UTF-8"
-        }
-
-        switch encoding {
-        case .utf8:
-            return "UTF-8"
-        default:
-            return String(describing: encoding)
-        }
-    }
-
-    private static func languageLabel(_ language: CodeLanguage) -> String {
-        switch language.id {
-        case .markdown, .markdownInline:
-            return "Markdown"
-        case .json:
-            return "JSON"
-        case .yaml:
-            return "YAML"
-        case .swift:
-            return "Swift"
-        case .plainText:
-            return "Plain Text"
-        default:
-            return language.tsName.capitalized
-        }
-    }
 }
 
 private struct PlainEditorCommandBar: View {
     let canSave: Bool
     let canUndo: Bool
     let canRedo: Bool
+    let canCleanText: Bool
     @Binding var fontFamily: String
     @Binding var fontSize: Double
 
@@ -275,13 +272,15 @@ private struct PlainEditorCommandBar: View {
             })
             Divider().frame(height: 16)
             commandButton("Undo", isEnabled: canUndo, action: {
-                NSApp.sendAction(#selector(UndoManager.undo), to: nil, from: nil)
+                _ = PlainEditorActionRouter.shared.undo()
             })
             commandButton("Redo", isEnabled: canRedo, action: {
-                NSApp.sendAction(#selector(UndoManager.redo), to: nil, from: nil)
+                _ = PlainEditorActionRouter.shared.redo()
             })
             Divider().frame(height: 16)
-            commandButton("Clean Text", isEnabled: false, action: { })
+            commandButton("Clean Text", isEnabled: canCleanText, action: {
+                _ = PlainEditorActionRouter.shared.cleanText()
+            })
             Spacer(minLength: 16)
             fontControls
         }
@@ -351,11 +350,5 @@ private struct PlainEditorStatusBar: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial)
-    }
-}
-
-private extension Int {
-    var nonZero: Int? {
-        self == 0 ? nil : self
     }
 }

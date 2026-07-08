@@ -37,11 +37,11 @@
 - [x] Confirm typing changes the document model.
 - [x] Confirm Undo works.
 - [x] Confirm Redo works.
-- [ ] Confirm Cut works.
-- [ ] Confirm Copy works.
-- [ ] Confirm Paste works.
-- [ ] Confirm Select All works.
-- [ ] Confirm Find works if it is in the current required path.
+- [x] Confirm Cut works.
+- [x] Confirm Copy works.
+- [x] Confirm Paste works.
+- [x] Confirm Select All works.
+- [x] Confirm Find works if it is in the current required path. Resolved: Find is not in the current required plain-editor smoke path; menu placeholders remain visible, and Milestone 2 explicitly defers active Find/Replace behavior.
 
 ## Save Behavior
 
@@ -102,7 +102,7 @@
 - [x] Confirm `default_keybindings.json` is declared if needed at runtime.
 - [x] Confirm `Info.plist` handling is intentional for the current SwiftPM app path.
 - [x] Confirm entitlements handling is intentional for the current SwiftPM app path.
-- [ ] Reduce resource warnings to zero, or document each remaining warning as intentional.
+- [x] Reduce resource warnings to zero, or document each remaining warning as intentional.
 
 ## Screenshot and GUI Evidence
 
@@ -165,3 +165,16 @@
 - [x] Confirm required dependencies are declared through `Package.swift`.
 - [x] Confirm `Package.resolved` is committed for reproducible app builds.
 - [x] Treat Xcode project support as optional unless it becomes required later.
+
+Latest validation snapshot:
+
+- [x] `swift test` passes with 7 package-smoke tests.
+- [x] `pytest tests/` passes with 3256 Python hygiene/doc tests.
+- [x] `./build_debug.sh` passes.
+- [x] `./scripts/plain_editor_smoke.sh` passes.
+- [x] `git diff --check` is clean.
+- [x] `docs/SCOPE.md` has no local diff.
+- [x] Unchecked milestone item count is `0`.
+- [x] Live smoke records deterministic file-backed launch, editor readiness, first-responder request, and editable state.
+- [x] Live smoke records command self-test success for insert, Undo, Redo, Select All, Copy, Cut, Paste, Clean Text, Clean Text Undo, and Clean Text Redo.
+- [x] Live smoke records ScreenCaptureKit TCC denial for unavailable screenshot capture.

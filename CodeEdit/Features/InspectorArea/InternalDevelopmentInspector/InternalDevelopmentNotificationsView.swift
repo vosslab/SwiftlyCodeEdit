@@ -39,8 +39,8 @@ struct InternalDevelopmentNotificationsView: View {
     ]
 
     private let availableEmojis = [
-        "bell", "alert", "warning", "wave", "heart-eyes", "cool", "kiss", "wink-tongue", "tongue", "grin", "beaming",
-        "joy", "rofl", "smile", "smile2", "laugh", "laugh2", "angel", "wink", "blush", "yum", "relieved"
+        "bell", "alert", "warning", "wave", "smile", "cool", "wink", "happy", "grin", "laugh", "ok",
+        "funny", "joy", "bright", "good", "relief", "cheer", "calm", "nice", "friendly", "simple", "soft"
     ]
 
     private let availableImages = [
@@ -170,7 +170,7 @@ struct InternalDevelopmentNotificationsView: View {
                             isSticky: sticky
                         )
                     case .emoji:
-                        let emoji = selectedEmoji ?? availableEmojis.randomElement() ?? "\u{1F514}"
+                        let emoji = selectedEmoji ?? availableEmojis.randomElement() ?? "bell"
                         let iconColor = selectedColor ?? availableColors.randomElement()?.1 ?? .blue
 
                         NotificationManager.shared.post(

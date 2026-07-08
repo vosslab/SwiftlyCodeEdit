@@ -38,6 +38,9 @@ enum PlainSyntaxHighlighter {
         storage.removeAttribute(.foregroundColor, range: fullRange)
         storage.addAttribute(.foregroundColor, value: theme.baseTextColor, range: fullRange)
         apply(spans: spans, storage: storage, text: text, theme: theme)
+        #if DEBUG
+        logMilestoneSyntaxSummary(spans: spans)
+        #endif
     }
 
     private static func apply(spans: [HighlightSpan], storage: NSTextStorage, text: String, theme: PlainSyntaxTheme) {
@@ -46,6 +49,18 @@ enum PlainSyntaxHighlighter {
             storage.addAttribute(.foregroundColor, value: theme.color(for: span), range: range)
         }
     }
+
+    #if DEBUG
+    private static func logMilestoneSyntaxSummary(spans: [HighlightSpan]) {
+        let milestoneTokens: [HighlightToken] = [.comment, .keyword, .number, .string, .type]
+        let tokens = Set(spans.map(\.token))
+        let tokenNames = milestoneTokens
+            .filter { tokens.contains($0) }
+            .map(String.init(describing:))
+            .joined(separator: ",")
+        debugRuntimeLog("Plain editor Swift syntax highlight: tokens=\(tokenNames) colors=6")
+    }
+    #endif
 }
 
 private struct PlainSyntaxTheme {

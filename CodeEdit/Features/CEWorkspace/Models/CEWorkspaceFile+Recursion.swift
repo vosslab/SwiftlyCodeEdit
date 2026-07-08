@@ -71,7 +71,7 @@ extension CEWorkspaceFile {
     /// - Returns: A string describing the file and it's children.
     /// - Authors: Mattijs Eikelenboom, KaiTheRedNinja. *Moved from 7c27b1e*
     func childrenDescription(tabCount: Int = 0, using fileManager: CEWorkspaceFileManager) -> String {
-        var myDetails = "\(String(repeating: "|  ", count: max(tabCount - 1, 0)))\(tabCount != 0 ? "\\--" : "")"
+        var myDetails = "\(String(repeating: "|  ", count: max(tabCount - 1, 0)))\(tabCount != 0 ? "`--" : "")"
         myDetails += "\(url.path(percentEncoded: false))"
         if !self.isFolder { // if im a file, just return the url
             return myDetails
@@ -84,7 +84,7 @@ extension CEWorkspaceFile {
             } else {
                 // Disabling for debug line.
                 // swiftlint:disable:next line_length
-                childDetails += "\n\(String(repeating: "|  ", count: max(tabCount - 1, 0)))\(tabCount != 0 ? "\\--" : "") Children Not Loaded"
+                childDetails += "\n\(String(repeating: "|  ", count: max(tabCount - 1, 0)))\(tabCount != 0 ? "`--" : "") Children Not Loaded"
             }
             return childDetails
         }

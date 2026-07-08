@@ -45,4 +45,4 @@ First, CodeEdit is able to capture log messages (which are also sent to Console.
 
 Additionally, if you choose to use the powerful Logger system to debug, CodeEdit provides support for various log types and will color them accordingly.
 
-Next, CodeEdit supports a way of hot reloading your extension. Instead of relaunching CodeEdit and the extension, only the extension is restarted, resulting in faster load times. To make use of this, build your extension instead of running it (`\u{2318}B` instead of `\u{2318}R`). Note that this feature is still in beta and may behave unexpectedly.
+Next, CodeEdit supports a way of hot reloading your extension. Instead of relaunching CodeEdit and the extension, only the extension is restarted, resulting in faster load times. To make use of this, build your extension instead of running it (Command-B instead of Command-R). Note that this feature is still in beta and may behave unexpectedly.

@@ -92,7 +92,7 @@ class FileSystemTableViewCell: StandardTableViewCell {
             return
         }
 
-        if fileItem.url.isSymbolicLink { secondaryLabel.stringValue = "symlink" }
+        if fileItem.url.isSymbolicLink { secondaryLabel.stringValue = "link" }
 
         guard let gitStatus = fileItem.gitStatus?.description else {
             return
