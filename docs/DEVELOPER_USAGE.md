@@ -7,6 +7,14 @@ This repository is driven by a small set of scripts. Use these first.
 - `./build_debug.sh`
 - `./build_release.sh`
 
+## Package a .app bundle
+
+- `./scripts/make_app_bundle.sh` (defaults to a release build)
+- `./scripts/make_app_bundle.sh debug` builds and packages the debug binary instead
+- Produces `build/SwiftlyCodeEdit.app` with the icon and Info.plist wired, so
+  Finder, Dock, and the menu bar show the SwiftlyCodeEdit name and icon
+- `build/` is gitignored; rerun the script any time the binary changes
+
 ## Smoke
 
 - `./scripts/plain_editor_smoke.sh`

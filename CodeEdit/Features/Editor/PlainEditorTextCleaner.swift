@@ -3,13 +3,17 @@ enum PlainEditorTextCleaner {
         var output = ""
         var line = ""
 
-        for character in text {
-            if character == "\n" || character == "\r" {
+        // Iterate by unicode scalar, not Character: Swift merges a "\r\n"
+        // pair into a single extended grapheme cluster, which would never
+        // match a bare "\n" or "\r" comparison and would leave CRLF-ended
+        // lines completely untrimmed.
+        for scalar in text.unicodeScalars {
+            if scalar == "\n" || scalar == "\r" {
                 output += line.trimmingTrailingSpacesAndTabs()
-                output.append(character)
+                output.unicodeScalars.append(scalar)
                 line = ""
             } else {
-                line.append(character)
+                line.unicodeScalars.append(scalar)
             }
         }
 

@@ -17,7 +17,7 @@ A fast native code editor for macOS. It is a lightweight Swift/SwiftUI-first tex
 
 1. Run `./build_debug.sh` to build and launch the debug app with SwiftPM.
 2. Run `./build_release.sh` to make a release build, with optional install to `/Applications` via `INSTALL_TO_APPLICATIONS=1`.
-3. Open `CodeEdit.xcodeproj` in Xcode if you want to run or debug interactively.
+3. Run `bash scripts/make_app_bundle.sh` to package a `.app` bundle; see [docs/DEVELOPER_USAGE.md](docs/DEVELOPER_USAGE.md) for the full build reference.
 
 ## Screenshots
 

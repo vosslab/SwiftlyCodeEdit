@@ -2,9 +2,13 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCHEME="${SCHEME:-CodeEdit}"
+SCHEME="${SCHEME:-SwiftlyCodeEdit}"
 BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-debug}"
-APP_PATH="${APP_PATH:-$REPO_ROOT/.build/$BUILD_CONFIGURATION/CodeEdit}"
+APP_PATH="${APP_PATH:-$REPO_ROOT/.build/$BUILD_CONFIGURATION/SwiftlyCodeEdit}"
+# This build-verification launch is a self-quitting backstop, not a workspace to
+# keep open. --kill-after keeps builds from piling up stray instances in the
+# Dock and from contaminating the shared /tmp/codeedit_runtime.log marker counts.
+LAUNCH_KILL_AFTER_SECONDS="${LAUNCH_KILL_AFTER_SECONDS:-5}"
 
 cd "$REPO_ROOT"
 
@@ -45,5 +49,5 @@ if [ "$build_status" -ne 0 ]; then
   exit "$build_status"
 fi
 
-echo "Launching $APP_PATH"
-"$APP_PATH" &
+echo "Launching $APP_PATH (auto-quits after ${LAUNCH_KILL_AFTER_SECONDS}s)"
+"$APP_PATH" "--kill-after=$LAUNCH_KILL_AFTER_SECONDS" &

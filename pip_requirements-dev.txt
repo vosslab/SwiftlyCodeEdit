@@ -4,3 +4,6 @@ packaging  # version parsing/comparison helpers used by tooling/tests
 pyflakes  # static analysis lint checks
 pytest  # automated test runner
 rich  # formatted terminal output in developer tools
+# Standard runtime dependencies
+numpy  # pixel-buffer analysis in tests/e2e/e2e_screenshot_colors.py
+pillow  # Image I O and basic image processing (PIL fork), used by scripts/make_app_icon.py

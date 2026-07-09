@@ -12,10 +12,24 @@ import UniformTypeIdentifiers
 import CodeEditLanguages
 import OSLog
 
-enum CodeFileError: Error {
+enum CodeFileError: Error, LocalizedError {
     case failedToDecode
     case failedToEncode
     case fileTypeError
+
+    /// Human-readable text surfaced by the NSDocument error alert. `read(from:ofType:)`
+    /// throws ``failedToDecode`` when a file matches none of ``FileEncoding``'s supported
+    /// decodings, so the message explains that outcome directly to the user.
+    var errorDescription: String? {
+        switch self {
+        case .failedToDecode:
+            return "The file could not be opened because its text encoding is not supported."
+        case .failedToEncode:
+            return "The file could not be saved because its text could not be encoded."
+        case .fileTypeError:
+            return "The file type is not supported."
+        }
+    }
 }
 
 @objc(CodeFileDocument)
@@ -102,6 +116,9 @@ final class CodeFileDocument: NSDocument, ObservableObject {
 
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
+        // Fires on the first document window only; must run before highlighting
+        // (WP-Q0 made the first highlight async) so the marker reflects launch-to-paint.
+        CodeEditMain.logLaunchToWindowIfNeeded()
 
         if let fileURL, UserDefaults.standard.object(forKey: "NSWindow Frame \(fileURL.path)") == nil {
             window.center()
@@ -121,9 +138,67 @@ final class CodeFileDocument: NSDocument, ObservableObject {
 
     // MARK: - Read
 
-    /// This function is used for decoding files.
-    /// It should not throw error as unsupported files can still be opened by QLPreviewView.
+    /// Decodes a file's bytes into ``content`` using one of ``FileEncoding``'s supported encodings.
+    ///
+    /// Encoding contract (decided for this fork; the plain editor has no QLPreview fallback path):
+    /// the editor window always shows either real decoded text or an explicit error alert, never a
+    /// silent blank. When the bytes match none of the supported decodings, this throws
+    /// ``CodeFileError/failedToDecode`` so NSDocument presents an error and opens nothing, rather
+    /// than returning silently and leaving an empty, unlabeled window while the status bar claims
+    /// "UTF-8". Latin-1 and Windows-1252 are supported decodings, so ordinary single-byte text
+    /// files open as real text instead of failing.
     override func read(from data: Data, ofType _: String) throws {
+        guard let decoded = Self.decode(data: data) else {
+            #if DEBUG
+            debugRuntimeLog("Failed to read file: no supported encoding matched (\(data.count) bytes)")
+            #endif
+            // No supported decoding matched. Surface a real error so the open fails visibly
+            // instead of leaving a blank window (sourceEncoding stays nil -> status "Unknown").
+            throw CodeFileError.failedToDecode
+        }
+        MainActor.assumeIsolated {
+            self.sourceEncoding = decoded.encoding
+            if let content {
+                // Reload (external change) path: replacing the text via setString
+                // mutates the shared storage directly and bypasses the TextView
+                // change notification, so onTextChange never fires and no
+                // highlight is scheduled for the new content. Schedule one here
+                // so a presentedItemDidChange reload stays highlighted.
+                content.mutableString.setString(decoded.text)
+                PlainSyntaxHighlighter.highlight(storage: content, language: getLanguage())
+            } else {
+                self.content = NSTextStorage(string: decoded.text)
+            }
+            #if DEBUG
+            debugRuntimeLog("Loaded file: \(self.fileURL?.path ?? "<unknown>") characters: \(self.content?.length ?? 0)")
+            #endif
+            NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
+        }
+    }
+
+    /// Decodes file bytes into text plus the ``FileEncoding`` that produced it, or `nil` when no
+    /// supported decoding matches.
+    ///
+    /// A BOM-less UTF-16 file (LE or BE) runs through ``plausibleBomlessUTF16Encoding(in:)`` first:
+    /// its interleaved 0x00 bytes are valid standalone UTF-8 NULs, so Foundation's heuristic below
+    /// confidently misreports UTF-8 and the NULs survive into the decoded string uncaught. Files
+    /// that already carry a byte-order mark skip this pre-check entirely and fall through to the
+    /// heuristic, which already resolves BOM'd UTF-16 correctly (the BOM removes the ambiguity the
+    /// heuristic otherwise has, and it strips the BOM from the returned string).
+    ///
+    /// Otherwise, primary detection uses Foundation's heuristic over the suggested encodings, which
+    /// handles byte-order marks and Unicode content confidently. That heuristic can misjudge a
+    /// short, mostly-ASCII file carrying a single high byte (for example "Caf\u{E9}\n") as UTF-8 and
+    /// then fail to convert it; for that case we fall back to an explicit Windows-1252 decode. The
+    /// fallback also covers ISO Latin-1 text because bytes 0xA0-0xFF are identical in both. Bytes
+    /// undefined in Windows-1252 (0x81, 0x8D, 0x8F, 0x90, 0x9D) fail every path deliberately, so a
+    /// genuinely undecodable file returns `nil` and the caller raises the decode error.
+    private nonisolated static func decode(data: Data) -> (text: String, encoding: FileEncoding)? {
+        if let utf16Encoding = plausibleBomlessUTF16Encoding(in: data),
+           let text = String(data: data, encoding: utf16Encoding) {
+            let fileEncoding: FileEncoding = utf16Encoding == .utf16LittleEndian ? .utf16LE : .utf16BE
+            return (text, fileEncoding)
+        }
         var nsString: NSString?
         let rawEncoding = NSString.stringEncoding(
             for: data,
@@ -135,23 +210,79 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             convertedString: &nsString,
             usedLossyConversion: nil
         )
-        guard let validEncoding = FileEncoding(rawEncoding), let nsString else {
-            #if DEBUG
-            debugRuntimeLog("Failed to read file from data using encoding: \(rawEncoding)")
-            #endif
-            return
+        if let encoding = FileEncoding(rawEncoding), let nsString {
+            return (nsString as String, encoding)
         }
-        MainActor.assumeIsolated {
-            self.sourceEncoding = validEncoding
-            if let content {
-                content.mutableString.setString(nsString as String)
-            } else {
-                self.content = NSTextStorage(string: nsString as String)
+        // Deterministic fallback for files the heuristic misjudged as UTF-8.
+        if let text = String(data: data, encoding: .windowsCP1252) {
+            return (text, .windows1252)
+        }
+        return nil
+    }
+
+    /// Detects a BOM-less UTF-16 (LE or BE) plausibility pattern in a bounded prefix of `data`, or
+    /// `nil` when the data does not look like BOM-less UTF-16.
+    ///
+    /// Samples at most the first 4 KiB (large files do not need more to decide) as byte pairs.
+    /// UTF-16LE ASCII-range text puts the character byte first and a 0x00 high byte second; UTF-16BE
+    /// puts them in the mirrored order. A file only qualifies when at least 2 pairs were sampled
+    /// (a 1-byte or empty file can never plausibly be UTF-16) and over 60% of sampled pairs match
+    /// one direction's pattern. The 60% threshold is conservative on purpose: ordinary UTF-8 and
+    /// Windows-1252 text never carries an interleaved 0x00 byte in most character pairs, so those
+    /// files score near 0% and can never cross the threshold by accident.
+    ///
+    /// Files that already carry a recognized byte-order mark are excluded up front, since
+    /// Foundation's `NSString` heuristic already decodes BOM'd UTF-16 (and UTF-8, UTF-32) correctly.
+    private nonisolated static func plausibleBomlessUTF16Encoding(in data: Data) -> String.Encoding? {
+        let byteOrderMarks: [[UInt8]] = [
+            [0xEF, 0xBB, 0xBF], // UTF-8 BOM
+            [0xFF, 0xFE, 0x00, 0x00], // UTF-32LE BOM (checked before the shorter UTF-16LE BOM below)
+            [0x00, 0x00, 0xFE, 0xFF], // UTF-32BE BOM
+            [0xFF, 0xFE], // UTF-16LE BOM
+            [0xFE, 0xFF] // UTF-16BE BOM
+        ]
+        for bom in byteOrderMarks where data.starts(with: bom) {
+            return nil
+        }
+
+        let sampleSize = min(data.count, 4096)
+        let pairCount = sampleSize / 2
+        guard pairCount >= 2 else {
+            return nil
+        }
+
+        let sampledBytes = [UInt8](data.prefix(sampleSize))
+        var littleEndianMatches = 0
+        var bigEndianMatches = 0
+        for pairIndex in 0..<pairCount {
+            let firstByte = sampledBytes[pairIndex * 2]
+            let secondByte = sampledBytes[pairIndex * 2 + 1]
+            if secondByte == 0x00 && isPlausibleAsciiTextByte(firstByte) {
+                littleEndianMatches += 1
             }
-            #if DEBUG
-            debugRuntimeLog("Loaded file: \(self.fileURL?.path ?? "<unknown>") characters: \(self.content?.length ?? 0)")
-            #endif
-            NotificationCenter.default.post(name: Self.didOpenNotification, object: self)
+            if firstByte == 0x00 && isPlausibleAsciiTextByte(secondByte) {
+                bigEndianMatches += 1
+            }
+        }
+
+        let matchThreshold = Double(pairCount) * 0.6
+        if Double(littleEndianMatches) > matchThreshold {
+            return .utf16LittleEndian
+        }
+        if Double(bigEndianMatches) > matchThreshold {
+            return .utf16BigEndian
+        }
+        return nil
+    }
+
+    /// A byte plausible as the non-zero half of an ASCII-range UTF-16 code unit: printable ASCII,
+    /// plus tab, newline, and carriage return.
+    private nonisolated static func isPlausibleAsciiTextByte(_ byte: UInt8) -> Bool {
+        switch byte {
+        case 0x09, 0x0A, 0x0D, 0x20...0x7E:
+            return true
+        default:
+            return false
         }
     }
 

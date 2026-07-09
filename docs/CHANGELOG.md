@@ -1,3 +1,73 @@
+## 2026-07-09
+
+### Additions and New Features
+
+- Added the WP-V1 independent verification audit report at `docs/active_plans/audits/milestone_claims_verification.md`, covering 40 milestone claims with 26 confirmed and 14 corrected against evidence.
+- Added live-engine tests for `#pop!ctx` stack transitions and step-budget truncation in `Packages/CodeEditSyntaxDefinitions/Tests/`.
+- Added `PlainEditorClipboardTests` with three tests, including an external-pasteboard regression guard.
+- Added four encoding lifecycle tests covering Latin-1, Windows-1252, short-high-byte fallback, and undecodable-input failure.
+- Added two cleaner edge-case tests covering lone CR line endings and a final line without a trailing newline.
+- Added a validation-only `--kill-after=N` CLI flag to the app.
+- Made the smoke script print `SMOKE_EXIT=<code>` to stderr on every exit.
+- Added a 32-way concurrent `highlightSpans` regression test proving `SyntaxDefinitionRepository`'s lock-guarded lazy loading returns identical spans under concurrency.
+- WP-Q3: the app logs `LAUNCH_TO_WINDOW_MS=<n>` (measured from the start of `main()` to the first document window ordered front); new `tests/e2e/e2e_launch_time.py` launches the built app five times with `--kill-after=3`, parses the marker, reports min/median/max, and fails when the median exceeds the 1000 ms budget; baseline recorded at `test-results/perf/launch_time.txt` (median 173 ms on MacBookPro18,3); the smoke script gates on the marker line.
+- WP-Q4: new `tests/e2e/e2e_screenshot_colors.py` crops a 10% border from the smoke screenshot, quantizes colors, separates grayscale from chromatic buckets, bins chromatic buckets into 30-degree hue families, and fails below 3 hue families; the smoke script runs it as a hard gate on the screenshot-captured branch (current capture: 4 hue families, the dominant three being green, blue, and orange).
+- Added `scripts/make_app_icon.py`, which generates the app icon programmatically with Pillow: a lightning bolt between angle-bracket chevrons, flat two-tone (charcoal navy tile, electric yellow glyphs), rendering all macOS iconset sizes and assembling `Resources/SwiftlyCodeEdit.icns` with Pillow's native ICNS writer (no `iconutil` dependency); a 512px preview is saved at `docs/screenshots/app_icon_preview.png`, and the image-evaluator assessment (verdict SHIP after an inset/chevron rework) is recorded at `docs/active_plans/reports/app_icon_assessment.md`.
+- Added `scripts/make_app_bundle.sh`, which assembles `build/SwiftlyCodeEdit.app` from the SwiftPM binary (release by default, `debug` argument accepted), writing Info.plist (CFBundleName/DisplayName SwiftlyCodeEdit, identifier org.vosslab.SwiftlyCodeEdit, icon wired, version read from `VERSION`) and validating it with `plutil -lint`; documented in `docs/DEVELOPER_USAGE.md`.
+- WP-Q1: split the Kate syntax pipeline into separately callable display-free public stages on `CodeEditSyntaxDefinitions` (`parseDefinition` -> `definition(forLanguage:)` -> `tokenRuns` -> spans producing `[HighlightSpan]` with an additive `nsRange` field); the headless benchmark now prints `HIGHLIGHT_BENCH` plus per-stage `HIGHLIGHT_BENCH_STAGES` (parseMs=6 interpretMs=54 spanMapMs=2), recorded in `test-results/perf/highlight_cold_pass.txt`.
+- Added WP-F0's shared `CodeEdit/Features/Support/UserDataDirectories.swift` helper defining the Application Support path policy (themes/syntax subdirectories, test-override root), with `UserDataDirectoriesTests` covering 7 tests.
+- Added `docs/THEME_FORMAT.md` (WP-F2 Patch A): a versioned YAML theme schema with light/dark variants, token keys drawn from `HighlightToken` plus Kate `styleName` refinements, a fallback chain, and a required background field.
+- Added `docs/HUMAN_GUIDANCE.md` recording the SwiftUI-first architecture principle (AppKit only as a last-resort escape hatch behind a replaceable adapter) and working-style guidance; linked from `AGENTS.md`; `docs/CODE_ARCHITECTURE.md` gained an "Architecture boundary" section.
+- Reworked `scripts/make_app_icon.py` to write the ICNS purely with Pillow (no `iconutil`); final geometry reworked to a 10% inset with the chevron angle restored, with preview evidence saved under `docs/screenshots/`.
+
+### Behavior or Interface Changes
+
+- Changed paste to always read `NSPasteboard.general` directly; removed the private `copiedText` buffer so pasting external-app content is no longer overridden by a stale internal value.
+- Changed non-UTF file opening to decode via Windows-1252 or Latin-1 fallback, or present a real error alert, instead of silently opening a blank document.
+- Changed the status bar to report "Unknown" instead of falsely claiming "UTF-8" when no decoding was actually applied.
+- Reclassified smoke screenshot capture as an optional diagnostic step with explicit `SKIPPED: <reason>` lines and a `--no-screenshot` flag.
+- Changed `build_debug.sh` and the smoke script to launch the app with `--kill-after` so validation runs never leave stray instances in the Dock.
+- Removed the font-family dropdown from the editor command ribbon; the persisted `PlainEditor.fontFamily` setting and the font size controls remain.
+- Renamed the product to SwiftlyCodeEdit: the executable product name in Package.swift, the app menu title and Quit item, and launch/kill tooling (`build_debug.sh`, `build_release.sh`, the smoke script, `tests/e2e/e2e_launch_time.py`); the target name and `CodeEdit/` source directory are deliberately kept as-is to avoid cascading `@testable import` breakage, with the directory rename owed to the purge work package.
+
+### Fixes and Maintenance
+
+- Fixed app-icon over-padding in `scripts/make_app_icon.py`: bracket vertices and arm tips (including rounded stroke caps) and the bolt tips now land exactly on the 10% content-inset lines, so the glyph spans ~80% of tile width/height instead of ~62%; bolt keeps its 0.34/0.62 width-to-height ratio and clears the right bracket by ~175 px at master size.
+- Fixed a double `finishPlainEditorLaunch()` invocation on launch.
+- Fixed a CRLF grapheme-cluster bug in `PlainEditorTextCleaner` where CRLF-terminated lines were never trimmed because Swift merges `\r\n` into a single `Character`.
+- Deleted the destructive `PlainTextCleaner`, which mapped codepoints above U+00FF to `?`.
+- Deleted the dead `PlainEditorSyntaxStyler` and its wrong-engine `KateXMLSyntaxHighlighter` test suite.
+- Retargeted cleaner tests to the live `PlainEditorTextCleaner` and renamed the test file to match.
+- Fixed the `.gitignore` bare `PackageSmoke` pattern that had kept the entire `CodeEditTests/PackageSmoke` suite untracked.
+- Moved the first syntax highlight off the main thread: span computation now runs in a detached background task with attribute application back on the main actor, using generation-based coalescing and stale-result guards, so the document window appears immediately instead of beachballing roughly 3-6 seconds behind a synchronous cold highlight during window construction.
+- WP-Q0b: fixed intermittent syntax highlighting by replacing the highlighter's global generation counter and span cache with per-document state keyed per `NSTextStorage` in a weak-key `NSMapTable`, so one window's request can no longer strand another window's in-flight compute; external-change reloads now schedule a highlight after `setString` (they bypass the text-change notification); a computed result that finds the text drifted with no newer request recomputes and applies instead of leaving the document unhighlighted; covered by a new two-document concurrency test (suite now 28 tests in 6 suites).
+- Fixed a release-configuration build failure: `CodeFileView.swift` called the DEBUG-only `PlainEditorCommandSelfTest` outside any `#if DEBUG` guard, compiling in debug but breaking `swift build -c release`; the call site is now guarded.
+- Removed a pasted Formula 1 standings table accidentally saved into `CodeFileDocument.swift`: a live editor session had the real source file open during manual paste testing, and the 2-second autosave wrote it to disk (also stripping the trailing newline); the appended text broke the release build and leaked into the smoke screenshot.
+- Declared `numpy` in a new root `pip_requirements.txt` (alongside `pillow`) for `tests/e2e/e2e_screenshot_colors.py`; added inline bandit B108 waivers in `tests/e2e/e2e_launch_time.py` for the fixed `/tmp/codeedit_runtime.log` path contract written by `DebugRuntimeLog.swift`.
+- Clarified `tests/e2e/e2e_screenshot_colors.py` output: it now prints `chromatic_buckets_total` and `chromatic_buckets_printed` separately so a single dominant printed bucket can no longer look contradictory next to the hue-family count.
+- WP-Q1: fixed the cold-highlight regression, 6293 ms down to 67 ms on the ~1400-line smoke fixture; the root cause was an O(n^2) step-budget guard recomputing `text.count` per interpreter step, not regex compilation. Added a `FirstCharFilter` ASCII-bitmap prefilter (skips roughly 83% of regex attempts, with a conservative analyzer bailing to always-run), a UTF-16 `NSString` backing with lockstep offset tracking, and a process-wide `CompiledRegexCache` (warm reopen 0 ms).
+- WP-Q1 review fixes: POSIX bracket expressions (`[[:cntrl:]]` and similar) are no longer misparsed by the filter analyzer, which now bails to always-run (a regression test is proven to fail without the fix); the match-jump path now advances the grapheme cursor and UTF-16 offset from one walk, eliminating a mid-cluster desync risk (covered by a unicode fixture test spanning emoji, CJK, and combining marks).
+- Fixed silent corruption of BOM-less UTF-16 files on open: `CodeFileDocument.decode` gained a plausibility pre-check (4KiB pair sampling) so interleaved-NUL UTF-16 is no longer misread as UTF-8; the lifecycle test matrix was extended to 10 tests, including bomless UTF-16 cases.
+- Fixed a stale `CodeEdit.xcodeproj` reference in the README.
+
+### Decisions and Failures
+
+- Corrected milestone checklist claims in place with `Corrected 2026-07-09:` annotations, covering the dead Find menu, dark mode never captured, overstated theme-awareness, wrong-engine test coverage, and a silent-blank encoding case mislabeled as a handled limitation.
+- Noted that the entire package-smoke test suite had never been in git history due to the `.gitignore` pattern.
+- Accepted WP-V3 decode-fallback breadth and recorded it in the plan: the Windows-1252 fallback rejects only 5 byte values, with BOM-less UTF-16 coverage owed in WP-S3.
+- Accepted WP-V4 quality nits as polish debt: `SMOKE_EXIT` is not printed on pre-launch usage errors, and a malformed `--kill-after` value silently disables the backstop.
+- Investigated a spec-review must-fix alleging an unsynchronized data race in `SyntaxDefinitionRepository` and found it already closed in HEAD: an `NSLock` guards all mutable state. Kept the internal lock instead of converting to an actor, because an actor would force async through the highlight API for no correctness gain.
+- WP-Q4 first metric counted 15 "significant colors" that were mostly grayscale antialiasing ramps; reworked to a hue-family metric so the gate proves chromatic syntax coloring, not gray shades.
+- WP-Q0b quality review accepted two polish items into WP-Q1: an iteration cap on the drift-recompute loop, and a comment on the compute task's intentional bounded strong capture of the storage.
+- Resolved the `Packages/CodeEditHighlighting` open question as KEEP: the WP-P1 scout confirmed live dependence (`HighlightSpan` used by `PlainSyntaxHighlighter.swift` and `CodeFileView.swift`) via a nested dependency in `Packages/CodeEditSyntaxDefinitions/Package.swift`.
+- WP-P3 spec review flagged "CodeEdit" strings in Feedback/WindowCommands/Settings/SourceControl trees as MUSTFIX; overruled with evidence, since all live in Package.swift-excluded, never-compiled trees already on the WP-P1 deletion list; the compiled-files-only audit scope stands.
+- WP-S0b spike verdict FAIL: SwiftUI `TextEditor`+`AttributedString` cannot meet editor gates (caret collapses to EOF on any programmatic attribute write; keystroke p95 140.56 ms against a 16 ms gate; a 1 MB document wedges the main thread). The TextKit bridge stays as the replaceable AppKit adapter under the SwiftUI-first principle, to be re-evaluated against the next macOS SDK. Decision record: `docs/active_plans/decisions/text_engine_decision.md`.
+- Deferred large-file (~1 MB+) cold-highlight performance (WP-Q1): these files remain multi-second cold until viewport-first highlighting lands, deferred to a future large-file work package.
+
+### Developer Tests and Notes
+
+- Ran a read-only document lifecycle audit ahead of milestone MS and found 4 HIGH findings (undo never clears the dirty flag; a dirty document's external change is silently dropped, a lost-update; reload swallows decode errors via `try?`; reload does not reset the undo stack), 2 MEDIUM, and 2 LOW findings; also confirmed `UndoManagerRegistration.swift` is dead code. Report: `docs/active_plans/audits/document_lifecycle_audit.md`.
+
 ## 2026-07-07
 
 ### Fixes and Maintenance

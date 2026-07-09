@@ -11,7 +11,7 @@ Regenerate on every audit; derive from the latest `## YYYY-MM-DD` heading in
 Best practices for AI agents in repos using the `claude-code-permissions-hook`:
 what is allowed, denied, and passed through, with preferred alternatives for denied
 patterns. Claude-specific (not Codex). Repo style conventions live in
-[REPO_STYLE.md](REPO_STYLE.md) and [PYTHON_STYLE.md](PYTHON_STYLE.md).
+[docs/REPO_STYLE.md](REPO_STYLE.md) and [docs/PYTHON_STYLE.md](PYTHON_STYLE.md).
 
 ## Trust model
 
@@ -81,11 +81,15 @@ Bash is still the right shape.
 ### Python
 
 ```bash
-python3 script.py
+source source_me.sh && python3 script.py
 python3 -m pytest tests/test_foo.py
 pytest tests/test_foo.py -k test_name
 pyflakes script.py
 ```
+
+Always use `source source_me.sh && python3` for running Python. Direct `python3`
+invocations also work. Command substitution (`` ` `` or `$(...)`) is blocked in
+Python commands.
 
 ### Git
 
@@ -521,6 +525,7 @@ interactive UI dialogs, causing blank answers or skipped consent screens.
 
 ## Best practices
 
+- Always use `source source_me.sh && python3` for Python execution
 - Use the Read tool for file inspection (offset / limit available)
 - Search file contents with `grep`/`rg` directly on a relative or workspace path (`grep -rn pat src/`); the Grep tool is not available here
 - Use `ls <dir>` or `git ls-files <pathspec>` to list files
@@ -535,6 +540,7 @@ interactive UI dialogs, causing blank answers or skipped consent screens.
 Quick rules of thumb (each is detailed in the per-command sections above):
 use `Read`/`Edit`/`Write` tool calls, not `cat`/`sed`/`printf`; search with
 `grep`/`rg` on a relative or workspace path (not `/etc`, not the `Grep` tool);
+list with `ls` or `git ls-files`; run Python via `source source_me.sh &&
 python3 script.py` (no `-c`); write loops/inline code to `_temp.py`/`_temp.sh`;
 rename with `git mv`; delete only `_temp*`/`/tmp` paths; stage to `/tmp` for
 `ffmpeg`/`convert` and prefer `mediainfo` over `ffprobe`.

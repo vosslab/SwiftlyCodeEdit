@@ -104,7 +104,7 @@ Checklist:
 - [x] Confirm command bar layout works at small window widths. Resolved: command bar uses a single compact SwiftUI `HStack` with borderless text buttons and no workspace controls; runtime smoke keeps the editor usable.
 - [x] Confirm command bar layout works at normal editor widths. Validated by live smoke opening the default 960 x 600 landscape editor window and logging `Plain editor command ribbon ready`.
 - [x] Confirm command bar works in light mode. Resolved through semantic `.regularMaterial`/standard button styling and current smoke screenshot evidence.
-- [x] Confirm command bar works in dark mode. Resolved through semantic `.regularMaterial`/standard button styling; mode-specific screenshot capture is not a separate Milestone 2 gate.
+- [x] Confirm command bar works in dark mode. Resolved through semantic `.regularMaterial`/standard button styling; mode-specific screenshot capture is not a separate Milestone 2 gate. Corrected 2026-07-09: no dark-mode screenshot or log evidence exists anywhere in the repo (`docs/screenshots/` contains only one light-mode capture); this is a design argument, not evidence. Owning work package: WP-G2.
 - [x] Add smoke/log validation for command availability where practical.
 - [x] Add screenshot evidence when display access exists.
 - [x] Update docs to describe the command bar.
@@ -160,7 +160,7 @@ Checklist:
 - [x] Confirm provisional/unknown values are clearly labeled.
 - [x] Confirm status bar values do not block editing if detection fails.
 - [x] Confirm status bar works in light mode. Resolved through semantic `.regularMaterial` and `.secondary` text styling plus current smoke screenshot evidence.
-- [x] Confirm status bar works in dark mode. Resolved through semantic `.regularMaterial` and `.secondary` text styling; mode-specific screenshot capture is not a separate Milestone 2 gate.
+- [x] Confirm status bar works in dark mode. Resolved through semantic `.regularMaterial` and `.secondary` text styling; mode-specific screenshot capture is not a separate Milestone 2 gate. Corrected 2026-07-09: no dark-mode screenshot or log evidence exists anywhere in the repo (`docs/screenshots/` contains only one light-mode capture); this is a design argument, not evidence. Owning work package: WP-G2.
 - [x] Confirm status bar remains readable with Liquid Glass styling. Validated mechanically by live status log values and resolved visually by keeping the editor text background stable while only chrome uses material.
 - [x] Add smoke/log validation for status values where practical.
 - [x] Add screenshot evidence when display access exists.
@@ -185,7 +185,7 @@ Goal: Confirm the editor and product-facing UI work in both appearances.
 Checklist:
 
 - [x] Confirm the app can run in light mode. Resolved with system/semantic styling and smoke screenshot evidence.
-- [x] Confirm the app can run in dark mode. Resolved with system/semantic styling; mode-specific screenshot capture is not a separate Milestone 2 gate.
+- [x] Confirm the app can run in dark mode. Resolved with system/semantic styling; mode-specific screenshot capture is not a separate Milestone 2 gate. Corrected 2026-07-09: dark mode is asserted "validated" but no dark-mode screenshot, log marker, or automated appearance-toggle check exists anywhere in the repo; `docs/screenshots/codeedit_window.png` is the only screenshot artifact and it is captured under the default light appearance. Owning work package: WP-G2.
 - [x] Confirm the editor text remains readable in light mode. Resolved with `.textColor`/`.textBackgroundColor` and smoke screenshot evidence.
 - [x] Confirm the editor text remains readable in dark mode. Resolved with `.textColor`/`.textBackgroundColor` and semantic system colors.
 - [x] Confirm the command bar remains readable in light mode. Resolved with standard controls over `.regularMaterial` and smoke screenshot evidence.
@@ -193,20 +193,20 @@ Checklist:
 - [x] Confirm the status bar remains readable in light mode. Resolved with standard SwiftUI text/material styling and smoke screenshot evidence.
 - [x] Confirm the status bar remains readable in dark mode. Resolved with standard SwiftUI text/material styling and semantic system colors.
 - [x] Confirm selection colors are readable in light mode. Resolved by using the AppKit text view's native selection behavior; smoke now restores a neutral selection before screenshot capture.
-- [x] Confirm selection colors are readable in dark mode. Resolved by using the AppKit text view's native selection behavior; smoke now restores a neutral selection before screenshot capture.
+- [x] Confirm selection colors are readable in dark mode. Resolved by using the AppKit text view's native selection behavior; smoke now restores a neutral selection before screenshot capture. Corrected 2026-07-09: no dark-mode screenshot exists to confirm this; see WP-G2.
 - [x] Confirm insertion point/caret is visible in light mode. Resolved by using the AppKit text view's native caret behavior.
-- [x] Confirm insertion point/caret is visible in dark mode. Resolved by using the AppKit text view's native caret behavior.
+- [x] Confirm insertion point/caret is visible in dark mode. Resolved by using the AppKit text view's native caret behavior. Corrected 2026-07-09: no dark-mode screenshot exists to confirm this; see WP-G2.
 - [x] Confirm syntax highlighting colors are readable in light mode. Resolved with semantic `NSColor` mappings and smoke screenshot evidence.
-- [x] Confirm syntax highlighting colors are readable in dark mode. Resolved with semantic `NSColor` mappings.
+- [x] Confirm syntax highlighting colors are readable in dark mode. Resolved with semantic `NSColor` mappings. Corrected 2026-07-09: no dark-mode screenshot exists to confirm this; see WP-G2.
 - [x] Confirm disabled command state is visible in light mode. Resolved through standard disabled SwiftUI buttons and smoke screenshot evidence.
-- [x] Confirm disabled command state is visible in dark mode. Resolved through standard disabled SwiftUI buttons.
+- [x] Confirm disabled command state is visible in dark mode. Resolved through standard disabled SwiftUI buttons. Corrected 2026-07-09: no dark-mode screenshot exists to confirm this; see WP-G2.
 - [x] Confirm system appearance changes update the UI without relaunch where practical. Resolved by using system colors/materials rather than fixed light/dark palettes.
 - [x] Confirm custom colors use semantic/system-aware values where practical.
 - [x] Confirm high contrast does not make the editor unusable. Resolved by avoiding custom editor backgrounds and using semantic colors.
 - [x] Confirm increased contrast does not make the editor unusable. Resolved by avoiding custom editor backgrounds and using semantic colors.
 - [x] Confirm reduced transparency does not make the command/status surfaces unusable. Resolved by using standard materials/controls.
 - [x] Save screenshot evidence for light mode when display access exists. Resolved: smoke writes `docs/screenshots/codeedit_window.png`.
-- [x] Save screenshot evidence for dark mode when display access exists. Resolved: semantic styling is used; dark-mode-specific capture is not a separate Milestone 2 gate.
+- [x] Save screenshot evidence for dark mode when display access exists. Resolved: semantic styling is used; dark-mode-specific capture is not a separate Milestone 2 gate. Corrected 2026-07-09: this item asks for dark-mode screenshot evidence and none was captured; no dark-mode screenshot file exists anywhere in the repo. Owning work package: WP-G2.
 - [x] Update docs with the light/dark validation result.
 
 Verification:
@@ -240,7 +240,7 @@ Checklist:
 - [x] Confirm reduced motion remains usable. Resolved: Milestone 2 shell adds no custom motion or animation requirement.
 - [x] Confirm high contrast remains usable. Resolved: controls and status labels use semantic AppKit/SwiftUI colors instead of fixed low-contrast palette values.
 - [x] Confirm Liquid Glass choices work in light mode. Resolved through semantic system materials and smoke screenshot evidence.
-- [x] Confirm Liquid Glass choices work in dark mode. Resolved through semantic system materials.
+- [x] Confirm Liquid Glass choices work in dark mode. Resolved through semantic system materials. Corrected 2026-07-09: no dark-mode screenshot exists to confirm this; see WP-G2.
 - [x] Add screenshot evidence when display access exists. Resolved: `docs/screenshots/codeedit_window.png` is regenerated by the live smoke run.
 - [x] Update docs to describe where Liquid Glass is used and why.
 
@@ -275,7 +275,7 @@ Checklist:
 - [x] Confirm syntax highlighting updates after text changes where practical.
 - [x] Confirm syntax highlighting handles empty documents.
 - [x] Confirm syntax highlighting handles large-enough files without obvious lag. Validated by live smoke highlighting a 10,264-character Swift file and completing the command self-test.
-- [x] Confirm syntax highlighting colors are theme-aware. Resolved: styling uses semantic `NSColor` attributes in the active editor path.
+- [x] Confirm syntax highlighting colors are theme-aware. Resolved: styling uses semantic `NSColor` attributes in the active editor path. Corrected 2026-07-09: colors are a hardcoded Swift struct (`PlainSyntaxTheme` in `CodeEdit/Features/Editor/Views/PlainSyntaxHighlighter.swift:104-171`) with two fixed variants selected only by an env var, not a data-driven or user-selectable theme. Owning work package: WP-F2.
 - [x] Confirm syntax highlighting colors are readable in light mode. Resolved through semantic colors and smoke screenshot evidence.
 - [x] Confirm syntax highlighting colors are readable in dark mode. Resolved through semantic colors.
 - [x] Confirm syntax highlighting failure falls back to readable plain text.
@@ -337,7 +337,7 @@ Checklist:
 - [x] Record the encoding used to load the file.
 - [x] Report `UTF-8` for normal UTF-8 files.
 - [x] Report non-UTF-8 encodings when detectable. `PlainEditorStatusReporter` labels UTF-16 BE/LE when the document loader reports those encodings.
-- [x] Keep unknown encoding fallback readable and non-blocking. Document loader keeps file opening non-blocking; ambiguous BOM-less non-UTF files are documented as a limitation.
+- [x] Keep unknown encoding fallback readable and non-blocking. Document loader keeps file opening non-blocking; ambiguous BOM-less non-UTF files are documented as a limitation. Corrected 2026-07-09: this is not accurate -- `CodeFileDocument.swift:126-143` shows `read(from:ofType:)` silently returns (no thrown error, no content set) when the encoding doesn't match `utf8`/`utf16BE`/`utf16LE`, opening a blank, unlabeled window with no error indication. This is the silent-blank-open bug, not a documented-and-handled limitation. Owning work package: WP-V3.
 - [x] Detect line endings from content.
 - [x] Report `LF`.
 - [x] Report `CRLF`.
@@ -654,7 +654,7 @@ Checklist:
 - [x] Confirm command bar controls have accessible labels. Standard SwiftUI `Button(title:)` controls provide visible/accessibility labels.
 - [x] Confirm status bar values are accessible where practical. Status values are plain SwiftUI `Text` labels.
 - [x] Confirm keyboard navigation reaches editor and commands. Live logs prove `PlainTextEditorView requested first responder`; menu commands remain registered.
-- [x] Confirm standard menu commands remain available. Live smoke logs `Main menu items` including File/Edit/Find entries.
+- [x] Confirm standard menu commands remain available. Live smoke logs `Main menu items` including File/Edit/Find entries. Corrected 2026-07-09: "available" means visible in the menu only. Both Find menu items send `#selector(NSTextView.performFindPanelAction(_:))`, but the live editing surface `TextView` (`Packages/CodeEditTextView/Sources/CodeEditTextView/TextView/TextView.swift:37`) is an `NSView` subclass, not `NSTextView`, and implements no such method anywhere in that package -- clicking Find or Find and Replace is a silent no-op. Owning work package: WP-F1.
 - [x] Confirm focus behavior remains Mac-native. Live smoke logs first-responder requests from the AppKit text view bridge.
 - [x] Confirm VoiceOver does not encounter unlabeled critical controls where practical. Resolved: critical command controls are standard labeled buttons and status values are text labels; no VoiceOver automation is available here.
 - [x] Confirm high contrast remains readable. Resolved through semantic colors and stable text background.
@@ -699,7 +699,7 @@ Verification:
 - [x] The status bar shows line ending/text format or a clear fallback.
 - [x] The status bar shows syntax mode.
 - [x] Light mode is validated. Resolved through semantic system colors/materials and the current smoke screenshot artifact.
-- [x] Dark mode is validated. Resolved through semantic system colors/materials; dark-mode-specific screenshot capture is not a separate Milestone 2 gate.
+- [x] Dark mode is validated. Resolved through semantic system colors/materials; dark-mode-specific screenshot capture is not a separate Milestone 2 gate. Corrected 2026-07-09: not validated with evidence -- no dark-mode screenshot, log marker, or appearance-toggle test exists anywhere in the repo; `docs/screenshots/codeedit_window.png` is the only capture and it is light-mode. Owning work package: WP-G2.
 - [x] Liquid Glass/system styling is applied to control surfaces where appropriate.
 - [x] Dense editor content remains readable.
 - [x] Syntax highlighting is visibly active in the live editor.
@@ -724,7 +724,7 @@ Verification:
 Latest validation snapshot:
 
 - [x] `swift test` passes with 14 tests in 5 suites.
-- [x] `swift test --package-path Packages/CodeEditHighlighting` passes with 5 Kate XML highlighter tests.
+- [x] `swift test --package-path Packages/CodeEditHighlighting` passes with 5 Kate XML highlighter tests. Corrected 2026-07-09: these 5 tests exercise the dead `KateXMLSyntaxHighlighter` engine (used only by the unreferenced `CodeEdit/Features/Editor/Views/PlainEditorSyntaxStyler.swift`), not the live `KateContextRuleInterpreter` engine the app actually runs (`CodeEdit/Features/Editor/Views/PlainSyntaxHighlighter.swift` -> `Packages/CodeEditSyntaxDefinitions/.../CodeEditSyntaxDefinitions.swift:575`). Owning work package: WP-V7.
 - [x] `pytest tests/` passes with 4077 Python hygiene/doc tests.
 - [x] `./build_debug.sh` passes.
 - [x] `./scripts/plain_editor_smoke.sh` passes.

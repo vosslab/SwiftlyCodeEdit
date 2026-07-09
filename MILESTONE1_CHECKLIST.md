@@ -39,7 +39,7 @@
 - [x] Confirm Redo works.
 - [x] Confirm Cut works.
 - [x] Confirm Copy works.
-- [x] Confirm Paste works.
+- [x] Confirm Paste works. Corrected 2026-07-09: Paste only round-trips reliably through this app's own Copy/Cut; `CodeEdit/CodeEditApp.swift:280-295` shows Paste prefers a private `copiedText` buffer over `NSPasteboard.general`, so pasting content copied from another app is silently overridden whenever `copiedText` is non-nil. Owning work package: WP-V2.
 - [x] Confirm Select All works.
 - [x] Confirm Find works if it is in the current required path. Resolved: Find is not in the current required plain-editor smoke path; menu placeholders remain visible, and Milestone 2 explicitly defers active Find/Replace behavior.
 
@@ -169,7 +169,7 @@
 Latest post-merge validation snapshot:
 
 - [x] `swift test` passes with 14 tests in 5 suites.
-- [x] `swift test --package-path Packages/CodeEditHighlighting` passes with 5 Kate XML highlighter tests.
+- [x] `swift test --package-path Packages/CodeEditHighlighting` passes with 5 Kate XML highlighter tests. Corrected 2026-07-09: these 5 tests exercise the dead `KateXMLSyntaxHighlighter` engine (used only by the unreferenced `CodeEdit/Features/Editor/Views/PlainEditorSyntaxStyler.swift`), not the live `KateContextRuleInterpreter` engine the app actually runs (`CodeEdit/Features/Editor/Views/PlainSyntaxHighlighter.swift` -> `Packages/CodeEditSyntaxDefinitions/.../CodeEditSyntaxDefinitions.swift:575`). Owning work package: WP-V7.
 - [x] `pytest tests/` passes with 4077 Python hygiene/doc tests.
 - [x] `./build_debug.sh` passes.
 - [x] `./scripts/plain_editor_smoke.sh` passes with normal GUI permissions.

@@ -1,5 +1,16 @@
 # Code architecture
 
+## Architecture boundary
+
+SwiftUI-first, Swift-native, AppKit only as a last-resort escape hatch: SwiftUI owns app
+lifecycle, document scenes, the Commands menu, chrome, settings, and panels. AppKit is used only
+when a specific user-facing behavior cannot be achieved reliably in SwiftUI or pure Swift
+(IME/text-input edge cases, native undo integration, accessibility gaps, responder-chain
+behavior), and every such use is isolated behind a replaceable adapter. AppKit must never be the
+app architecture; `NSDocument`, hand-built `NSMenu`, `NSWindowController`, and delegate-chain
+patterns outside the isolated editor-surface adapter are defects once the SwiftUI migration
+lands. See [HUMAN_GUIDANCE.md](HUMAN_GUIDANCE.md) for the decision record.
+
 ## Overview
 
 This repo is being cut over to a lightweight macOS text editor, not a full IDE. The required path is the plain editor shell, file-backed editing, saving/reopening, command and status bars, Clean Text, syntax highlighting, and data-driven syntax definitions.

@@ -1,9 +1,52 @@
 import Foundation
 import CodeEditHighlighting
 
+// Public seams of the syntax-color pipeline. Each stage is pure text/data in,
+// data out (no AppKit, no display side), and separately callable so any stage
+// can be timed in isolation like an ammeter in a circuit. The display stage
+// (spans -> NSTextStorage attributes) lives in the app, not this package.
+//
+//   parse:      Kate XML        -> SyntaxDefinition   (parseDefinition / definition)
+//   interpret:  text + rules    -> [TokenRun]         (tokenRuns)
+//   span-map:   [TokenRun]      -> [HighlightSpan]    (spans)
+//
+// highlightSpans composes all three for the common case.
 public enum CodeEditSyntaxDefinitions {
+    // Full pipeline: parse (cached) + interpret + span-map. Behavior-preserving
+    // convenience over the three stage calls below.
     public static func highlightSpans(text: String, language: String) -> [HighlightSpan] {
-        SyntaxDefinitionRepository.shared.highlightSpans(text: text, language: language)
+        guard let definition = definition(forLanguage: language) else {
+            return []
+        }
+        let runs = tokenRuns(text: text, definition: definition)
+        return spans(from: runs, in: text)
+    }
+
+    // Parse stage (cached). Loads and parses the bundled Kate XML for `language`
+    // once, then returns the cached rule structures on later calls.
+    public static func definition(forLanguage language: String) -> SyntaxDefinition? {
+        SyntaxDefinitionRepository.shared.definition(forLanguage: language.lowercased())
+    }
+
+    // Parse stage (uncached). Parses a Kate XML string straight into rule
+    // structures with no caching, so the raw parse cost is measurable in
+    // isolation. Normal callers use `definition(forLanguage:)` instead.
+    public static func parseDefinition(kateXML: String) -> SyntaxDefinition? {
+        SyntaxDefinitionLoader.load(from: kateXML)
+    }
+
+    // Interpretation stage. Walks the text against the definition's rules and
+    // emits offset-native token runs (UTF-16 location/length), doing no
+    // String.Index work.
+    public static func tokenRuns(text: String, definition: SyntaxDefinition) -> [TokenRun] {
+        KateContextRuleInterpreter.tokenRuns(text: text, definition: definition)
+    }
+
+    // Span-mapping stage. Converts offset-native token runs into HighlightSpans,
+    // resolving each UTF-16 range to a String.Index range once and carrying the
+    // offsets forward on the span so the display stage never reconverts.
+    public static func spans(from tokenRuns: [TokenRun], in text: String) -> [HighlightSpan] {
+        HighlightSpanMapper.spans(from: tokenRuns, in: text)
     }
 
     public static func debugSummary(language: String) -> String {
@@ -16,6 +59,46 @@ public enum CodeEditSyntaxDefinitions {
 			throw SyntaxDefinitionError.missingDefinition(name: name)
 		}
         return try String(contentsOf: url, encoding: .utf8)
+    }
+}
+
+// Interpretation-stage output: a token colored run addressed by UTF-16 offsets.
+// UTF-16 location/length are NSRange-compatible and free during the interpreter's
+// linear walk, so this is the natural boundary type between interpretation and
+// span mapping. Ints (not NSRange) keep it trivially Sendable and Hashable.
+public struct TokenRun: Sendable, Hashable {
+    public let location: Int   // UTF-16 offset of the run start
+    public let length: Int     // UTF-16 length of the run
+    public let token: HighlightToken
+    public let styleName: String?
+
+    public init(location: Int, length: Int, token: HighlightToken, styleName: String? = nil) {
+        self.location = location
+        self.length = length
+        self.token = token
+        self.styleName = styleName
+    }
+
+    public var nsRange: NSRange {
+        NSRange(location: location, length: length)
+    }
+}
+
+// Span-mapping stage. Resolves each token run's UTF-16 range to a String.Index
+// range once and keeps the offsets on the span (HighlightSpan.nsRange) so the
+// display stage applies attributes without another conversion walk.
+public enum HighlightSpanMapper {
+    public static func spans(from tokenRuns: [TokenRun], in text: String) -> [HighlightSpan] {
+        var spans: [HighlightSpan] = []
+        spans.reserveCapacity(tokenRuns.count)
+        for run in tokenRuns {
+            let nsRange = run.nsRange
+            guard let range = Range(nsRange, in: text) else {
+                continue
+            }
+            spans.append(HighlightSpan(range: range, token: run.token, styleName: run.styleName, nsRange: nsRange))
+        }
+        return spans
     }
 }
 
@@ -72,6 +155,32 @@ public enum SyntaxContextItem: Sendable {
     case include(String)
 }
 
+// Conservative membership set for the first UTF-16 code unit a rule's regex can
+// match, anchored at a scan position. The interpreter skips the expensive
+// anchored regex whenever the current code unit is provably not in this set,
+// which removes the bulk of the per-character, per-rule matching cost. The set
+// MUST be a superset of every code unit the rule can actually begin with; when
+// that cannot be guaranteed the rule carries no filter (`firstChar == nil`) and
+// the regex always runs. An all-ASCII bitmap covers the common case; any allowed
+// unit >= 128 flips `allowsNonASCII` so non-ASCII leads never get skipped.
+public struct FirstCharFilter: Sendable, Hashable {
+    private let low: UInt64   // membership for code units 0...63
+    private let high: UInt64  // membership for code units 64...127
+    public let allowsNonASCII: Bool
+
+    public init(low: UInt64, high: UInt64, allowsNonASCII: Bool) {
+        self.low = low
+        self.high = high
+        self.allowsNonASCII = allowsNonASCII
+    }
+
+    public func allows(codeUnit unit: UInt16) -> Bool {
+        if unit >= 128 { return allowsNonASCII }
+        if unit < 64 { return (low >> UInt64(unit)) & 1 == 1 }
+        return (high >> UInt64(unit - 64)) & 1 == 1
+    }
+}
+
 public struct SyntaxRule: Sendable {
     public let pattern: String
     public let token: HighlightToken
@@ -81,6 +190,8 @@ public struct SyntaxRule: Sendable {
     public let column: Int?
     public let firstNonSpace: Bool
     public let minimal: Bool
+    // nil means "first character unknown, always run the regex".
+    public let firstChar: FirstCharFilter?
 
     public init(
         pattern: String,
@@ -90,7 +201,8 @@ public struct SyntaxRule: Sendable {
         lookAhead: Bool = false,
         column: Int? = nil,
         firstNonSpace: Bool = false,
-        minimal: Bool = false
+        minimal: Bool = false,
+        firstChar: FirstCharFilter? = nil
     ) {
         self.pattern = pattern
         self.token = token
@@ -100,6 +212,7 @@ public struct SyntaxRule: Sendable {
         self.column = column
         self.firstNonSpace = firstNonSpace
         self.minimal = minimal
+        self.firstChar = firstChar
     }
 }
 
@@ -121,6 +234,12 @@ public final class SyntaxDefinitionRepository: @unchecked Sendable {
         }
 
         return KateContextRuleInterpreter.highlightSpans(text: text, definition: definition)
+    }
+
+    // Parse-stage seam: the cached lookup that turns a language name into parsed
+    // rule structures. `key` is expected already lowercased by the caller.
+    public func definition(forLanguage key: String) -> SyntaxDefinition? {
+        definition(for: key)
     }
 
     public func debugSummary(language: String) -> String {
@@ -337,78 +456,399 @@ enum SyntaxDefinitionLoader {
         entities: [String: String],
         lists: [String: [String]]
     ) -> SyntaxRule? {
-                let styleName = attributes["attribute"]
-                let styleToken = styleName.map { highlightToken(for: $0) } ?? HighlightToken.plainText
-                let insensitive = attributes["insensitive"]?.lowercased() == "true"
-                let context = attributes["context"]
-                let lookAhead = truthy(attributes["lookAhead"])
-                let column = attributes["column"].flatMap(Int.init)
-                let firstNonSpace = attributes["firstNonSpace"]?.lowercased() == "true"
-                let minimal = attributes["minimal"]?.lowercased() == "true"
+        let styleName = attributes["attribute"]
+        let styleToken = styleName.map { highlightToken(for: $0) } ?? HighlightToken.plainText
+        let insensitive = attributes["insensitive"]?.lowercased() == "true"
+        let context = attributes["context"]
+        let lookAhead = truthy(attributes["lookAhead"])
+        let column = attributes["column"].flatMap(Int.init)
+        let firstNonSpace = attributes["firstNonSpace"]?.lowercased() == "true"
+        let minimal = attributes["minimal"]?.lowercased() == "true"
 
-                switch tag {
-                case "RegExpr":
-                    guard let pattern = attributes["String"] else { return nil }
-                    return SyntaxRule(
-                        pattern: compiledPattern(expandPattern(pattern, entities: entities), insensitive: insensitive, minimal: minimal),
-                        token: styleToken,
-                        styleName: styleName,
-                        context: context,
-                        lookAhead: lookAhead,
-                        column: column,
-                        firstNonSpace: firstNonSpace,
-                        minimal: minimal
-                    )
-                case "DetectChar":
-                    guard let char = attributes["char"] else { return nil }
-                    return SyntaxRule(pattern: compiledPattern(NSRegularExpression.escapedPattern(for: expandPattern(char, entities: entities)), insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "Detect2Chars":
-                    guard let char = attributes["char"], let char1 = attributes["char1"] else { return nil }
-                    let pattern = NSRegularExpression.escapedPattern(for: expandPattern(char, entities: entities)) + NSRegularExpression.escapedPattern(for: expandPattern(char1, entities: entities))
-                    return SyntaxRule(pattern: compiledPattern(pattern, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "DetectSpaces":
-                    return SyntaxRule(pattern: compiledPattern(#"[ \t]+"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "DetectIdentifier":
-                    return SyntaxRule(pattern: compiledPattern(#"\b[A-Za-z_][A-Za-z0-9_]*\b"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "StringDetect":
-                    guard let string = attributes["String"] else { return nil }
-                    return SyntaxRule(pattern: compiledPattern(NSRegularExpression.escapedPattern(for: expandPattern(string, entities: entities)), insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "WordDetect":
-                    guard let string = attributes["String"] else { return nil }
-                    let escaped = NSRegularExpression.escapedPattern(for: expandPattern(string, entities: entities))
-                    return SyntaxRule(pattern: compiledPattern(#"(?<!\w)"# + escaped + #"(?!\w)"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "AnyChar":
-                    guard let string = attributes["String"] else { return nil }
-                    let escaped = expandPattern(string, entities: entities)
-                        .map { NSRegularExpression.escapedPattern(for: String($0)) }
-                        .joined(separator: "|")
-                    return SyntaxRule(pattern: compiledPattern("(?:" + escaped + ")", insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "Int":
-                    return SyntaxRule(pattern: compiledPattern(#"\b\d+\b"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "Float":
-                    return SyntaxRule(pattern: compiledPattern(#"\b\d+\.\d+(?:[eE][+-]?\d+)?\b"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "RangeDetect":
-                    guard let char = attributes["char"], let char1 = attributes["char1"] else { return nil }
-                    let open = NSRegularExpression.escapedPattern(for: expandPattern(char, entities: entities))
-                    let close = NSRegularExpression.escapedPattern(for: expandPattern(char1, entities: entities))
-                    return SyntaxRule(pattern: compiledPattern(open + #".*?"# + close, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "LineContinue":
-                    return SyntaxRule(pattern: compiledPattern(#"\\"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "HlCStringChar":
-                    return SyntaxRule(pattern: compiledPattern(#"\\(?:[0-7]{1,3}|x[0-9A-Fa-f]+|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|.)"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "HlCChar":
-                    return SyntaxRule(pattern: compiledPattern(#"'(?:\\.|[^'\\])'"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "HlCOct":
-                    return SyntaxRule(pattern: compiledPattern(#"\b0[0-7]+\b"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "HlCHex":
-                    return SyntaxRule(pattern: compiledPattern(#"\b0[xX][0-9A-Fa-f]+\b"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                case "keyword":
-                    guard let listName = attributes["String"], let items = lists[listName], !items.isEmpty else { return nil }
-                    let escaped = items.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
-                    return SyntaxRule(pattern: compiledPattern(#"(?<!\w)(?:"# + escaped + #")(?!\w)"#, insensitive: insensitive, minimal: minimal), token: styleToken, styleName: styleName, context: context, lookAhead: lookAhead, column: column, firstNonSpace: firstNonSpace, minimal: minimal)
-                default:
+        // Each tag yields the raw regex body plus a conservative leading-char
+        // filter. Deriving the filter from the known tag semantics (rather than
+        // re-parsing the finished regex) keeps it exact for the typed tags, which
+        // are the overwhelming majority of rules; only free-form RegExpr falls
+        // back to pattern analysis, and to nil when analysis is uncertain.
+        let rawPattern: String
+        let filter: FirstCharFilter?
+        switch tag {
+        case "RegExpr":
+            guard let pattern = attributes["String"] else { return nil }
+            let expanded = expandPattern(pattern, entities: entities)
+            rawPattern = expanded
+            filter = regexLeadingFilter(expanded, insensitive: insensitive)
+        case "DetectChar":
+            guard let char = attributes["char"] else { return nil }
+            let expanded = expandPattern(char, entities: entities)
+            rawPattern = NSRegularExpression.escapedPattern(for: expanded)
+            filter = leadingUnitFilter(ofFirstCharIn: expanded, insensitive: insensitive)
+        case "Detect2Chars":
+            guard let char = attributes["char"], let char1 = attributes["char1"] else { return nil }
+            let open = expandPattern(char, entities: entities)
+            rawPattern = NSRegularExpression.escapedPattern(for: open) + NSRegularExpression.escapedPattern(for: expandPattern(char1, entities: entities))
+            filter = leadingUnitFilter(ofFirstCharIn: open, insensitive: insensitive)
+        case "DetectSpaces":
+            rawPattern = #"[ \t]+"#
+            filter = classFilter(units: [9, 32])
+        case "DetectIdentifier":
+            rawPattern = #"\b[A-Za-z_][A-Za-z0-9_]*\b"#
+            filter = identifierStartFilter
+        case "StringDetect":
+            guard let string = attributes["String"] else { return nil }
+            let expanded = expandPattern(string, entities: entities)
+            rawPattern = NSRegularExpression.escapedPattern(for: expanded)
+            filter = leadingUnitFilter(ofFirstCharIn: expanded, insensitive: insensitive)
+        case "WordDetect":
+            guard let string = attributes["String"] else { return nil }
+            let expanded = expandPattern(string, entities: entities)
+            rawPattern = #"(?<!\w)"# + NSRegularExpression.escapedPattern(for: expanded) + #"(?!\w)"#
+            filter = leadingUnitFilter(ofFirstCharIn: expanded, insensitive: insensitive)
+        case "AnyChar":
+            guard let string = attributes["String"] else { return nil }
+            let expanded = expandPattern(string, entities: entities)
+            let escaped = expanded.map { NSRegularExpression.escapedPattern(for: String($0)) }.joined(separator: "|")
+            rawPattern = "(?:" + escaped + ")"
+            filter = anyCharFilter(of: expanded, insensitive: insensitive)
+        case "Int":
+            rawPattern = #"\b\d+\b"#
+            filter = digitFilter
+        case "Float":
+            rawPattern = #"\b\d+\.\d+(?:[eE][+-]?\d+)?\b"#
+            filter = digitFilter
+        case "RangeDetect":
+            guard let char = attributes["char"], let char1 = attributes["char1"] else { return nil }
+            let open = expandPattern(char, entities: entities)
+            let close = NSRegularExpression.escapedPattern(for: expandPattern(char1, entities: entities))
+            rawPattern = NSRegularExpression.escapedPattern(for: open) + #".*?"# + close
+            filter = leadingUnitFilter(ofFirstCharIn: open, insensitive: insensitive)
+        case "LineContinue":
+            rawPattern = #"\\"#
+            filter = classFilter(units: [92])
+        case "HlCStringChar":
+            rawPattern = #"\\(?:[0-7]{1,3}|x[0-9A-Fa-f]+|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|.)"#
+            filter = classFilter(units: [92])
+        case "HlCChar":
+            rawPattern = #"'(?:\\.|[^'\\])'"#
+            filter = classFilter(units: [39])
+        case "HlCOct":
+            rawPattern = #"\b0[0-7]+\b"#
+            filter = classFilter(units: [48])
+        case "HlCHex":
+            rawPattern = #"\b0[xX][0-9A-Fa-f]+\b"#
+            filter = classFilter(units: [48])
+        case "keyword":
+            guard let listName = attributes["String"], let items = lists[listName], !items.isEmpty else { return nil }
+            let escaped = items.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
+            rawPattern = #"(?<!\w)(?:"# + escaped + #")(?!\w)"#
+            filter = keywordFilter(items: items, insensitive: insensitive)
+        default:
+            return nil
+        }
+
+        return SyntaxRule(
+            pattern: compiledPattern(rawPattern, insensitive: insensitive, minimal: minimal),
+            token: styleToken,
+            styleName: styleName,
+            context: context,
+            lookAhead: lookAhead,
+            column: column,
+            firstNonSpace: firstNonSpace,
+            minimal: minimal,
+            firstChar: filter
+        )
+    }
+
+    // MARK: - Leading-character filters
+    //
+    // A rule's filter must be a superset of every UTF-16 code unit the rule can
+    // begin matching at a scan position. Under-stating it would silently drop
+    // matches, so every builder here errs toward inclusion (or nil = always run).
+
+    private struct FirstCharAccumulator {
+        private var low: UInt64 = 0
+        private var high: UInt64 = 0
+        private var allowsNonASCII = false
+        private var isEmpty = true
+
+        private mutating func insertRaw(_ unit: UInt16) {
+            isEmpty = false
+            if unit >= 128 {
+                allowsNonASCII = true
+            } else if unit < 64 {
+                low |= (UInt64(1) << UInt64(unit))
+            } else {
+                high |= (UInt64(1) << UInt64(unit - 64))
+            }
+        }
+
+        // Adds `unit` and, under case-insensitive matching, the opposite-case
+        // ASCII letter so a folded lead is never skipped.
+        mutating func insert(unit: UInt16, insensitive: Bool) {
+            insertRaw(unit)
+            guard insensitive else { return }
+            if unit >= 65, unit <= 90 {
+                insertRaw(unit + 32)
+            } else if unit >= 97, unit <= 122 {
+                insertRaw(unit - 32)
+            }
+        }
+
+        mutating func insert(firstUnitOf text: String, insensitive: Bool) {
+            guard let unit = text.utf16.first else { return }
+            insert(unit: unit, insensitive: insensitive)
+        }
+
+        func makeFilter() -> FirstCharFilter? {
+            guard !isEmpty else { return nil }
+            return FirstCharFilter(low: low, high: high, allowsNonASCII: allowsNonASCII)
+        }
+    }
+
+    private static let digitFilter: FirstCharFilter? = {
+        var acc = FirstCharAccumulator()
+        for unit in UInt16(48)...UInt16(57) { acc.insert(unit: unit, insensitive: false) }
+        return acc.makeFilter()
+    }()
+
+    private static let identifierStartFilter: FirstCharFilter? = {
+        var acc = FirstCharAccumulator()
+        acc.insert(unit: 95, insensitive: false)               // underscore
+        for unit in UInt16(65)...UInt16(90) { acc.insert(unit: unit, insensitive: false) }   // A-Z
+        for unit in UInt16(97)...UInt16(122) { acc.insert(unit: unit, insensitive: false) }  // a-z
+        return acc.makeFilter()
+    }()
+
+    private static func classFilter(units: [UInt16]) -> FirstCharFilter? {
+        var acc = FirstCharAccumulator()
+        for unit in units { acc.insert(unit: unit, insensitive: false) }
+        return acc.makeFilter()
+    }
+
+    private static func leadingUnitFilter(ofFirstCharIn text: String, insensitive: Bool) -> FirstCharFilter? {
+        var acc = FirstCharAccumulator()
+        acc.insert(firstUnitOf: text, insensitive: insensitive)
+        return acc.makeFilter()
+    }
+
+    private static func keywordFilter(items: [String], insensitive: Bool) -> FirstCharFilter? {
+        var acc = FirstCharAccumulator()
+        for item in items { acc.insert(firstUnitOf: item, insensitive: insensitive) }
+        return acc.makeFilter()
+    }
+
+    private static func anyCharFilter(of text: String, insensitive: Bool) -> FirstCharFilter? {
+        var acc = FirstCharAccumulator()
+        for character in text { acc.insert(firstUnitOf: String(character), insensitive: insensitive) }
+        return acc.makeFilter()
+    }
+
+    // Best-effort leading-character analysis for free-form RegExpr patterns.
+    // Deliberately narrow: it handles one required leading atom and bails to nil
+    // on anything it does not fully model (alternation, groups, optional leads).
+    // Bailing only costs a always-run regex; understating would drop matches.
+    private static func regexLeadingFilter(_ pattern: String, insensitive: Bool) -> FirstCharFilter? {
+        let chars = Array(pattern)
+        let count = chars.count
+        guard count > 0, !hasTopLevelAlternation(chars) else { return nil }
+
+        var index = 0
+        // Skip leading zero-width assertions that consume no characters.
+        while index < count {
+            if chars[index] == "^" {
+                index += 1
+                continue
+            }
+            if chars[index] == "\\", index + 1 < count, chars[index + 1] == "b" || chars[index + 1] == "B" {
+                index += 2
+                continue
+            }
+            break
+        }
+        guard index < count else { return nil }
+
+        var acc = FirstCharAccumulator()
+        let atomEnd: Int
+        switch chars[index] {
+        case "\\":
+            guard index + 1 < count else { return nil }
+            let escaped = chars[index + 1]
+            switch escaped {
+            case "d":
+                for unit in UInt16(48)...UInt16(57) { acc.insert(unit: unit, insensitive: false) }
+            case "w":
+                acc.insert(unit: 95, insensitive: false)
+                for unit in UInt16(48)...UInt16(57) { acc.insert(unit: unit, insensitive: false) }
+                for unit in UInt16(65)...UInt16(90) { acc.insert(unit: unit, insensitive: false) }
+                for unit in UInt16(97)...UInt16(122) { acc.insert(unit: unit, insensitive: false) }
+            case "s":
+                for unit in [UInt16(9), 10, 11, 12, 13, 32] { acc.insert(unit: unit, insensitive: false) }
+            case "D", "W", "S", "b", "B":
+                return nil                                  // negated class or boundary: too broad
+            default:
+                // An escaped non-alphanumeric is that literal; an escaped letter
+                // or digit is an unmodeled escape (for example \u, \x, \1).
+                if escaped.isLetter || escaped.isNumber { return nil }
+                acc.insert(firstUnitOf: String(escaped), insensitive: insensitive)
+            }
+            atomEnd = index + 2
+        case "[":
+            guard let end = analyzeCharacterClass(chars, openIndex: index, into: &acc, insensitive: insensitive) else {
+                return nil
+            }
+            atomEnd = end
+        case ".", "$", "*", "+", "?", "(", ")", "|", "{":
+            return nil                                      // metacharacter we do not model
+        default:
+            acc.insert(firstUnitOf: String(chars[index]), insensitive: insensitive)
+            atomEnd = index + 1
+        }
+
+        // The leading atom must be required; a zero-allowing quantifier would let
+        // the following atom supply the first character, which we do not track.
+        if atomEnd < count {
+            let quantifier = chars[atomEnd]
+            if quantifier == "?" || quantifier == "*" {
+                return nil
+            }
+            if quantifier == "{", braceQuantifierAllowsZero(chars, braceIndex: atomEnd) {
+                return nil
+            }
+        }
+        return acc.makeFilter()
+    }
+
+    // True when an unescaped `|` sits at the top level (outside any group or
+    // character class), signalling an alternation this analyzer will not split.
+    private static func hasTopLevelAlternation(_ chars: [Character]) -> Bool {
+        var depth = 0
+        var inClass = false
+        var index = 0
+        while index < chars.count {
+            let character = chars[index]
+            if character == "\\" {
+                index += 2
+                continue
+            }
+            if inClass {
+                if character == "]" { inClass = false }
+            } else if character == "[" {
+                inClass = true
+            } else if character == "(" {
+                depth += 1
+            } else if character == ")" {
+                depth = max(0, depth - 1)
+            } else if character == "|", depth == 0 {
+                return true
+            }
+            index += 1
+        }
+        return false
+    }
+
+    // Parses a non-negated `[...]` class starting at `openIndex`, adding every
+    // member's leading unit to `acc`. Returns the index just past `]`, or nil on
+    // negation or any member it cannot resolve to concrete units.
+    private static func analyzeCharacterClass(
+        _ chars: [Character],
+        openIndex: Int,
+        into acc: inout FirstCharAccumulator,
+        insensitive: Bool
+    ) -> Int? {
+        let count = chars.count
+        var index = openIndex + 1
+        guard index < count, chars[index] != "^" else { return nil }
+
+        while index < count, chars[index] != "]" {
+            // POSIX class ([:name:]), equivalence class ([=c=]), or collating
+            // element ([.name.]) nested inside the class. Their real member sets
+            // (for example [[:cntrl:]] = control bytes) are not the literal chars
+            // that follow, so modelling them as literals would silently exclude
+            // matchable characters. Bail to nil (always-run) instead.
+            if chars[index] == "[", index + 1 < count,
+               chars[index + 1] == ":" || chars[index + 1] == "=" || chars[index + 1] == "." {
+                return nil
+            }
+            guard let (lowUnit, lowIsSet, afterLow) = readClassMember(chars, at: index, into: &acc, insensitive: insensitive) else {
+                return nil
+            }
+            // A range low-high only applies when both ends are single units.
+            if !lowIsSet, afterLow < count, chars[afterLow] == "-", afterLow + 1 < count, chars[afterLow + 1] != "]" {
+                guard let (highUnit, highIsSet, afterHigh) = readClassMember(chars, at: afterLow + 1, into: &acc, insensitive: insensitive),
+                      !highIsSet, lowUnit <= highUnit else {
                     return nil
                 }
+                var unit = lowUnit
+                while unit <= highUnit {
+                    acc.insert(unit: unit, insensitive: insensitive)
+                    unit += 1
+                }
+                index = afterHigh
+            } else {
+                acc.insert(unit: lowUnit, insensitive: insensitive)
+                index = afterLow
+            }
+        }
+        guard index < count, chars[index] == "]" else { return nil }
+        return index + 1
+    }
+
+    // Reads one class member (literal, escaped char, or a \d/\w/\s set). For a
+    // set it inserts directly into `acc` and reports lowIsSet = true so the
+    // caller does not treat it as a range endpoint.
+    private static func readClassMember(
+        _ chars: [Character],
+        at index: Int,
+        into acc: inout FirstCharAccumulator,
+        insensitive: Bool
+    ) -> (unit: UInt16, isSet: Bool, next: Int)? {
+        let count = chars.count
+        guard index < count else { return nil }
+        if chars[index] == "\\" {
+            guard index + 1 < count else { return nil }
+            let escaped = chars[index + 1]
+            switch escaped {
+            case "d":
+                for unit in UInt16(48)...UInt16(57) { acc.insert(unit: unit, insensitive: false) }
+                return (0, true, index + 2)
+            case "w":
+                acc.insert(unit: 95, insensitive: false)
+                for unit in UInt16(48)...UInt16(57) { acc.insert(unit: unit, insensitive: false) }
+                for unit in UInt16(65)...UInt16(90) { acc.insert(unit: unit, insensitive: false) }
+                for unit in UInt16(97)...UInt16(122) { acc.insert(unit: unit, insensitive: false) }
+                return (0, true, index + 2)
+            case "s":
+                for unit in [UInt16(9), 10, 11, 12, 13, 32] { acc.insert(unit: unit, insensitive: false) }
+                return (0, true, index + 2)
+            case "t": return (9, false, index + 2)
+            case "n": return (10, false, index + 2)
+            case "r": return (13, false, index + 2)
+            case "f": return (12, false, index + 2)
+            case "v": return (11, false, index + 2)
+            case "D", "W", "S", "b", "B", "u", "x", "p", "P":
+                return nil                                  // negated or unmodeled escape
+            default:
+                if escaped.isNumber { return nil }          // octal/backreference: unmodeled
+                guard let unit = String(escaped).utf16.first else { return nil }
+                return (unit, false, index + 2)
+            }
+        }
+        guard let unit = String(chars[index]).utf16.first else { return nil }
+        return (unit, false, index + 1)
+    }
+
+    // True when a `{m,n}` quantifier permits zero repetitions (m is 0 or absent).
+    private static func braceQuantifierAllowsZero(_ chars: [Character], braceIndex: Int) -> Bool {
+        let count = chars.count
+        var index = braceIndex + 1
+        var digits = ""
+        while index < count, chars[index].isNumber {
+            digits.append(chars[index])
+            index += 1
+        }
+        // No closing brace means it is a literal `{`, not a quantifier.
+        guard index < count, chars[index] == "," || chars[index] == "}" else { return false }
+        return digits.isEmpty || Int(digits) == 0
     }
 
     private static func compiledPattern(_ pattern: String, insensitive: Bool, minimal: Bool) -> String {
@@ -573,12 +1013,36 @@ private func isStyledAttribute(_ attribute: String) -> Bool {
 }
 
 enum KateContextRuleInterpreter {
-    static func highlightSpans(text: String, definition: SyntaxDefinition) -> [HighlightSpan] {
+    // Interpretation stage: text + rules -> offset-native token runs. This is the
+    // interpreter's real output; it does no String.Index work. `applyFirstCharFilter`
+    // is always true in production; tests set it false to prove the leading-char
+    // prefilter is a pure optimization that never changes the emitted runs.
+    static func tokenRuns(
+        text: String,
+        definition: SyntaxDefinition,
+        applyFirstCharFilter: Bool = true
+    ) -> [TokenRun] {
         guard !text.isEmpty else { return [] }
 
         let rootContext = definition.contexts[definition.rootContext] == nil ? fallbackRootContext(definition) : definition.rootContext
-        var evaluator = Evaluator(text: text, definition: definition, rootContext: rootContext)
-        return evaluator.highlightSpans()
+        var evaluator = Evaluator(
+            text: text,
+            definition: definition,
+            rootContext: rootContext,
+            applyFirstCharFilter: applyFirstCharFilter
+        )
+        return evaluator.evaluate()
+    }
+
+    // Convenience composition of interpretation + span mapping for callers (and
+    // tests) that want spans directly from a definition and text.
+    static func highlightSpans(
+        text: String,
+        definition: SyntaxDefinition,
+        applyFirstCharFilter: Bool = true
+    ) -> [HighlightSpan] {
+        let runs = tokenRuns(text: text, definition: definition, applyFirstCharFilter: applyFirstCharFilter)
+        return HighlightSpanMapper.spans(from: runs, in: text)
     }
 
     private static func fallbackRootContext(_ definition: SyntaxDefinition) -> String {
@@ -589,29 +1053,57 @@ enum KateContextRuleInterpreter {
 
     private struct Evaluator {
         let text: String
+        // The text bridged to NSString once. NSRegularExpression works on UTF-16,
+        // so every anchored match reuses this single bridge and the cached length
+        // instead of re-bridging the whole string on every rule attempt (the old
+        // hot-path cost). `location` is the UTF-16 offset of `index`, kept in
+        // lockstep so a match never has to convert String.Index to an offset.
+        let nsText: NSString
+        let nsLength: Int
+        // Runaway guard budget, computed once. Deriving it from `text.count`
+        // inside the loop was O(n) per step (Swift counts graphemes by walking
+        // the whole string), which made the whole pass O(n^2) and was the true
+        // dominant cost of the cold pass.
+        let stepBudget: Int
         let definition: SyntaxDefinition
         let rootContext: String
+        let applyFirstCharFilter: Bool
         var index: String.Index
+        var location: Int
         var contextStack: [String]
         var regexCache: [String: NSRegularExpression] = [:]
         var failedRegexPatterns: Set<String> = []
         var expandedItemCache: [String: [SyntaxContextItem]] = [:]
-        var spans: [HighlightSpan] = []
+        var runs: [TokenRun] = []
         var stepCount = 0
 
-        init(text: String, definition: SyntaxDefinition, rootContext: String) {
+        init(text: String, definition: SyntaxDefinition, rootContext: String, applyFirstCharFilter: Bool) {
             self.text = text
+            self.applyFirstCharFilter = applyFirstCharFilter
+            // Build a UTF-16-backed NSString from an explicit code-unit buffer.
+            // A plain `text as NSString` bridge of a native (UTF-8) Swift string
+            // has no contiguous UTF-16 store, so both `character(at:)` and every
+            // anchored regex transcode UTF-16 on demand, which turns per-position
+            // work into O(offset) and the whole pass into O(n^2). A real UTF-16
+            // buffer makes both O(1).
+            let units = Array(text.utf16)
+            self.nsText = NSString(characters: units, length: units.count)
+            self.nsLength = units.count
+            // UTF-16 length is an upper bound on grapheme count, so this budget
+            // is at least as generous as the old text.count * 200 guard.
+            self.stepBudget = max(10_000, units.count * 200)
             self.definition = definition
             self.rootContext = rootContext
             self.index = text.startIndex
+            self.location = 0
             self.contextStack = [rootContext]
         }
 
-        mutating func highlightSpans() -> [HighlightSpan] {
+        mutating func evaluate() -> [TokenRun] {
             while index < text.endIndex {
                 stepCount += 1
-                guard stepCount <= max(10_000, text.count * 200) else {
-                    return spans
+                guard stepCount <= stepBudget else {
+                    return runs
                 }
 
                 guard let context = currentContext else {
@@ -625,7 +1117,7 @@ enum KateContextRuleInterpreter {
                     continue
                 }
 
-                if let match = firstMatch(in: context, at: index) {
+                if let match = firstMatch(in: context, at: location) {
                     apply(match, in: context)
                     continue
                 }
@@ -635,16 +1127,19 @@ enum KateContextRuleInterpreter {
                     continue
                 }
 
-                if let span = defaultSpan(in: context, at: index) {
-                    spans.append(span)
+                if let run = defaultRun(in: context) {
+                    runs.append(run)
                 }
                 advance()
             }
-            return spans.sorted(by: {
-                let left = NSRange($0.range, in: text)
-                let right = NSRange($1.range, in: text)
-                if left.location != right.location { return left.location < right.location }
-                return left.length > right.length
+            // Sort by start ascending, then by length descending. Runs carry UTF-16
+            // offsets, so this compares plain Ints; the previous span sort had to
+            // convert String.Index to NSRange twice per comparison.
+            return runs.sorted(by: {
+                if $0.location != $1.location {
+                    return $0.location < $1.location
+                }
+                return $0.length > $1.length
             })
         }
 
@@ -654,15 +1149,20 @@ enum KateContextRuleInterpreter {
 
         private mutating func apply(_ match: RuleMatch, in context: SyntaxContext) {
             if !match.rule.lookAhead, shouldEmit(rule: match.rule) {
-                spans.append(HighlightSpan(range: match.range, token: match.rule.token, styleName: match.rule.styleName))
-            } else if !match.rule.lookAhead, let defaultSpan = defaultSpan(for: match.range, in: context) {
-                spans.append(defaultSpan)
+                runs.append(TokenRun(
+                    location: match.nsRange.location,
+                    length: match.nsRange.length,
+                    token: match.rule.token,
+                    styleName: match.rule.styleName
+                ))
+            } else if !match.rule.lookAhead, let defaultRun = defaultRun(for: match.nsRange, in: context) {
+                runs.append(defaultRun)
             }
             let previousIndex = index
             let previousStack = contextStack
             applyContextTransition(match.rule.context)
             if !match.rule.lookAhead {
-                index = match.range.upperBound
+                advanceCursor(toAtLeast: match.nsRange.location + match.nsRange.length)
             } else if match.rule.context == nil || match.rule.context == "#stay" {
                 advance()
             }
@@ -673,24 +1173,43 @@ enum KateContextRuleInterpreter {
 
         private mutating func advance() {
             guard index < text.endIndex else { return }
+            // Keep the UTF-16 offset aligned with the grapheme cursor: a single
+            // grapheme can span two code units (surrogate pairs, CRLF).
+            location += text[index].utf16.count
             index = text.index(after: index)
         }
 
-        private func defaultSpan(in context: SyntaxContext, at index: String.Index) -> HighlightSpan? {
+        // Advance the grapheme cursor to the first grapheme boundary at or past
+        // `targetLocation` (a UTF-16 offset). Walking whole graphemes from the
+        // current aligned position keeps `index` grapheme-aligned and `location`
+        // its exact UTF-16 offset even when a match ends mid-grapheme -- for
+        // example a regex that stops between a base character and its combining
+        // mark. Deriving both cursors from this one walk removes the desync that a
+        // direct `index = Range(nsRange, in: text).upperBound` jump could cause.
+        private mutating func advanceCursor(toAtLeast targetLocation: Int) {
+            while location < targetLocation, index < text.endIndex {
+                location += text[index].utf16.count
+                index = text.index(after: index)
+            }
+        }
+
+        // Single-character default run at the current cursor. Uses the tracked
+        // UTF-16 offset directly; the character's UTF-16 length gives the run width.
+        private func defaultRun(in context: SyntaxContext) -> TokenRun? {
             guard let styleName = context.attribute,
                   isStyledAttribute(styleName),
                   text[index] != "\n" else {
                 return nil
             }
-            let nextIndex = text.index(after: index)
-            return HighlightSpan(range: index..<nextIndex, token: highlightToken(for: styleName), styleName: styleName)
+            let length = text[index].utf16.count
+            return TokenRun(location: location, length: length, token: highlightToken(for: styleName), styleName: styleName)
         }
 
-        private func defaultSpan(for range: Range<String.Index>, in context: SyntaxContext) -> HighlightSpan? {
+        private func defaultRun(for nsRange: NSRange, in context: SyntaxContext) -> TokenRun? {
             guard let styleName = context.attribute, isStyledAttribute(styleName) else {
                 return nil
             }
-            return HighlightSpan(range: range, token: highlightToken(for: styleName), styleName: styleName)
+            return TokenRun(location: nsRange.location, length: nsRange.length, token: highlightToken(for: styleName), styleName: styleName)
         }
 
         private func shouldEmit(rule: SyntaxRule) -> Bool {
@@ -700,13 +1219,20 @@ enum KateContextRuleInterpreter {
             return true
         }
 
-        private mutating func firstMatch(in context: SyntaxContext, at index: String.Index) -> RuleMatch? {
+        private mutating func firstMatch(in context: SyntaxContext, at location: Int) -> RuleMatch? {
+            // One code-unit read per position drives the leading-char prefilter,
+            // which skips the anchored regex for every rule that provably cannot
+            // begin with this unit. That removes the bulk of the per-position,
+            // per-rule matching that dominated the cold pass.
+            let currentUnit = nsText.character(at: location)
             for item in expandedItems(for: context.name) {
-                guard case let .rule(rule) = item,
-                      let match = match(rule: rule, at: index) else {
+                guard case let .rule(rule) = item else { continue }
+                if applyFirstCharFilter, let filter = rule.firstChar, !filter.allows(codeUnit: currentUnit) {
                     continue
                 }
-                return match
+                if let match = match(rule: rule, at: location) {
+                    return match
+                }
             }
             return nil
         }
@@ -744,26 +1270,33 @@ enum KateContextRuleInterpreter {
             return includeName
         }
 
-        private mutating func match(rule: SyntaxRule, at index: String.Index) -> RuleMatch? {
+        private mutating func match(rule: SyntaxRule, at location: Int) -> RuleMatch? {
             guard let regex = compiledRegex(for: rule.pattern) else {
                 return nil
             }
-            let location = NSRange(index..<index, in: text).location
-            let searchRange = NSRange(location: location, length: (text as NSString).length - location)
-            guard let result = regex.firstMatch(in: text, options: [.anchored], range: searchRange),
-                  result.range.length > 0,
-                  let range = Range(result.range, in: text) else {
+            let searchRange = NSRange(location: location, length: nsLength - location)
+            // `nsText as String` re-wraps the already-bridged NSString in O(1),
+            // so firstMatch never deep-copies the text on the hot path.
+            guard let result = regex.firstMatch(in: nsText as String, options: [.anchored], range: searchRange),
+                  result.range.length > 0 else {
                 return nil
             }
-            if let column = rule.column, column != actualColumn(for: range.lowerBound) {
+            // The match is anchored at the current cursor, so `index` is its start.
+            // The column and first-non-space checks need only that start position,
+            // and working from `index` avoids converting the match's NSRange back to
+            // a String.Index that could land mid-grapheme.
+            if let column = rule.column, column != actualColumn(for: index) {
                 return nil
             }
-            if rule.firstNonSpace, !isFirstNonSpace(range.lowerBound) {
+            if rule.firstNonSpace, !isFirstNonSpace(index) {
                 return nil
             }
-            return RuleMatch(rule: rule, range: range)
+            return RuleMatch(rule: rule, nsRange: result.range)
         }
 
+        // Two-level cache: a lock-free per-Evaluator dictionary on the hot path,
+        // backed by a process-wide compiled-regex cache so repeated passes and
+        // other documents reuse compilations instead of rebuilding them.
         private mutating func compiledRegex(for pattern: String) -> NSRegularExpression? {
             if let cached = regexCache[pattern] {
                 return cached
@@ -771,7 +1304,7 @@ enum KateContextRuleInterpreter {
             if failedRegexPatterns.contains(pattern) {
                 return nil
             }
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else {
+            guard let regex = CompiledRegexCache.shared.regex(for: pattern) else {
                 failedRegexPatterns.insert(pattern)
                 return nil
             }
@@ -827,7 +1360,41 @@ enum KateContextRuleInterpreter {
 
     private struct RuleMatch {
         let rule: SyntaxRule
-        let range: Range<String.Index>
+        // UTF-16 range of the match, emitted directly into the token run. The
+        // cursor advances to the grapheme boundary at or past nsRange's end, so a
+        // match ending mid-grapheme never desyncs the grapheme cursor from its
+        // UTF-16 offset.
+        let nsRange: NSRange
+    }
+}
+
+// Process-wide compiled-regex cache. NSRegularExpression instances are immutable
+// and thread-safe once built, and every interpreter pass compiles with the same
+// options, so a single pattern-keyed store lets repeated passes (drift recompute,
+// per-keystroke reinterpret) and every open document share compilations instead
+// of rebuilding them per Evaluator.
+final class CompiledRegexCache: @unchecked Sendable {
+    static let shared = CompiledRegexCache()
+
+    private let lock = NSLock()
+    private var cache: [String: NSRegularExpression] = [:]
+    private var failedPatterns: Set<String> = []
+
+    func regex(for pattern: String) -> NSRegularExpression? {
+        lock.lock()
+        defer { lock.unlock() }
+        if let cached = cache[pattern] {
+            return cached
+        }
+        if failedPatterns.contains(pattern) {
+            return nil
+        }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else {
+            failedPatterns.insert(pattern)
+            return nil
+        }
+        cache[pattern] = regex
+        return regex
     }
 }
 

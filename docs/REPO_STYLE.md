@@ -12,7 +12,7 @@ Core principles guide work in this repo. Cite them by name when making judgment 
 - **Prompt positively.** Tell the model what to do, not what to avoid. Small LMs can confuse negative prompting with positive instructions, which can lead to poor code and seriously flawed results.     Prefer direct instructions like "use explicit key access" over negative ones, like "do not use dict.get()"
 - **Atomic task decomposition.** Break hard problems into the smallest independently completable tasks. Each task should have one owner, one clear outcome, and one verification step.
 - **Be efficient with time.** Subagents and tokens are cheap, but wall time is not. Optimize for implementation time by spreading atomic tasks in parallel.
-- **Fresh subagent per task.** Give each independent task to a new subagent with a self-contained prompt. Reusing a subagent across tasks carries stale context, encourages drift, and weakens independent judgment.
+- **Fresh subagent per task.** Give each independent task to a new subagent with a self-contained prompt. Reusing a subagent across tasks carries stale context, encourages drift, and weakens independent judgment. When a subagent is performing suboptimal, kill and replace it rather than negotiating.
 - **Finish the obvious.** Continue while the next safe step is defined by the plan, implied by the task, or required to verify the work. Obvious follow-on work is part of the task, not a bonus. Stop only at a real blocker, risky action, or change to the user's requested outcome.
 
 ## Repository structure
@@ -133,7 +133,7 @@ Preferred structure:
 - Categories are not required when they would be empty, but every changelog entry must belong to one category.
 - Changelog entries are never removed, but they may be rephrased for accuracy and clarity.
 - Legacy archives that use the older `CHANGELOG_ARCHIVE_NN.md` form must be renamed to the documented `CHANGELOG-YYYY-MM[a-z].md` form. The new name follows the most-recent-month-in-range rule above (use the most recent `## YYYY-MM-DD` heading inside the archive). Use `git mv` so history is preserved. Only one archive naming style should exist in the repo at any time.
-- Automation: [rotate_changelog.py](../devel/rotate_changelog.py) enforces this rotation policy (keeps the two newest day blocks, archives the rest into `docs/CHANGELOG-YYYY-MM[a-z].md`, refuses to clobber boundary dates). [query_changelog.py](../devel/query_changelog.py) searches the active changelog and archives by date range, category, keyword, or source. [commit_changelog.py](../devel/commit_changelog.py) drafts the seed commit message from the changelog bullets newly ADDED in the working tree (via `git diff HEAD` on `docs/CHANGELOG.md`), then restricts those to the most recent run of consecutive day-block headings so an edited older bullet does not leak into the seed. All three share [changelog_lib.py](../devel/changelog_lib.py) (parser/serializer, git helpers, console + prompt helpers).
+- Automation: [devel/rotate_changelog.py](../devel/rotate_changelog.py) enforces this rotation policy (keeps the two newest day blocks, archives the rest into `docs/CHANGELOG-YYYY-MM[a-z].md`, refuses to clobber boundary dates). [devel/query_changelog.py](../devel/query_changelog.py) searches the active changelog and archives by date range, category, keyword, or source. [devel/commit_changelog.py](../devel/commit_changelog.py) drafts the seed commit message from the changelog bullets newly ADDED in the working tree (via `git diff HEAD` on `docs/CHANGELOG.md`), then restricts those to the most recent run of consecutive day-block headings so an edited older bullet does not leak into the seed. All three share [devel/changelog_lib.py](../devel/changelog_lib.py) (parser/serializer, git helpers, console + prompt helpers).
 
 ## Active plans folder organization
 - Working planning artifacts under `docs/active_plans/` are filed into a closed set of subdirectories by kind.
@@ -170,6 +170,7 @@ Preferred structure:
 - Keep scripts self-contained and single-purpose.
 - Add a shebang for executable scripts and keep them runnable directly.
 - For repo-local Python commands, use:
+  - `source source_me.sh && python ...`
 - For pytest commands, use:
   - `pytest tests/`
 - Avoid hard-coded interpreter paths in routine command examples.
@@ -182,6 +183,34 @@ Preferred structure:
   REPO_ROOT = file_utils.get_repo_root()
   ```
   This module uses `git rev-parse --show-toplevel` and is propagated across repos automatically.
+
+### source_me.sh contract
+
+- `source_me.sh` is a bash script sourced into your shell, not run directly. It
+  enforces bash, sources `~/.bashrc`, and exports the Python runtime flags
+  `PYTHONUNBUFFERED` and `PYTHONDONTWRITEBYTECODE`.
+- It ships as a NOEXIST starter seed: the consumer repo owns its copy after
+  bootstrap, so local edits do not propagate back and are never overwritten.
+- Ordering invariant: `source ~/.bashrc` runs FIRST, before any repo-specific
+  environment extension. `~/.bashrc` applies local shell setup and clears
+  `PYTHONPATH`, so any `PYTHONPATH` line must come after it or be wiped.
+- The seed sets no `PYTHONPATH`. One generic seed is shipped to every repo type;
+  a universal `PYTHONPATH` is intentionally omitted. Most repos need none, and a
+  broad path would mask missing-dependency bugs. `PYTHONPATH` need is per-repo
+  (does the repo ship a repo-root package), which varies within a repo type, so
+  there are no repo_type-specific seeds either.
+- When a repo needs its repo-root modules importable while commands run from a
+  subdirectory without installing the repo -- most commonly a repo-root package
+  imported package-qualified (for example `import repolib.console`), or scripts
+  under `tools/` or `tests/` that import repo-root modules -- uncomment the
+  canonical extension block in that repo's `source_me.sh`. Use exactly this
+  idiom (it assumes the repo is inside a Git work tree):
+  ```bash
+  # Must come after sourcing ~/.bashrc, which clears PYTHONPATH.
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+  export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+  unset REPO_ROOT
+  ```
 
 ## Dependency manifests
 - Store Python standard dependencies in `pip_requirements.txt` at the repo root and developer dependencies, e.g., pytest in `pip_requirements-dev.txt`.
@@ -206,7 +235,7 @@ Preferred structure:
 - Choose clear, descriptive names.
 - Keep well-known root-level docs (for example VERSION, README.md, AGENTS.md).
 - I prefer to use social media links instead of hard coding my email in repos. For example, Neil Voss, https://bsky.app/profile/neilvosslab.bsky.social
-- When referencing files, use Markdown links so users can click through. Markdown links are created using the syntax ``URL``, where "link text" is the clickable text that appears in the document, and "URL" is the web address or file path the link points to. This allows users to navigate between different content easily. Use file-path link text so readers know the exact filename (good: `[MARKDOWN_STYLE.md](MARKDOWN_STYLE.md)`, bad: `[Style Guide for Markdown](MARKDOWN_STYLE.md)`). Only include a backticked path when the link text is not the path.
+- When referencing files, use Markdown links so users can click through. Markdown links are created using the syntax `[link text](URL)`, where "link text" is the clickable text that appears in the document, and "URL" is the web address or file path the link points to. This allows users to navigate between different content easily. Use file-path link text so readers know the exact filename (good: `[docs/MARKDOWN_STYLE.md](docs/MARKDOWN_STYLE.md)`, bad: `[Style Guide for Markdown](docs/MARKDOWN_STYLE.md)`). Only include a backticked path when the link text is not the path.
 
 
 ### Recommended common docs

@@ -10,7 +10,7 @@ let package = Package(
     ],
     products: [
         .executable(
-            name: "CodeEdit",
+            name: "SwiftlyCodeEdit",
             targets: ["CodeEdit"]
         ),
     ],

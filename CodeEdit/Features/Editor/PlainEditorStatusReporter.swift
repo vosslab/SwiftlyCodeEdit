@@ -54,8 +54,10 @@ enum PlainEditorStatusReporter {
     }
 
     static func encodingLabel(_ encoding: FileEncoding?) -> String {
+        // A nil source encoding means no supported decoding was applied. Report "Unknown" here
+        // so the status bar never claims an encoding the file was not actually read with.
         guard let encoding else {
-            return "UTF-8"
+            return "Unknown"
         }
 
         switch encoding {
@@ -65,6 +67,10 @@ enum PlainEditorStatusReporter {
             return "UTF-16 BE"
         case .utf16LE:
             return "UTF-16 LE"
+        case .windows1252:
+            return "Windows-1252"
+        case .latin1:
+            return "ISO Latin-1"
         }
     }
 

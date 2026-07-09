@@ -6,16 +6,48 @@ import UniformTypeIdentifiers
 @main
 @MainActor
 enum CodeEditMain {
+    // Captured on first access, which main() forces as its very first statement,
+    // so LAUNCH_TO_WINDOW_MS measures from the start of main(), the earliest point
+    // Swift application code runs, and so excludes dyld/framework load before main().
+    static let launchStartNanoseconds = DispatchTime.now().uptimeNanoseconds
     private static let appDelegate = PlainEditorAppDelegate()
+    private static var didLogLaunchToWindow = false
 
     static func main() {
+        _ = launchStartNanoseconds
         let application = NSApplication.shared
         application.setActivationPolicy(.regular)
         application.delegate = appDelegate
         application.mainMenu = PlainEditorMainMenu.make(appDelegate: appDelegate)
+        // finishLaunching() posts the didFinishLaunching notification, which drives
+        // applicationDidFinishLaunching(_:) -> finishPlainEditorLaunch() exactly once.
+        // Calling finishPlainEditorLaunch() here as well would run the launch path twice.
         application.finishLaunching()
-        appDelegate.finishPlainEditorLaunch()
         application.run()
+    }
+
+    // Parses --kill-after=N from the launch arguments. Returns nil when the flag
+    // is absent so normal user launches never auto-quit.
+    static func killAfterSeconds() -> Double? {
+        let flagPrefix = "--kill-after="
+        for argument in CommandLine.arguments where argument.hasPrefix(flagPrefix) {
+            let secondsText = String(argument.dropFirst(flagPrefix.count))
+            return Double(secondsText)
+        }
+        return nil
+    }
+
+    // Logs LAUNCH_TO_WINDOW_MS exactly once, the first time a document window is
+    // ordered front and visible. Must not wait on highlighting completion (WP-Q0
+    // made the first highlight async) so the number reflects true launch-to-paint.
+    static func logLaunchToWindowIfNeeded() {
+        guard !didLogLaunchToWindow else { return }
+        didLogLaunchToWindow = true
+        let elapsedNanoseconds = DispatchTime.now().uptimeNanoseconds - launchStartNanoseconds
+        let elapsedMilliseconds = elapsedNanoseconds / 1_000_000
+        #if DEBUG
+        debugRuntimeLog("LAUNCH_TO_WINDOW_MS=\(elapsedMilliseconds)")
+        #endif
     }
 }
 
@@ -29,6 +61,18 @@ final class PlainEditorAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         finishPlainEditorLaunch()
+        scheduleKillAfterIfRequested()
+    }
+
+    // Validation-only backstop: with --kill-after=N present, quit N seconds after
+    // the launch path finishes, giving smoke runs (markers plus screenshot capture)
+    // time to complete before the process is torn down. Absent the flag, this is a
+    // no-op, so ordinary user launches never auto-quit.
+    func scheduleKillAfterIfRequested() {
+        guard let seconds = CodeEditMain.killAfterSeconds() else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            NSApp.terminate(nil)
+        }
     }
 
     func finishPlainEditorLaunch() {
@@ -242,13 +286,6 @@ final class PlainEditorActionRouter: ObservableObject {
     @Published var canCleanText = false
 
     private weak var activeTextView: TextView?
-    private var copiedText: String?
-
-    #if DEBUG
-    var debugCopiedText: String? {
-        copiedText
-    }
-    #endif
 
     func register(textView: TextView) {
         activeTextView = textView
@@ -277,15 +314,16 @@ final class PlainEditorActionRouter: ObservableObject {
         let range = activeTextView.selectedRange()
         guard range.location != NSNotFound, range.length > 0 else { return false }
         let selectedText = (activeTextView.string as NSString).substring(with: range)
-        copiedText = selectedText
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(selectedText, forType: .string)
         return true
     }
 
     func paste() -> Bool {
+        // Always read the live system pasteboard so text copied in any app pastes
+        // correctly. A private copy buffer would override newer external content.
         guard let activeTextView,
-              let pasteText = copiedText ?? NSPasteboard.general.string(forType: .string) else {
+              let pasteText = NSPasteboard.general.string(forType: .string) else {
             return false
         }
         let range = activeTextView.selectedRange()
@@ -326,8 +364,8 @@ private enum PlainEditorMainMenu {
 
     private static func appMenu() -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "CodeEdit")
-        menu.addItem(withTitle: "Quit CodeEdit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let menu = NSMenu(title: "SwiftlyCodeEdit")
+        menu.addItem(withTitle: "Quit SwiftlyCodeEdit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.submenu = menu
         return item
     }

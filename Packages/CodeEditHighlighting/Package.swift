@@ -16,10 +16,6 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditHighlighting"
-        ),
-        .testTarget(
-            name: "CodeEditHighlightingTests",
-            dependencies: ["CodeEditHighlighting"]
         )
     ]
 )

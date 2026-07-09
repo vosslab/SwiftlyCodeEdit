@@ -78,7 +78,9 @@ struct CodeFileView: View {
                         PlainEditorActionRouter.shared.register(textView: textView)
                         PlainSyntaxHighlighter.highlight(textView: textView, language: codeFile.getLanguage())
                         chrome.refresh(document: codeFile, selection: textView.selectedRange())
+                        #if DEBUG
                         PlainEditorCommandSelfTest.scheduleIfRequested(textView: textView)
+                        #endif
                     }
                 )
                 // This view needs to refresh when the codefile changes. The file URL is too stable.
@@ -183,18 +185,24 @@ private enum PlainEditorCommandSelfTest {
         let selectAllSent = PlainEditorActionRouter.shared.selectAll()
         let selectedAll = selectAllSent && textView.selectedRange().length == (textView.string as NSString).length
 
+        // Copy value A (the marker) to the system pasteboard.
         textView.selectionManager.setSelectedRange(NSRange(location: 0, length: (marker as NSString).length))
         let copySent = PlainEditorActionRouter.shared.copy()
-        let copiedText = PlainEditorActionRouter.shared.debugCopiedText
-            ?? NSPasteboard.general.string(forType: .string)
-        let copied = copySent && copiedText == marker
+        let copied = copySent && NSPasteboard.general.string(forType: .string) == marker
 
+        // Cut a distinct value B so the pasteboard now holds B, not the copied A.
+        // Paste must then yield B, proving paste reads the live pasteboard and not a
+        // stale internal copy buffer (regression guard for the paste-ordering bug).
+        let cutMarker = "let plainEditorCommandCutValue = 456\n"
+        textView.selectionManager.setSelectedRange(NSRange(location: 0, length: 0))
+        textView.replaceCharacters(in: NSRange(location: 0, length: 0), with: cutMarker)
+        textView.selectionManager.setSelectedRange(NSRange(location: 0, length: (cutMarker as NSString).length))
         let cutSent = PlainEditorActionRouter.shared.cut()
-        let cut = cutSent && !textView.string.hasPrefix(marker)
+        let cut = cutSent && !textView.string.hasPrefix(cutMarker)
 
         textView.selectionManager.setSelectedRange(NSRange(location: 0, length: 0))
         let pasteSent = PlainEditorActionRouter.shared.paste()
-        let pasted = pasteSent && textView.string.hasPrefix(marker)
+        let pasted = pasteSent && textView.string.hasPrefix(cutMarker)
 
         let dirtyLine = "let cleanTextSmokeValue = 1    \n"
         textView.selectionManager.setSelectedRange(NSRange(location: 0, length: 0))
@@ -317,14 +325,6 @@ private struct PlainEditorCommandBar: View {
 
     private var fontControls: some View {
         HStack(spacing: 8) {
-            Picker("Font", selection: $fontFamily) {
-                ForEach(PlainEditorFontSettings.availableFontFamilies, id: \.self) { family in
-                    Text(family).tag(family)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 132)
-
             Text("\(Int(fontSize.rounded())) pt")
                 .foregroundStyle(.secondary)
                 .frame(width: 42, alignment: .trailing)

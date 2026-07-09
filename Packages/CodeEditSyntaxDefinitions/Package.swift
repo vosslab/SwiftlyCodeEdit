@@ -26,6 +26,10 @@ let package = Package(
 			resources: [
 				.process("Resources/Vendor/Kate")
 			]
-		)
+		),
+        .testTarget(
+            name: "CodeEditSyntaxDefinitionsTests",
+            dependencies: ["CodeEditSyntaxDefinitions"]
+        )
     ]
 )

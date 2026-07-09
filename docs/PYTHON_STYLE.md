@@ -21,6 +21,8 @@ AI agents frequently get these wrong. Read the full sections below for details.
 ## Python version
 
 * I like using one of the latest versions of python, but not the latest, of python3, currently **3.12**.
+* In this repo, run python commands through the bootstrap pattern:
+* `source source_me.sh && python ...`
 
 ## FILENAMES
 * Prefer snake_case for Python filenames and module names.

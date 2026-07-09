@@ -7,6 +7,7 @@
 - docs/SWIFT_STYLE.md
 - docs/LIQUID_GLASS.md
 - docs/SCOPE.md
+- docs/HUMAN_GUIDANCE.md
 - docs/CODE_ARCHITECTURE.md
 - docs/FILE_STRUCTURE.md
 - docs/CHANGELOG.md

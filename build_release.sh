@@ -2,9 +2,9 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCHEME="${SCHEME:-CodeEdit}"
+SCHEME="${SCHEME:-SwiftlyCodeEdit}"
 BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-release}"
-APP_PATH="${APP_PATH:-$REPO_ROOT/.build/$BUILD_CONFIGURATION/CodeEdit}"
+APP_PATH="${APP_PATH:-$REPO_ROOT/.build/$BUILD_CONFIGURATION/SwiftlyCodeEdit}"
 INSTALL_TO_APPLICATIONS="${INSTALL_TO_APPLICATIONS:-0}"
 
 cd "$REPO_ROOT"
