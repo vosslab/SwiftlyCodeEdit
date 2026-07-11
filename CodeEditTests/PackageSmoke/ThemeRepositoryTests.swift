@@ -134,7 +134,7 @@ struct ThemeRepositoryTests {
     #if DEBUG
     @Test
     func registeredInMemoryThemeResolvesByNameThenFallsBackAfterClear() throws {
-        // Backs the WP-F5 live-apply self-test: a distinctly-named in-memory
+        // Backs the live-apply self-test: a distinctly-named in-memory
         // theme must resolve ahead of disk so a genuine theme-name change is
         // observable with only one bundled theme, and clearing it must restore
         // the disk/bundled fallback so the seam leaves no lingering state.
@@ -161,7 +161,7 @@ struct ThemeRepositoryTests {
     @Test
     func resolvedThemeReturnsTheBundledDefaultWhenNoNameIsRequestedYet() {
         // Matches PlainSyntaxHighlighter's current call site: no Settings scene
-        // exists yet (WP-F5), so the highlighter always requests nil.
+        // exists yet, so the highlighter always requests nil.
         let theme = ThemeRepository.resolvedTheme(named: nil)
 
         #expect(theme.name == ThemeRepository.bundledDefaultThemeName)

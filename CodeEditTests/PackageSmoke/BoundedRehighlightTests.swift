@@ -2,7 +2,7 @@
 //  BoundedRehighlightTests.swift
 //  CodeEditTests
 //
-//  Created for WP-Q6 bounded rehighlight.
+//  Created for the bounded rehighlight path.
 //
 
 import AppKit
@@ -12,7 +12,7 @@ import Foundation
 import Testing
 @testable import CodeEdit
 
-// The bounded rehighlight path (WP-Q6) reinterprets only a region around each
+// The bounded rehighlight path reinterprets only a region around each
 // edit instead of the whole document. These tests drive a document past the
 // bounded-scheduling threshold, apply a range edit through the bounded entry
 // point, and assert the edited line ends up colored exactly as a full-document

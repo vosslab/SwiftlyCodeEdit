@@ -2,18 +2,18 @@
 //  PlainSyntaxHighlightRegion.swift
 //  CodeEdit
 //
-//  Created for WP-Q6 bounded rehighlight.
+//  Created for the bounded rehighlight pass.
 //
 
 import AppKit
 import Foundation
 import CodeEditTextView
 
-// Plans the character region a bounded rehighlight pass reinterprets (WP-Q6).
+// Plans the character region a bounded rehighlight pass reinterprets.
 // The plain editor picks a small region around each edit and reinterprets only
 // that region per keystroke, so a 1 MB file no longer pays a whole-document span
 // compute and paint on every character. Two candidate strategies were prototyped
-// and measured under the WP-Q5 keystroke-latency harness; the edited-line-window
+// and measured under the keystroke-latency harness; the edited-line-window
 // strategy shipped (see test-results/perf/keystroke_latency_candidates.txt).
 @MainActor
 enum HighlightRegionPlanner {

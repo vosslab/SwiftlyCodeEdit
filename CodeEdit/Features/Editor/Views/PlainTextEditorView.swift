@@ -149,10 +149,10 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         // swapped (a new NSTextStorage replaced the old one). SwiftUI re-runs
         // updateNSViewController on every keystroke, so calling the hook here
         // unconditionally scheduled a whole-document highlight per edit that
-        // superseded the bounded WP-Q6 rehighlight -- the ~2 s fixed cost the
+        // superseded the bounded rehighlight -- the ~2 s fixed cost the
         // keystroke bench measured. A same-storage keystroke no longer reaches
         // the hook; the initial highlight runs from makeNSViewController and
-        // reloads re-highlight through the document read path (WP-Q6 fix).
+        // reloads re-highlight through the document read path.
         let storageDidChange = textView.string != textStorage.string
         if storageDidChange {
             textView.setTextStorage(textStorage)
@@ -167,7 +167,7 @@ struct PlainTextEditorView: NSViewControllerRepresentable {
         textView.wrapLines = wrapLines
         textView.useSystemCursor = useSystemCursor
         // This is the view-application site for the Settings scene's font
-        // controls (WP-F5): compare against the font already on the live
+        // controls: compare against the font already on the live
         // text view before overwriting it, so the marker logs only after an
         // actual rendered-state change, never from the @AppStorage write
         // itself. The very first update after makeNSViewController already

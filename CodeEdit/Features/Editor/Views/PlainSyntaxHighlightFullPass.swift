@@ -13,7 +13,7 @@ import CodeEditTextView
 
 // Whole-document highlight scheduling: cold open, theme change, and reload. On
 // a large document with a layout target this paints the viewport region first
-// (WP-Q6) so the user sees colored text before the whole-document pass finishes;
+// so the user sees colored text before the whole-document pass finishes;
 // both the viewport paint and the full pass run under one generation so a newer
 // edit supersedes the pair as a unit.
 @MainActor
@@ -77,6 +77,11 @@ enum HighlightFullPass {
         #if DEBUG
         let definitionSummary = CodeEditSyntaxDefinitions.debugSummary(language: languageName)
         debugRuntimeLog("PlainSyntaxHighlighter start language=\(languageName) length=\(storage.length) \(definitionSummary)")
+        // Timestamp the main-actor Task enqueue so the bench can attribute the
+        // scheduling hop (enqueue to task-body start) apart from real compute and
+        // paint on the full-document path a small (< bounded threshold) document
+        // takes per edit. DEBUG-only; read only when the phase markers fire.
+        let enqueueUptime = DispatchTime.now().uptimeNanoseconds
         #endif
 
         // The enclosing type is @MainActor, so this Task resumes on the main
@@ -86,6 +91,11 @@ enum HighlightFullPass {
         // applied), so it keeps the storage alive only for the duration of one
         // pass rather than leaking it.
         state.currentTask = Task { @MainActor in
+            #if DEBUG
+            let schedMs = Double(DispatchTime.now().uptimeNanoseconds - enqueueUptime) / 1_000_000
+            #else
+            let schedMs = 0.0
+            #endif
             // Coalesce: a burst of edits enqueues many requests on the main
             // actor before any runs. Skip the expensive pass for every request
             // a newer one for this storage has already superseded.
@@ -103,7 +113,7 @@ enum HighlightFullPass {
                 return
             }
 
-            await runFullPass(request, initialText: text)
+            await runFullPass(request, initialText: text, schedMs: schedMs)
         }
     }
 
@@ -138,7 +148,7 @@ enum HighlightFullPass {
     // The whole-document interpret-and-apply loop, with drift recompute. Split
     // out of `schedule`'s task so the scheduling function stays small; behavior
     // is unchanged.
-    private static func runFullPass(_ request: Request, initialText: String) async {
+    private static func runFullPass(_ request: Request, initialText: String, schedMs: Double) async {
         let state = request.state
         // Bound the drift-recompute retries below. Each retry handles a
         // setString reload that changed the text without issuing a new
@@ -161,9 +171,15 @@ enum HighlightFullPass {
         while true {
             let snapshot = attemptText
             let languageName = request.languageName
+            #if DEBUG
+            let spanStart = DispatchTime.now().uptimeNanoseconds
+            #endif
             let spans = await Task.detached(priority: .userInitiated) {
                 CodeEditSyntaxDefinitions.highlightSpans(text: snapshot, language: languageName)
             }.value
+            #if DEBUG
+            let spanMs = Double(DispatchTime.now().uptimeNanoseconds - spanStart) / 1_000_000
+            #endif
 
             // A newer request for THIS storage superseded us while we
             // computed; that request will apply its own result, so stop.
@@ -203,6 +219,9 @@ enum HighlightFullPass {
             #else
             let elapsedMilliseconds = 0
             #endif
+            #if DEBUG
+            let paintStart = DispatchTime.now().uptimeNanoseconds
+            #endif
             HighlightPainter.applyHighlight(
                 spans: spans,
                 storage: request.storage,
@@ -212,6 +231,18 @@ enum HighlightFullPass {
                 elapsedMilliseconds: elapsedMilliseconds,
                 state: state
             )
+            #if DEBUG
+            // Whole-document paint over a small (< bounded threshold) document,
+            // measured per edit so the low-end floor attribution can see
+            // how much of the fixed cost is this synchronous paint (which on this
+            // path includes the DEBUG token-summary logging) versus the scheduling
+            // hop and the off-main span compute.
+            PlainSyntaxHighlighter.emitKeystrokePhaseMarkers(
+                schedMs: schedMs,
+                spanMs: spanMs,
+                paintMs: Double(DispatchTime.now().uptimeNanoseconds - paintStart) / 1_000_000
+            )
+            #endif
             // applyHighlight has finished painting and laying out on the
             // main actor; the full end-to-end pass for this generation is
             // now complete, so release any bench waiter timing it.

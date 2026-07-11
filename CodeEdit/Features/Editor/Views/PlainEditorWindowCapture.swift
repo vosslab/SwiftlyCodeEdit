@@ -2,7 +2,7 @@
 //  PlainEditorWindowCapture.swift
 //  CodeEdit
 //
-//  DEBUG-only in-app window self-capture seam (WP-G0). Renders the editor
+//  DEBUG-only in-app window self-capture seam. Renders the editor
 //  window's own view hierarchy to a PNG, so release-evidence and smoke
 //  screenshots need no macOS screen-recording (TCC) grant. This file holds the
 //  pure, AppKit-free half: reading the launch argument and validating the

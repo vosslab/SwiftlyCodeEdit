@@ -11,7 +11,7 @@ import SwiftUI
 /// `Settings` scene (Cmd+,). Built entirely from standard SwiftUI controls
 /// (`TabView`, `Form`, `Picker`, `Stepper`) so the window matches the current
 /// macOS design system automatically, per docs/SWIFT_STYLE.md. Replaces
-/// WP-S1's placeholder `ShellSettingsView` stub.
+/// the earlier placeholder `ShellSettingsView` stub.
 struct SettingsWindowView: View {
     var body: some View {
         TabView {

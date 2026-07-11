@@ -1,3 +1,104 @@
+## 2026-07-11
+
+### Additions and New Features
+
+- Native macOS 26 Liquid Glass toolbar: the SwiftUI `.toolbar` (`editorToolbar()` in
+  `CodeEdit/Features/Editor/Views/CodeFileView.swift`) is bridged into the AppKit-hosted document
+  window via `hostingController.sceneBridgingOptions = [.toolbars, .title]`
+  (`CodeFileDocumentBridge.swift`), replacing the custom ribbon with a native grouped-capsule
+  toolbar (7 items) that adopts Liquid Glass automatically from the OS; see the architect
+  decision at `docs/active_plans/decisions/native_toolbar_decision.md`.
+- Glass-pop chrome tint landed on the status bar: `PlainEditorStatusBar` now tints its
+  `glassEffect` with `Color.accentColor.opacity(0.14)` (light) / `0.20` (dark), plus a reduce-
+  transparency opaque tinted fallback via `@Environment(\.accessibilityReduceTransparency)`. A
+  toolbar backdrop gradient band was also attempted but is not yet realized: measured evidence
+  shows the light-mode status bar pops (spread 15.9, WCAG 5.23:1) while the dark-mode status bar
+  and the toolbar capsule do not yet show a visible color pop -- see the "Post-pop re-capture"
+  section of `docs/active_plans/reports/wp_g2_glass_evidence_report.md` (REWORK verdict for the
+  pop goal as a whole; the underlying base toolbar/status-bar Liquid Glass material itself
+  remains SHIP).
+- WP-G2 light and dark glass evidence captured: `docs/screenshots/glass_toolbar_light.png` /
+  `glass_toolbar_dark.png`, plus backdrop-differential fixtures
+  `glass_backdrop_green_light.png` / `glass_backdrop_red_light.png`, recorded in
+  `docs/active_plans/reports/wp_g2_glass_evidence_report.md`.
+- Finalized the native toolbar's item layout: `window.toolbarStyle = .unified`
+  (`CodeFileDocumentBridge.swift`) plus a custom `ToolbarButtonLabel`
+  (`CodeFileView.swift`) that lays each item's icon and text out horizontally in an
+  `HStack`, since the system's default icon-above-text stacking rendered a tall band
+  the Kate-style single-row layout is meant to avoid. Toolbar buttons are grouped
+  under `ToolbarItemGroup(placement: .navigation)` (4 groups, 7 items total:
+  New/Open, Save/Save As, Undo/Redo, Clean Text) so the row docks at the leading
+  edge, right after the traffic lights, instead of the system default's trailing
+  float; the native grouped-capsule Liquid Glass and each item's enabled/disabled
+  state are unaffected.
+- Landed a working status-bar glass-pop mechanism:
+  `CodeFileWindowBridge.installWindowController` sets `window.backgroundColor` to a
+  gentle accent blend (`NSColor.controlAccentColor.blended(withFraction:of:)`
+  against `.windowBackgroundColor`, 4% accent in light mode / 7% in dark) resolved
+  once against the effective appearance at window-creation time, giving
+  `PlainEditorStatusBar`'s `.glassEffect(.regular.tint(...))`
+  (`Color.accentColor.opacity(0.08)` light / `0.10` dark) a colored backdrop to
+  sample; the existing reduce-transparency opaque fallback
+  (`@Environment(\.accessibilityReduceTransparency)`) is unchanged. Known
+  limitation: the backdrop color is resolved once at window creation and does not
+  live-re-tint if the system appearance toggles while the window stays open.
+
+### Behavior or Interface Changes
+
+- The editor chrome (toolbar and status bar) now carries a subtle accent tint instead of plain
+  neutral glass; the editor text surface itself is unchanged (`.textBackgroundColor`), per the
+  glass evidence report.
+
+### Fixes and Maintenance
+
+- Doc-backstop: `CodeEditTests/PackageSmoke/CodeFileDocumentLifecycleGapTests.swift`'s header
+  comment was stale (described Findings 2-4 as still open); updated to reflect that all four
+  WP-L1..L4 findings are closed and no test carries a `withKnownIssue` wrapper. Reworded stale
+  ribbon-era comments left over from the native-toolbar cutover and removed a stray
+  `_temp_winid.py` scratch file.
+
+### Removals and Deprecations
+
+- Archived the completed milestone-3 planning artifacts: `MILESTONE3_CHECKLIST.md` and
+  `docs/active_plans/active/scope_closure_plan.md` moved via `git mv` to
+  `docs/archive/MILESTONE3_CHECKLIST.md` and `docs/archive/scope_closure_plan.md`. Cross-reference
+  links in `AGENTS.md`, `docs/HUMAN_GUIDANCE.md`, `docs/ROADMAP.md`, and
+  `docs/archive/MILESTONE3_CHECKLIST.md` itself were updated to point at the new archive paths.
+
+### Decisions and Failures
+
+- Toolbar color-pop is architecturally infeasible with the current bridge. Placing tinted
+  color behind the native bridged toolbar was tried through a SwiftUI content-layer gradient,
+  `.toolbarBackground`, `.toolbarBackgroundVisibility`, and `window.backgroundColor` (the same
+  property that successfully feeds the status bar's glass-pop above), and every attempt
+  measured zero tint at the toolbar band. The bridged `NSToolbar`
+  (`hostingController.sceneBridgingOptions = [.toolbars, .title]`) is window-server chrome
+  outside the SwiftUI paintable region, so it cannot sample color composited by the hosted
+  SwiftUI content or by `NSWindow.backgroundColor`; a toolbar color pop would need a custom
+  `NSToolbar`/`NSVisualEffectView` replacement, an architect-level change out of scope here.
+  The toolbar therefore ships with OS Liquid Glass only, which correctly tracks light/dark
+  automatically; the status bar carries the chrome's accent color instead.
+
+### Developer Tests and Notes
+
+- DEBUG appearance-force harness: `ForcedAppearanceOverride.applyIfRequested()`
+  (`CodeFileDocumentBridge.swift`) sets `NSApp.appearance` from the `-AppleInterfaceStyle
+  Light|Dark` launch argument (volatile `NSArgumentDomain`, no `defaults write`), proven by
+  `APPEARANCE_MODE=light` and `=dark` runtime markers quoted in the glass evidence report.
+- The WP-G2 captures used the live on-screen easy-screenshot path (not an offscreen render), so
+  the display must stay awake and unlocked for the duration of the run; a sleeping or locked
+  display produces a black capture.
+- Added `scripts/capture_screenshots.sh`, which regenerates all 6 `docs/screenshots/` PNGs
+  reproducibly from the current build: five live on-screen window captures (the representative
+  default-source window, plus varied-token and backdrop-differential fixtures under
+  `tests/fixtures/screenshots/`) with light/dark forced via `-AppleInterfaceStyle` and a fixed
+  15pt font, each launch serialized (`pkill`/`pgrep` before and after) so no capture races a
+  prior instance, plus the programmatic app-icon preview from `scripts/make_app_icon.py`.
+  `scripts/check_screenshot_not_black.py` gates each capture against a near-black
+  mean-brightness floor so a slept-or-locked-display capture is skipped rather than silently
+  overwriting a good tracked PNG. All 6 `docs/screenshots/` PNGs were regenerated with the
+  final chrome (unified toolbar layout, status-bar accent tint) using this script.
+
 ## 2026-07-10
 
 ### Additions and New Features
@@ -42,6 +143,15 @@
 - WP-S1: added the single SwiftUI `App` entry point `CodeEdit/App/SwiftlyCodeEditApp.swift` (a `Settings` scene plus a minimal File command group routing New/Open/Save/Save As/Close) and the sanctioned document-layer AppKit bridge `CodeEdit/Features/Documents/CodeFileDocument/CodeFileDocumentBridge.swift`, which holds the `ShellAppDelegate` launch path, the `NSDocumentController` glue, and the `NSWindowController`+`NSHostingController` window hosting; all new AppKit stays inside the bridge file.
 - WP-S2: replaced the hand-built `PlainEditorMainMenu` NSMenu with SwiftUI `Commands`, added in `CodeEdit/App/Commands/`. `EditorCommands.swift` declares the File (New Cmd+N, Open Cmd+O, Save Cmd+S, Save As Cmd+Shift+S, Close Cmd+W), Edit (Undo Cmd+Z, Redo Cmd+Shift+Z, Cut Cmd+X, Copy Cmd+C, Paste Cmd+V, Select All Cmd+A, Clean Text no-shortcut), Find (Find Cmd+F, Find and Replace Cmd+Opt+F), and Format menus, attached to the app scene via `SwiftlyCodeEditApp.commands { EditorCommands() }`; every shortcut from the menu-shortcut inventory is preserved exactly. `EditorCommandRouter.swift` is the single shared action router -- an `@Observable @MainActor` type replacing the old `ObservableObject` `PlainEditorActionRouter` (which stays defined in the unreachable AppKit shell until WP-S4) -- and both the Commands menu and the in-window ribbon call its functions, so a menu item and its ribbon button run the same code path. Undo/redo resolve through the active `TextView.undoManager` (single undo owner; nothing sets `\.environment(\.undoManager)`). Find items are placeholders that log a `FIND_REQUESTED mode=<find|replace>` marker; the panel arrives in a later package. The Format menu is present-but-minimal (a single disabled item) since the old menu bar had no Format menu and font controls move to the Settings scene (WP-F5) and font menu (WP-F6); no shortcut parity is owed there. SwiftUI's default `.textEditing` group is emptied so Cmd+F stays single-bound to the top-level Find menu. Document commands (New/Open/Save/Save As/Close) route through the sanctioned document bridge `ShellDocumentActions`, and the ribbon's New/Open/Save/Save As buttons were repointed from direct `NSDocumentController`/`NSApp.sendAction` calls to the same bridge helpers. Verified: `./build_debug.sh` "Build complete!" zero new warnings, `swift test` 86 tests pass with exactly 4 known issues (the WP-L1..L4 lifecycle parity contract), `./scripts/plain_editor_smoke.sh` `SMOKE_EXIT=0` with the command self-test line all-true (`insert=true undo=true redo=true selectAll=true copy=true cut=true paste=true cleanText=true cleanUndo=true cleanRedo=true`) and the `Main menu items:` marker listing File, Edit, Find, and Format.
 - WP-Q5: added a keystroke latency E2E harness. `CodeEdit/Features/Editor/Views/PlainEditorKeystrokeBench.swift` is a DEBUG-only, `CODEEDIT_KEYSTROKE_BENCH=<n>` env-gated bench wired next to the existing command self-test in `CodeFileView.swift`'s `onTextViewReady`; it drives `n` single-character insertions through `TextView.replaceCharacters` at offsets cycled across the document (the same synchronous path a real keystroke takes, confirmed by reading `TextView+ReplaceCharacters.swift`'s `NotificationCenter.post`), scheduling one edit per run-loop turn via `DispatchQueue.main.async` recursion (not a blocking for-loop, which would starve the run loop for the whole multi-minute run and its own `--kill-after` backstop timer), and logs one `KEYSTROKE_MS=<float>` line per edit plus `KEYSTROKE_BENCH_DONE=<n>` through `debugRuntimeLog`. New `tests/e2e/e2e_keystroke_latency.py` generates a runtime-only ~1 MB Swift-like fixture, launches the app with the bench env vars, refuses to start if another `SwiftlyCodeEdit` process is already running (`refuse_if_another_codeedit_is_running`, documenting the single-writer rule on the shared `/tmp/codeedit_runtime.log`), polls the runtime log for the done marker and terminates the process itself (the app's own `--kill-after` quit path blocks forever on the standard unsaved-changes save prompt once the bench has dirtied the document, so the harness cannot rely on the app exiting on its own), and reports min/median/p95 with a two-part gate design not both wired up yet: `--record-baseline` (default, always exits 0) records the baseline, `--gate` (reserved for WP-Q6) checks a 16 ms p95 budget plus a 20% regression threshold. The first baseline recorded at `test-results/perf/keystroke_latency.txt` (min 2377.07 ms, median 2384.14 ms, p95 2416.02 ms on a MacBookPro18,3, macOS 26.5.2, Swift 6.3.3) was later found invalid: it timed only the synchronous mutation window and stopped the clock before the async span compute and main-thread attribute paint a keystroke actually triggers, so it could never show WP-Q6's future improvement (corrected under Fixes and Maintenance). The valid end-to-end baseline is min 2627.47 ms, median 10662.09 ms, p95 15233.04 ms (git 028868f, same hardware/toolchain) -- the whole-document re-highlight-per-keystroke cost dominates at this fixture size, far past the eventual 16 ms budget, exactly the gap M8 exists to close.
+- WP-Q8 wired the M8 keystroke ship gate to `KEYSTROKE_MUTATION_MS` (the synchronous first-paint
+  slice), not `KEYSTROKE_MS` (full highlight settle), per the M8 keystroke gate decision
+  (`docs/active_plans/decisions/m8_keystroke_gate_decision.md`).
+  `tests/e2e/e2e_keystroke_latency.py --gate` now checks mutation p95 against the 16 ms absolute
+  budget plus a 20% regression threshold over the recorded mutation baseline; `--record-baseline`
+  records both the mutation (ship-gate) series and the settle (background-freshness) series,
+  clearly labeled, to `test-results/perf/keystroke_latency.txt`. On the 1 MB / 44,884-line fixture
+  (git 93312b6, MacBookPro18,3): mutation p95 1.87 ms (PASS, roughly 8.6x under budget), settle
+  p95 204.26 ms (tracked, not gated). This is the M8 milestone exit evidence.
 
 ### Behavior or Interface Changes
 
@@ -54,6 +164,9 @@
 - Changed `build_debug.sh` and the smoke script to launch the app with `--kill-after` so validation runs never leave stray instances in the Dock.
 - Removed the font-family dropdown from the editor command ribbon; the persisted `PlainEditor.fontFamily` setting and the font size controls remain.
 - Renamed the product to SwiftlyCodeEdit: the executable product name in Package.swift, the app menu title and Quit item, and launch/kill tooling (`build_debug.sh`, `build_release.sh`, the smoke script, `tests/e2e/e2e_launch_time.py`); the target name and `CodeEdit/` source directory are deliberately kept as-is to avoid cascading `@testable import` breakage, with the directory rename owed to the purge work package.
+- Changed the keystroke-latency baseline file schema: flat `p95_ms`/`min_ms`/`median_ms` fields
+  are replaced by explicitly labeled `mutation_*` (ship gate) and `settle_*`
+  (background-freshness) fields in `test-results/perf/keystroke_latency.txt`.
 
 ### Fixes and Maintenance
 
@@ -143,6 +256,20 @@
 - WP-F2 quality-review follow-up: `ThemeRepository.resolvedTheme(named:)` was performing bundle discovery, disk reads, and a full parse on every call, including `PlainSyntaxHighlighter`'s synchronous cached-span fast path -- per-keystroke disk I/O on the path the M8 milestone must bring under a 16 ms p95. Added a lock-guarded, process-wide `resolvedThemeCache` (an `@unchecked Sendable` class keyed by `(requestedName, overrideRoot, bundle)`), mirroring `SyntaxDefinitionRepository`'s and `CompiledRegexCache`'s existing lock-guarded lazy-loading pattern in `CodeEditSyntaxDefinitions`; results are reused until the new `ThemeRepository.invalidateCache()` is called (named for a future Settings live-apply action). Added `resolvedThemeCachesUntilInvalidated` proving a resolved theme survives deletion of its backing user file until `invalidateCache()` forces fresh discovery.
 - `EditorCommandRouter`'s `copy()` and `paste()` now delegate to `TextView`'s own copy/paste implementations (which are multi-cursor aware) instead of reimplementing `NSPasteboard` logic, letting the router drop its AppKit import entirely; found by the WP-S2 spec review.
 - Smoke gate revalidation (`scripts/plain_editor_smoke.sh`): removed a stopped agent's rejected `defaults write org.vosslab.SwiftlyCodeEdit`/`defaults delete` theme-seeding block (a prior agent was halted mid-task for mutating the real preferences domain) along with its now-unused `scripts/smoke_fixtures/smoke_theme_probe.yaml` fixture, keeping WP-S3's reviewed `SHELL=SwiftUI` gate and per-menu `check_menu_has_items` assertions intact. Extended the command self-test hard gate to WP-F4 patch 2's full 15-key line (`cleanText`/`cleanUndo`/`cleanRedo` plus the four Clean Text sub-cleaners: `cleanLineEndings`, `cleanFinalNewline`, `cleanTabsToSpaces`, `cleanSpacesToTabs`, `cleanSmartPunct`). Fixed the screenshot deletion hazard from `docs/TODO.md`: capture now writes to a `mktemp` scratch path and only `mv`s over the git-tracked `docs/screenshots/codeedit_window.png` after a confirmed non-empty capture, so a TCC-denied or otherwise failed capture leaves the tracked file untouched instead of deleting it ahead of time. Guarded `check_menu_has_items`'s `extract_menu_section` assignment with `|| true` so the missing-section diagnostic is reachable under `set -e` (WP-S3 spec-review finding), verified against a doctored-log fail-path probe covering missing-section, missing-item, and all-present cases. Investigated the WP-F5 `SETTINGS_APPLIED` smoke assertion empirically (launching the debug build with seeded `-PlainEditor.fontSize`/`-PlainEditor.themeName` launch arguments, which land in `NSArgumentDomain` and are per-process/volatile, never touching the real preferences domain) and found neither the font nor theme marker can fire from a seeded cold launch under the current design: the font markers compare against a value already set identically at view creation, and the theme marker's only bundled alternate name (`ThemeRepository` ships just `standard`) means an unknown seeded theme name falls back to the same name the highlighter already starts from; a real second theme would require writing into the user's actual Application Support directory, the same class of pollution as the rejected `defaults write` approach. Filed the concrete DEBUG-only Swift seam needed (a `CODEEDIT_SETTINGS_APPLY_SELF_TEST`-style env var driving a post-mount live change) in `docs/TODO.md` rather than asserting a marker that can never fire; the smoke script does not gate `SETTINGS_APPLIED` yet. Verified: `./scripts/plain_editor_smoke.sh --no-screenshot` -> `SMOKE_EXIT=0` with every new gate active; `pytest tests/test_ascii_compliance.py tests/test_markdown_links.py` 785 passed; `defaults read org.vosslab.SwiftlyCodeEdit` identical before and after every run in this session (only the pre-existing `NSWindow Frame` key).
+- WP-Q9: replaced the O(cursor-offset) cursor-label scan with a binary search into a cached
+  `lineStartIndex` (`PlainEditorStatusReporter.lineStartIndex(in:)`/
+  `lineNumber(forOffset:lineStartIndex:)`), refreshed alongside WP-Q2's cached total-line count on
+  the debounced heavy recompute. Fixing this exposed a stale-cache bug in the WP-Q2
+  `CursorSignature` dedup: it keyed the skip signature only on `(location, length, documentLength,
+  totalLines, editGeneration)`, so an equal-length edit that relocates a line break before the
+  cursor (reachable through Find/Replace's equal-length regex substitution) produced a
+  bit-identical signature and left a wrong cursor label at rest even after the debounce refreshed
+  the cache. Fixed by dropping the signature and `editGeneration` dedup entirely rather than
+  adding another key: the binary-search scan is O(log lines) and cheap enough to recompute
+  unconditionally on every call, so no signature can go stale if there is none. Added
+  `cursorLabelCorrectsStaleCacheOnDebouncedRecompute` (via a new DEBUG-only
+  `drainHeavyRecomputeForTesting` test hook that drives the debounce body synchronously) and
+  extended `cursorLabelWithCachedIndexMatchesStatelessOracle` with a CRLF sample.
 
 ### Removals and Deprecations
 
@@ -158,6 +285,12 @@
 - WP-P5 chunk 6 (sweep addition): deleted the whole remaining `Documentation.docc/` tree (26 files) after confirming `grep -n "Documentation.docc" Package.swift build_debug.sh build_release.sh` and `grep -rn "Documentation.docc" scripts` both returned zero hits and `Package.swift` declares no DocC plugin; every remaining section (About Window, App Window, AppPreferences, FileManagement, Git, KeyChain, Keybindings, Welcome, plus the top-level `Documentation.md` index) indexed only symbols already deleted by WP-P1/P2 or the earlier chunks of this WP. Gates: `./build_debug.sh` (Build complete!, 3.11s) and `./scripts/plain_editor_smoke.sh` (SMOKE_EXIT=0). Final gates after all six chunks: `swift test` (40 tests, 7 suites, all passed, including `UndoManagerRegistrationTests`) and `pytest tests/` (2398 passed; the count moved from 2418 because deleting 8 fewer files in chunk 5 reduces the file-parametrized `test_markdown_links`/`test_ascii_compliance` cases, not a failure -- an earlier `test_markdown_links` failure from a stale `docs/CODE_ARCHITECTURE.md` "Known gaps" bullet pointing at the just-deleted `ViewOffsetPreferenceKey.swift` was fixed by deleting that bullet).
 - WP-F2: deleted the hardcoded `private struct PlainSyntaxTheme` from `PlainSyntaxHighlighter.swift` (its `standard` palette, `color(for:)` resolution, and the `.current` accessor). `PlainSyntaxHighlighter.applyHighlight` now resolves colors through `ThemeRepository.resolvedTheme(named:)` and `ThemeVariant.color(forToken:styleName:)`, which preserves the same resolution order (style key, then token key, then `base_text`) and picks the light or dark variant from `NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])`.
 - WP-F1 patch 19: deleted the vendored `Packages/CodeEditSourceEditor/` tree (199 tracked files, `git rm -r`) now that patch 18 finished porting its find/replace panel into `CodeEdit/Features/Find/`. `Package.swift` never declared the package as a dependency (confirmed by a pre-deletion grep) and the root `Package.resolved` carried no reference to it, so neither file needed a change. Confirmed zero remaining code references anywhere in `CodeEdit/`, `CodeEditTests/`, or the other `Packages/` trees -- the only hits were pre-existing comment/README mentions naming the upstream project by name (four `CodeEdit/Features/Find/*.swift` history comments and `CodeEditTextView`'s own migration-notice comments/README links), not imports. Gates: `swift build` (Build complete!, no warnings), `swift test` (119 tests, 13 suites, 4 known issues, unchanged from patch 18), `pytest tests/test_ascii_compliance.py tests/test_markdown_links.py` (771 passed). Updated `docs/RELATED_PROJECTS.md`, `docs/FILE_STRUCTURE.md`, and `docs/CODE_ARCHITECTURE.md` to record the package as harvested-and-deleted rather than harvest-source-pending-deletion.
+- WP-S4: deleted the retired AppKit shell content from `CodeEdit/CodeEditApp.swift` (455 lines
+  down to 40): removed `CodeEditMain.main()`, `.appDelegate`, `PlainEditorAppDelegate`,
+  `PlainEditorActionRouter`, `PlainEditorMainMenu`, and the `TextView.cleanText` extension; kept
+  only the `launchStartNanoseconds`, `killAfterSeconds`, `logLaunchToWindowIfNeeded`, and
+  `didLogLaunchToWindow` members the live SwiftUI shell and document bridge still call for the
+  `LAUNCH_TO_WINDOW_MS` marker.
 
 ### Decisions and Failures
 
@@ -201,6 +334,14 @@
   wiring) land, with WP-Q9 (fix the O(cursor-offset) cursor-label scan at
   `PlainEditorStatusReporter.swift:25`) recommended in scope. Decision record:
   [m8_keystroke_gate_decision.md](active_plans/decisions/m8_keystroke_gate_decision.md).
+- M8 keystroke gate decision revised: the ship gate now measures the synchronous first-paint
+  slice (`KEYSTROKE_MUTATION_MS`), not full highlight settle (`KEYSTROKE_MS`). WP-Q8 phase
+  attribution showed the prior 16 ms gate was applied to the wrong metric -- perceived typing
+  latency (edit apply plus status refresh plus synchronous scheduling) measures roughly
+  1.2-2.1 ms p95 across tested sizes including the 1 MB fixture, while `KEYSTROKE_MS` conflated
+  that with an async ~7-9 ms scheduling hop and DEBUG-inflated paint. Highlight settle is now a
+  separately tracked background-freshness metric, not a ship gate. Decision record:
+  [m8_keystroke_gate_decision.md](active_plans/decisions/m8_keystroke_gate_decision.md).
 
 ### Developer Tests and Notes
 
@@ -210,6 +351,20 @@
 - Ran a read-only live-target dead-code audit inside the SwiftPM compile surface and produced `docs/active_plans/audits/live_target_dead_code_audit.md`: 50 dead whole files + 2 in-file symbol removals, plus 2 orphaned package dependencies (AboutWindow, CodeEditSymbols) reachable only from a dead About subtree; the whole `CodeEdit/Utils` tree is dead except `DebugRuntimeLog.swift`, `String+Lines.swift`, and `SceneID.swift`.
 - Logged a smoke-coverage gap in `docs/TODO.md` found by the WP-P5 reviewer: `scripts/plain_editor_smoke.sh` exercises the in-memory command self-test lifecycle but has no literal save-to-disk/reopen round-trip, so save-path regressions are invisible to smoke.
 - WP-Q5 baseline run 4 (discarded, not the recorded baseline) hit the keystroke-latency harness's 900 s poll deadline at 42/200 edits, timed out against `ThemeRepository.resolvedTheme(named:)` still re-reading and re-parsing the theme YAML from disk on every highlight pass -- before its resolved-theme cache (see the WP-F2 quality-review follow-up above) landed mid-run. Measured average ~12.9 s/edit (540.6 s across 42 edits, individual values ranging ~2.4 s-14.8 s) versus the ~2.4 s/edit the recorded baseline (run 5, after the cache fix landed) shows on the same fixture -- direct evidence of how much the uncached theme-load step alone was costing the per-keystroke highlight path, recorded in `test-results/perf/keystroke_latency.txt` as input for M8.
+- WP-S4: renamed `PlainEditorClipboardTests.swift` to `EditorCommandRouterClipboardTests.swift`
+  (`git mv`) and ported its three cases off the just-deleted `PlainEditorActionRouter` onto the
+  live `EditorCommandRouter`, including the external-pasteboard regression guard; renamed the
+  empty-pasteboard case to `pasteIsNoOpWhenPasteboardIsEmpty` since
+  `EditorCommandRouter.paste()` always returns true once dispatched, unlike the retired router's
+  `paste()`, which returned false on an empty pasteboard.
+- Floor-attribution instrumentation (WP-Q8): added DEBUG-only per-edit phase-timing markers.
+  `PlainEditorKeystrokeBench.swift` now logs `KEYSTROKE_MUTATION_MS`, the synchronous
+  edit-apply-plus-status-refresh slice that ends before any async highlight hop runs;
+  `PlainSyntaxHighlighter.swift` and `PlainSyntaxHighlightFullPass.swift` log
+  `KEYSTROKE_SCHED_MS`/`KEYSTROKE_SPAN_MS`/`KEYSTROKE_PAINT_MS` for the async
+  main-actor-enqueue, off-main span-compute, and paint sub-phases, gated to fire only from the
+  first bench edit on (the cold-open pass stays unmarked) so the markers never fire outside a
+  bench run.
 
 ## 2026-07-07
 

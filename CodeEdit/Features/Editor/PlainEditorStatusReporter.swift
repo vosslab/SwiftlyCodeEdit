@@ -5,7 +5,7 @@ import CodeEditLanguages
 // on `NSString` (the editor's live `NSTextStorage.mutableString` backing store)
 // rather than bridging a fresh Swift `String` copy on each call, and scans the
 // UTF-16 code units directly instead of allocating line/word arrays. This is the
-// M8 status-bar fix: the previous String-based passes (whole-document
+// status-bar fix: the previous String-based passes (whole-document
 // `components(separatedBy:)` splits plus a Unicode-grapheme word scan, run three
 // times per keystroke) were the measured ~2 s per-keystroke floor. The heavier
 // metrics (`wordCount`, `indentationLabel`, `lineEndingLabel`) run on a debounce
@@ -33,12 +33,103 @@ enum PlainEditorStatusReporter {
         return label
     }
 
+    /// The cursor position label `line/totalLines:column`, identical in output to
+    /// `cursorLabel(text:selection:totalLines:)` above, but computing the
+    /// numerator with a binary search into a caller-cached `lineStartIndex`
+    /// (built by `lineStartIndex(in:)`, alongside `totalLines`, on the
+    /// heavy-metrics recompute) instead of an O(cursor-offset) newline count.
+    /// This is the immediate-path variant the status-bar fix calls on every
+    /// keystroke; `lineStartIndex` may be up to one debounce cycle stale, the
+    /// same staleness window `totalLines` already tolerates.
+    static func cursorLabel(
+        text: NSString,
+        selection: NSRange,
+        totalLines: Int,
+        lineStartIndex: [Int]
+    ) -> String {
+        let cappedLocation = max(0, min(selection.location, text.length))
+        let lineNumber = lineNumber(forOffset: cappedLocation, lineStartIndex: lineStartIndex)
+        // lineRange scans backward to the line start and forward to the line end;
+        // it is bounded by the current line length, not the whole document.
+        let lineRange = text.lineRange(for: NSRange(location: cappedLocation, length: 0))
+        // Column in UTF-16 units from the line start. One-based to match editor
+        // conventions ("column 1" is the first character on the line).
+        let column = cappedLocation - lineRange.location + 1
+        let label = "\(lineNumber)/\(max(1, totalLines)):\(column)"
+        return label
+    }
+
     /// The total number of lines: line breaks plus one. A trailing newline yields
     /// the conventional extra empty line, and a CRLF pair counts as one break so a
     /// Windows-lineending file is not double counted.
     static func lineCount(in text: NSString) -> Int {
         let lines = countLineBreaks(in: text, range: NSRange(location: 0, length: text.length)) + 1
         return lines
+    }
+
+    /// An index of the UTF-16 offset where each line begins: `index[0]` is always
+    /// `0`, and `index[k]` is the offset of the first UTF-16 unit of line `k + 1`.
+    /// `index.count` equals `lineCount(in:)` for the same text, since each entry
+    /// (the initial `0` plus one per line break) corresponds to exactly one line.
+    ///
+    /// This mirrors `countLineBreaks`'s CRLF-and-standalone-break detection (a
+    /// CRLF pair is one break, matching `lineCount`), but records the running
+    /// offset of each break instead of only a count, so `lineNumber(forOffset:
+    /// lineStartIndex:)` can binary-search a cursor offset to a line number in
+    /// O(log lines) instead of rescanning from the start of the document
+    /// (this was the O(cursor-offset) `cursorLabel` numerator scan).
+    static func lineStartIndex(in text: NSString) -> [Int] {
+        var offsets = [0]
+        var previousWasCarriageReturn = false
+        var chunkStart = 0
+        forEachChunk(in: text, whole: text.length) { buffer, chunkLength in
+            var index = 0
+            while index < chunkLength {
+                let unit = buffer[index]
+                // The offset immediately after this UTF-16 unit is where the next
+                // line would start if this unit turns out to end the line.
+                let nextLineStart = chunkStart + index + 1
+                if previousWasCarriageReturn {
+                    previousWasCarriageReturn = false
+                    // A LF right after a CR is the tail of a CRLF pair: the line
+                    // start recorded for the CR moves past this LF instead of a
+                    // second entry being appended.
+                    if unit == 0x0A {
+                        offsets[offsets.count - 1] = nextLineStart
+                        index += 1
+                        continue
+                    }
+                }
+                if unit == 0x0D {
+                    offsets.append(nextLineStart)
+                    previousWasCarriageReturn = true
+                } else if isStandaloneLineBreak(unit) {
+                    offsets.append(nextLineStart)
+                }
+                index += 1
+            }
+            chunkStart += chunkLength
+        }
+        return offsets
+    }
+
+    /// Binary-searches `lineStartIndex` for the 1-based line number containing
+    /// `offset`: the greatest line whose recorded start is `<= offset`. `offset`
+    /// is expected to already be capped to `[0, text.length]` by the caller.
+    static func lineNumber(forOffset offset: Int, lineStartIndex: [Int]) -> Int {
+        var low = 0
+        var high = lineStartIndex.count - 1
+        while low < high {
+            // Round the midpoint up so `low` always advances, since the search
+            // keeps the invariant lineStartIndex[low] <= offset.
+            let mid = (low + high + 1) / 2
+            if lineStartIndex[mid] <= offset {
+                low = mid
+            } else {
+                high = mid - 1
+            }
+        }
+        return low + 1
     }
 
     // MARK: - Word counting (debounced, off the keystroke hot path)

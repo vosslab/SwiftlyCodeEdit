@@ -45,34 +45,39 @@ The app replaces the standard File and Edit menus with these commands:
     maps curly quotes, en/em dashes, and ellipsis characters to their ASCII
     equivalents. Nothing else in the app applies this silently.
 
-## Command bar and fonts
+## Toolbar
 
-The command bar above the editor shows Save/Undo/Redo/Clean Text state and
-font controls:
+A native macOS 26 Liquid Glass toolbar sits above the editor, docked at the
+leading edge next to the traffic lights. It carries 7 items in 4 grouped
+capsules -- New / Open, Save / Save As, Undo / Redo, Clean Text -- each with
+its label beside its icon. Every button calls the same `ShellDocumentActions`
+/ `EditorCommandRouter` functions the Commands menu calls, and each button's
+enabled state (for example Save only when the document has unsaved edits)
+tracks the same state the menu items use, so a toolbar click and its
+matching menu item always agree.
 
-- `A-` / `A+` buttons shrink or grow the editor font size within its allowed
-  range.
-- A reset control restores the default font family and size.
+There are no font controls in the toolbar. Font size lives in the Format
+menu and the Settings window only:
+
+- The Format menu carries **Increase Size** (`Cmd+=`), **Decrease Size**
+  (`Cmd+-`), and **Reset Size** (`Cmd+0`), which call the same
+  `PlainEditorFontSettings` step functions the Settings window's font
+  picker uses.
 - Font family and size are persisted across launches via `UserDefaults` keys
   `PlainEditor.fontFamily` and `PlainEditor.fontSize`.
-- The Format menu carries the same size controls: **Increase Size**
-  (`Cmd+=`), **Decrease Size** (`Cmd+-`), and **Reset Size** (`Cmd+0`). Both
-  the ribbon buttons and these menu items call the same
-  `PlainEditorFontSettings` step functions, so they always agree.
-- The font-family list (both the ribbon's Settings-driven picker and the
-  Settings scene's **General** pane) is enumerated live from the fixed-pitch
-  (monospace) font families actually installed on the system via
-  `PlainEditorFontEnumeration`; a newly installed monospace font appears
-  without a rebuild. The default remains SF Mono.
+- The font-family list (the Settings scene's **General** pane) is enumerated
+  live from the fixed-pitch (monospace) font families actually installed on
+  the system via `PlainEditorFontEnumeration`; a newly installed monospace
+  font appears without a rebuild. The default remains SF Mono.
 
 ## Settings window
 
 `Cmd+,` (or **SwiftlyCodeEdit > Settings...**) opens a standard macOS Settings
 window with three tabs, built entirely from standard SwiftUI controls:
 
-- **General**: font family and size. Reuses the same `PlainEditor.fontFamily`
-  and `PlainEditor.fontSize` keys the command-bar ribbon's A-/A+/Reset
-  shortcuts write, so the ribbon and this pane always agree.
+- **General**: font family and size, persisted under `PlainEditor.fontFamily`
+  and `PlainEditor.fontSize`, the same keys the Format menu's size shortcuts
+  write.
 - **Theme**: a picker over every theme `ThemeRepository` can discover -- the
   bundled default plus any user themes under
   `~/Library/Application Support/SwiftlyCodeEdit/Themes/` (see
@@ -86,9 +91,7 @@ window with three tabs, built entirely from standard SwiftUI controls:
   auto-indent behavior or new-document creation.
 
 Changing the font or theme applies immediately to every already-open
-document window -- no relaunch required. The ribbon's A-/A+/Reset buttons
-remain as transient per-window shortcuts; the Settings window is where these
-preferences live permanently.
+document window -- no relaunch required.
 
 ## Status bar
 

@@ -9,8 +9,8 @@ import SwiftUI
 
 /// The Settings scene's "General" pane: static font family and size controls
 /// that persist to the same `PlainEditor.fontFamily` / `PlainEditor.fontSize`
-/// `@AppStorage` keys the command-bar ribbon's A-/A+/Reset shortcuts already
-/// write in `CodeFileView.swift`. Because both readers use `@AppStorage` on
+/// `@AppStorage` keys the Format menu's Increase/Decrease/Reset Size items
+/// already write in `CodeFileView.swift`. Because both readers use `@AppStorage` on
 /// the same key, a change made here is picked up by every already-open
 /// document window's `CodeFileView` without relaunching: SwiftUI re-renders
 /// any view holding that key, `editorFont` recomputes, and

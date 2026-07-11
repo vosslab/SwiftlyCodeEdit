@@ -2,7 +2,7 @@
 //  FindPanelModel.swift
 //  SwiftlyCodeEdit
 //
-//  State and behavior for the find/replace bar (WP-F1). This is the port of the old
+//  State and behavior for the find/replace bar. This is the port of the old
 //  CodeEditSourceEditor `FindPanelViewModel`, re-expressed with the `Observable` macro
 //  per the plan's Resolved decisions (not the old `ObservableObject`) and driven
 //  against a `FindPanelTarget` over the app's `TextView` rather than a

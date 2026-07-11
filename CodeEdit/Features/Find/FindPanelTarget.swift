@@ -2,7 +2,7 @@
 //  FindPanelTarget.swift
 //  SwiftlyCodeEdit
 //
-//  The seam the find panel drives (WP-F1). The old CodeEditSourceEditor panel talked
+//  The seam the find panel drives. The old CodeEditSourceEditor panel talked
 //  to a `FindPanelTarget` that its view model down-cast to `TextViewController`
 //  (FindPanelViewModel.swift:69) just to read cursor positions; that down-cast is the
 //  dependency this port removes. Here the target is satisfied directly by the app's

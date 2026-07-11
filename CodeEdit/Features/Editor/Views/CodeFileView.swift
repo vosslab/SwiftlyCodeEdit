@@ -21,11 +21,11 @@ struct CodeFileView: View {
     // status bar (encoding label included) after a silent external reload, which
     // replaces the buffer via the document's storage swap rather than a keystroke.
     @State private var didObserveReloads = false
-    // Guards a single registration of the bounded-rehighlight observer (WP-Q6),
+    // Guards a single registration of the bounded-rehighlight observer,
     // which drives per-keystroke syntax coloring from the document's edited-range
     // broadcast so exactly one bounded pass runs per edit.
     @State private var didObserveHighlightEdits = false
-    // This window's find/replace bar (WP-F1). Presented by the shared router when a
+    // This window's find/replace bar. Presented by the shared router when a
     // Find menu command resolves to this window; bound to this window's editor as the
     // text view becomes ready.
     @State private var findModel = FindPanelModel()
@@ -33,7 +33,7 @@ struct CodeFileView: View {
     private var editorFontFamily = PlainEditorFontSettings.defaultFontFamily
     @AppStorage("PlainEditor.fontSize")
     private var editorFontSize = PlainEditorFontSettings.defaultFontSize
-    // Observes the Settings scene's theme picker (WP-F5). Every open
+    // Observes the Settings scene's theme picker. Every open
     // document window's CodeFileView holds this same @AppStorage key, so a
     // theme change in Settings re-renders every window and the onChange
     // below re-triggers a highlight pass with no relaunch required.
@@ -54,16 +54,6 @@ struct CodeFileView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PlainEditorCommandBar(
-                textView: activeTextView,
-                canSave: codeFile.isDocumentEdited,
-                canUndo: activeTextView?.undoManager?.canUndo ?? false,
-                canRedo: activeTextView?.undoManager?.canRedo ?? false,
-                canCleanText: activeTextView?.isEditable ?? false,
-                fontFamily: $editorFontFamily,
-                fontSize: $editorFontSize
-            )
-
             if findModel.isPresented {
                 FindPanelView(model: findModel)
             }
@@ -88,11 +78,11 @@ struct CodeFileView: View {
                         // broadcast (the bounded-rehighlight observer registered in
                         // onTextViewReady), not from here, so exactly one bounded
                         // pass runs per edit instead of a whole-document pass on top
-                        // of the edited-range signal (WP-Q6 double-highlight dedup).
+                        // of the edited-range signal (bounded double-highlight dedup).
                         chrome.refreshForEdit(document: codeFile, selection: activeTextView?.selectedRange())
                         // Tell the find bar the document changed so it can re-scan and
                         // never act on a match range that the edit left out of bounds
-                        // (WP-F1 stale-match crash). The model ignores its own Replace
+                        // (stale-match crash). The model ignores its own Replace
                         // edits via an internal flag.
                         findModel.handleExternalTextChange()
                     },
@@ -123,7 +113,7 @@ struct CodeFileView: View {
                         // which SwiftUI re-runs on each keystroke (chrome.refresh
                         // mutates @Published state); without this guard every edit
                         // would schedule a whole-document highlight on top of the
-                        // bounded rehighlight, defeating WP-Q6. After the view is
+                        // bounded rehighlight, defeating it. After the view is
                         // ready, edits are highlighted by the bounded edited-range
                         // observer below, and reloads by the document's read path.
                         guard activeTextView == nil else { return }
@@ -139,7 +129,7 @@ struct CodeFileView: View {
                             for: ObjectIdentifier(codeFile)
                         )
                         // Bind this window's find bar to its editor and register it so
-                        // a Find menu command can present it (WP-F1), keyed on the same
+                        // a Find menu command can present it, keyed on the same
                         // document identity as the text view above.
                         findModel.bind(target: TextViewFindTarget(textView: textView))
                         EditorCommandRouter.shared.register(
@@ -173,7 +163,7 @@ struct CodeFileView: View {
                                 chrome.refresh(document: codeFile, selection: nil)
                             }
                         }
-                        // Bounded rehighlight (WP-Q6): a range edit (typing, paste,
+                        // Bounded rehighlight: a range edit (typing, paste,
                         // undo, redo, find-replace, Clean Text) reinterprets only a
                         // region around the edit and paints just that region. A
                         // full invalidation comes only from an external reload, which
@@ -185,7 +175,7 @@ struct CodeFileView: View {
                                 guard case let .range(replacedRange, newLength) = change,
                                       let codeFile, let textView else { return }
                                 #if DEBUG
-                                debugRuntimeLog("WPQ6_OBSERVER range=\(replacedRange) newLength=\(newLength)")
+                                debugRuntimeLog("REHIGHLIGHT_OBSERVER range=\(replacedRange) newLength=\(newLength)")
                                 #endif
                                 PlainSyntaxHighlighter.rehighlight(
                                     textView: textView,
@@ -221,11 +211,14 @@ struct CodeFileView: View {
 
             PlainEditorStatusBar(chrome: chrome)
         }
+        .toolbar {
+            editorToolbar()
+        }
         .onAppear {
             chrome.refresh(document: codeFile, selection: activeTextView?.selectedRange())
             #if DEBUG
             debugRuntimeLog("CodeFileView appeared length=\(codeFile.content?.length ?? 0) editable=\(isEditable)")
-            debugRuntimeLog("Plain editor command ribbon ready")
+            debugRuntimeLog("Plain editor toolbar ready")
             debugRuntimeLog("Plain editor status bar ready")
             logFontSettings()
             #endif
@@ -243,7 +236,7 @@ struct CodeFileView: View {
                 PlainSyntaxHighlighter.highlight(storage: storage, language: codeFile.getLanguage())
             }
         }
-        // The external-change conflict surface (WP-L2). Driven entirely by the
+        // The external-change conflict surface. Driven entirely by the
         // document's observable pendingExternalChange state, so the prompt is
         // SwiftUI-side on this window's scene with no AppKit NSAlert.
         .alert(
@@ -262,6 +255,79 @@ struct CodeFileView: View {
             externalChangeAlertButtons(for: prompt)
         } message: { prompt in
             Text(externalChangeAlertMessage(for: prompt))
+        }
+    }
+
+    // Per-window enabled state for the native toolbar. Save tracks the document's
+    // dirty flag; undo, redo, and Clean Text track this window's own active text
+    // view, matching the same-named Commands-menu items so a toolbar click and a
+    // menu command agree.
+    private var canSave: Bool { codeFile.isDocumentEdited }
+    private var canUndo: Bool { activeTextView?.undoManager?.canUndo ?? false }
+    private var canRedo: Bool { activeTextView?.undoManager?.canRedo ?? false }
+    private var canCleanText: Bool { activeTextView?.isEditable ?? false }
+
+    // The window's native macOS 26 Liquid Glass toolbar (top chrome). These are
+    // standard system toolbar controls, so the OS applies grouped rounded-capsule
+    // Liquid Glass automatically (docs/LIQUID_GLASS.md sections 1-2); no glass is
+    // hand-applied here. Each ToolbarItemGroup is one capsule cluster. Every button
+    // is a pure click target that calls the exact ShellDocumentActions /
+    // EditorCommandRouter function the Commands menu calls, against this window's own
+    // activeTextView, with the same enabled state. Keyboard shortcuts stay on the
+    // Commands menu (EditorCommands.swift); toolbar items carry none.
+    @ToolbarContentBuilder
+    private func editorToolbar() -> some ToolbarContent {
+        // Explicit `.navigation` placement docks each group at the toolbar's leading
+        // edge, right after the traffic lights, instead of the trailing cluster the
+        // system's default `.automatic` placement produces. This is what makes the row
+        // read left-aligned like the Kate reference, rather than floated to the right.
+        ToolbarItemGroup(placement: .navigation) {
+            Button {
+                ShellDocumentActions.newDocument()
+            } label: {
+                ToolbarButtonLabel(title: "New", systemImage: "doc.badge.plus")
+            }
+            Button {
+                ShellDocumentActions.openDocumentWithPanel()
+            } label: {
+                ToolbarButtonLabel(title: "Open", systemImage: "folder")
+            }
+        }
+        ToolbarItemGroup(placement: .navigation) {
+            Button {
+                ShellDocumentActions.saveActiveDocument()
+            } label: {
+                ToolbarButtonLabel(title: "Save", systemImage: "square.and.arrow.down")
+            }
+            .disabled(!canSave)
+            Button {
+                ShellDocumentActions.saveActiveDocumentAs()
+            } label: {
+                ToolbarButtonLabel(title: "Save As", systemImage: "square.and.arrow.down.on.square")
+            }
+            .disabled(!canSave)
+        }
+        ToolbarItemGroup(placement: .navigation) {
+            Button {
+                if let activeTextView { _ = EditorCommandRouter.shared.undo(on: activeTextView) }
+            } label: {
+                ToolbarButtonLabel(title: "Undo", systemImage: "arrow.uturn.backward")
+            }
+            .disabled(!canUndo)
+            Button {
+                if let activeTextView { _ = EditorCommandRouter.shared.redo(on: activeTextView) }
+            } label: {
+                ToolbarButtonLabel(title: "Redo", systemImage: "arrow.uturn.forward")
+            }
+            .disabled(!canRedo)
+        }
+        ToolbarItemGroup(placement: .navigation) {
+            Button {
+                if let activeTextView { _ = EditorCommandRouter.shared.cleanText(on: activeTextView) }
+            } label: {
+                ToolbarButtonLabel(title: "Clean Text", systemImage: "wand.and.sparkles")
+            }
+            .disabled(!canCleanText)
         }
     }
 
@@ -317,6 +383,27 @@ struct CodeFileView: View {
     }
 }
 
+// A native `Label(_:systemImage:)` toolbar item is decomposed by the SwiftUI/
+// AppKit toolbar bridge into NSToolbarItem's built-in image and title, which
+// the system's icon-and-label display mode stacks vertically (icon above,
+// text below) -- the tall look this toolbar is meant to avoid (Kate-style
+// layout). This view is a fully custom SwiftUI toolbar item instead, so AppKit
+// keeps the horizontal layout as authored: icon beside text, one compact row,
+// matching the reference. The native toolbar container (and its automatic
+// Liquid Glass grouping) is unaffected; only this item's internal label
+// layout is customized.
+private struct ToolbarButtonLabel: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+            Text(title)
+        }
+    }
+}
+
 enum PlainEditorFontSettings {
     static let defaultFontFamily = "SF Mono"
     static let defaultFontSize = 13.0
@@ -324,7 +411,7 @@ enum PlainEditorFontSettings {
     static let maximumFontSize = 32.0
 
     /// The fixed-pitch families the font picker offers, enumerated live from
-    /// the installed system fonts (WP-F6) so a newly installed monospace
+    /// the installed system fonts so a newly installed monospace
     /// font shows up without a rebuild. `defaultFontFamily` is guaranteed to
     /// be present even if CoreText's family enumeration does not surface it
     /// as a distinct family name on this system, since it must always
@@ -349,17 +436,13 @@ enum PlainEditorFontSettings {
     }
 
     /// The next font size after growing by one step, clamped to
-    /// `maximumFontSize`. Shared by the command-bar ribbon's `A+` button
-    /// and the Format menu's Increase Size item so both call the same
-    /// action function (WP-F6).
+    /// `maximumFontSize`. Called by the Format menu's Increase Size item.
     static func increasedFontSize(from current: Double) -> Double {
         min(maximumFontSize, current + 1)
     }
 
     /// The next font size after shrinking by one step, clamped to
-    /// `minimumFontSize`. Shared by the command-bar ribbon's `A-` button
-    /// and the Format menu's Decrease Size item so both call the same
-    /// action function (WP-F6).
+    /// `minimumFontSize`. Called by the Format menu's Decrease Size item.
     static func decreasedFontSize(from current: Double) -> Double {
         max(minimumFontSize, current - 1)
     }
@@ -431,7 +514,7 @@ private enum PlainEditorCommandSelfTest {
         let cleanRedoSent = EditorCommandRouter.shared.redo()
         let cleanRedoWorked = cleanRedoSent && textView.string.hasPrefix("let cleanTextSmokeValue = 1\n")
 
-        // WP-F4 patch 2: exercise the five new Clean Text actions. Each check
+        // Exercise the five Clean Text actions. Each check
         // replaces the whole document with a small dedicated fixture, since
         // these actions (unlike cleanText's prefix check above) need control
         // of the whole document to prove line-ending, final-newline, and
@@ -514,38 +597,29 @@ final class PlainEditorChromeModel: ObservableObject {
     // Total line count, refreshed by the heavy recompute and reused as the cursor
     // label denominator so a plain cursor move never rescans the whole document.
     private var cachedTotalLines = 1
+    // Line-start UTF-16 offset index, refreshed alongside cachedTotalLines by the
+    // heavy recompute. cursorLabel binary-searches this array for the
+    // cursor's line number instead of counting line breaks from offset 0, so the
+    // cheap keystroke path never rescans from the start of the document. Like
+    // cachedTotalLines, this can be up to one debounce cycle (150 ms) stale
+    // between edits: a transiently-stale index still indexes safely into the
+    // cached array (never out of bounds) and self-corrects once the debounced
+    // recompute runs, so at worst the label briefly shows the pre-edit line
+    // number rather than crashing or showing an unbounded value. Defaults to a
+    // single empty line to match cachedTotalLines' default before any document
+    // has been through a full recompute.
+    private var cachedLineStartIndex = [0]
     // The most recent selection, so the debounced recompute can re-emit the cursor
     // label against the freshly recomputed total line count.
     private var lastSelection = NSRange(location: 0, length: 0)
-    // Skips the bounded cursor scan when nothing that affects the cursor label
-    // changed. Two of the three refreshes a single keystroke triggers (the cursor
-    // bounce) carry an unchanged selection, so this collapses them to no-ops.
-    private var lastCursorSignature: CursorSignature?
     // In-flight debounced recompute; cancelled and rescheduled on each edit.
     private var recomputeTask: Task<Void, Never>?
-    // Bumped by every text-edit refresh path (refresh, refreshForEdit), never by
-    // refreshForSelectionChange. An equal-length edit entirely before the cursor
-    // can leave location/length/documentLength/totalLines all numerically
-    // unchanged (it only moves where a newline sits inside the prefix), which
-    // would otherwise collide with the pre-edit signature and keep a stale
-    // cursor label. Including the generation forces a recompute on every edit
-    // while a genuine no-op selection bounce (no intervening edit) still dedups.
-    private var editGeneration = 0
-
-    private struct CursorSignature: Equatable {
-        let location: Int
-        let length: Int
-        let documentLength: Int
-        let totalLines: Int
-        let editGeneration: Int
-    }
 
     // Full synchronous refresh for initial load, external reload, and onAppear, so
     // the status bar is correct the moment a document opens rather than after the
     // first debounce.
     func refresh(document: CodeFileDocument, selection: NSRange?) {
         recomputeTask?.cancel()
-        editGeneration += 1
         lastSelection = selection ?? NSRange(location: 0, length: 0)
         recomputeAll(document: document, selection: lastSelection)
     }
@@ -553,7 +627,6 @@ final class PlainEditorChromeModel: ObservableObject {
     // A text edit: update the cheap metrics (cursor label, character count) now and
     // debounce the O(n) counts. Called from the editor's onTextChange.
     func refreshForEdit(document: CodeFileDocument, selection: NSRange?) {
-        editGeneration += 1
         lastSelection = selection ?? lastSelection
         updateCheapMetrics(document: document, selection: lastSelection)
         scheduleHeavyRecompute(document: document)
@@ -576,9 +649,16 @@ final class PlainEditorChromeModel: ObservableObject {
     }
 
     // Cheap, immediate metrics: encoding and syntax are O(1) enum lookups and the
-    // character count is the storage length, so all three refresh every call. Only
-    // the cursor label needs a bounded UTF-16 scan, and that is skipped when the
-    // selection, document length, and total-line denominator are all unchanged.
+    // character count is the storage length. The cursor label is the only bounded
+    // scan left, and that scan is an O(log lines) binary search into
+    // the cached line-start index plus an O(line length) column scan, so it is
+    // cheap enough to recompute on every call. It deliberately always runs against
+    // the current cache with no cursor-signature dedup: the earlier dedup
+    // keyed on scalar counts (location, length, documentLength, totalLines) that
+    // stay equal across an equal-length edit which merely relocates a line break,
+    // so a stale-cache label could survive a debounced cache refresh (the rebuilt
+    // signature matched and the recompute was skipped). Recomputing unconditionally
+    // removes that whole bug class -- no signature can go stale if there is none.
     private func updateCheapMetrics(document: CodeFileDocument, selection: NSRange) {
         encoding = PlainEditorStatusReporter.encodingLabel(document.sourceEncoding)
         syntaxMode = PlainEditorStatusReporter.languageLabel(document.getLanguage())
@@ -586,24 +666,11 @@ final class PlainEditorChromeModel: ObservableObject {
         guard let storage = document.content else {
             cursorPosition = "--"
             characterCount = "--"
-            lastCursorSignature = nil
             return
         }
 
         let documentLength = storage.length
         characterCount = "\(documentLength) characters"
-
-        let signature = CursorSignature(
-            location: selection.location,
-            length: selection.length,
-            documentLength: documentLength,
-            totalLines: cachedTotalLines,
-            editGeneration: editGeneration
-        )
-        if lastCursorSignature == signature {
-            return
-        }
-        lastCursorSignature = signature
 
         #if DEBUG
         let scanStart = DispatchTime.now()
@@ -613,12 +680,13 @@ final class PlainEditorChromeModel: ObservableObject {
         cursorPosition = PlainEditorStatusReporter.cursorLabel(
             text: storage.mutableString,
             selection: selection,
-            totalLines: cachedTotalLines
+            totalLines: cachedTotalLines,
+            lineStartIndex: cachedLineStartIndex
         )
         #if DEBUG
         // STATUS_REFRESH_MS isolates the status subsystem's synchronous keystroke
         // cost from the highlight cost the keystroke bench measures, so a future
-        // regression here is attributable (M8). It times only the bounded cursor
+        // regression here is attributable. It times only the bounded cursor
         // scan, which is the sole O(document) work left on the hot path.
         let elapsedMs = Double(DispatchTime.now().uptimeNanoseconds - scanStart.uptimeNanoseconds) / 1_000_000
         debugRuntimeLog("STATUS_REFRESH_MS=\(elapsedMs)")
@@ -637,6 +705,9 @@ final class PlainEditorChromeModel: ObservableObject {
         let nsText = storage.mutableString
         let lines = PlainEditorStatusReporter.lineCount(in: nsText)
         cachedTotalLines = lines
+        // Built alongside cachedTotalLines so cursorLabel's immediate path
+        // never scans from offset 0 for the cursor's line number.
+        cachedLineStartIndex = PlainEditorStatusReporter.lineStartIndex(in: nsText)
         lineCount = "\(max(1, lines)) lines"
         wordCount = "\(PlainEditorStatusReporter.wordCount(in: nsText)) words"
         indentation = PlainEditorStatusReporter.indentationLabel(in: nsText)
@@ -656,6 +727,20 @@ final class PlainEditorChromeModel: ObservableObject {
         }
     }
 
+    #if DEBUG
+    // Test-only synchronous entry point to the debounced heavy-recompute body.
+    // The release path runs this same recomputeAll off a 150 ms Task (see
+    // scheduleHeavyRecompute); a test cannot deterministically await that Task,
+    // so this drives the identical work directly: it cancels any pending debounce
+    // and recomputes against the most recent selection, exactly as the debounce
+    // does, without bumping any edit state. This lets a test observe the label the
+    // status bar settles on at rest. Never called on the release hot path.
+    func drainHeavyRecomputeForTesting(document: CodeFileDocument) {
+        recomputeTask?.cancel()
+        recomputeAll(document: document, selection: lastSelection)
+    }
+    #endif
+
     private func emitStatusMarker() {
         #if DEBUG
         // Built as concatenated segments (rather than one long interpolated literal) so the
@@ -669,86 +754,64 @@ final class PlainEditorChromeModel: ObservableObject {
 
 }
 
-private struct PlainEditorCommandBar: View {
-    // This window's own editor. Ribbon buttons act on it directly so they always
-    // target the window they live in, matching the enabled-state bindings below.
-    let textView: TextView?
-    let canSave: Bool
-    let canUndo: Bool
-    let canRedo: Bool
-    let canCleanText: Bool
-    @Binding var fontFamily: String
-    @Binding var fontSize: Double
+#if DEBUG
+/// DEBUG-only environment key letting an automated capture force
+/// `PlainEditorStatusBar`'s reduce-transparency fallback. `nil` means "no
+/// override"; the status bar then falls back to the real, live-tracked
+/// `\.accessibilityReduceTransparency` value. SwiftUI does not expose a
+/// writable key path for `\.accessibilityReduceTransparency` itself, so this
+/// app-local key is the override seam instead (set from
+/// CodeFileDocumentBridge.swift).
+private struct ForcedReduceTransparencyKey: EnvironmentKey {
+    static let defaultValue: Bool? = nil
+}
 
-    var body: some View {
-        HStack(spacing: 10) {
-            commandButton("New", action: {
-                ShellDocumentActions.newDocument()
-            })
-            commandButton("Open...", action: {
-                ShellDocumentActions.openDocumentWithPanel()
-            })
-            Divider().frame(height: 16)
-            commandButton("Save", isEnabled: canSave, action: {
-                ShellDocumentActions.saveActiveDocument()
-            })
-            commandButton("Save As...", isEnabled: canSave, action: {
-                ShellDocumentActions.saveActiveDocumentAs()
-            })
-            Divider().frame(height: 16)
-            commandButton("Undo", isEnabled: canUndo, action: {
-                if let textView { _ = EditorCommandRouter.shared.undo(on: textView) }
-            })
-            commandButton("Redo", isEnabled: canRedo, action: {
-                if let textView { _ = EditorCommandRouter.shared.redo(on: textView) }
-            })
-            Divider().frame(height: 16)
-            commandButton("Clean Text", isEnabled: canCleanText, action: {
-                if let textView { _ = EditorCommandRouter.shared.cleanText(on: textView) }
-            })
-            Spacer(minLength: 16)
-            fontControls
-        }
-        .font(.system(size: 12, weight: .medium))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial)
-    }
-
-    @ViewBuilder
-    private func commandButton(_ title: String, isEnabled: Bool = true, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .buttonStyle(.borderless)
-            .disabled(!isEnabled)
-    }
-
-    private var fontControls: some View {
-        HStack(spacing: 8) {
-            Text("\(Int(fontSize.rounded())) pt")
-                .foregroundStyle(.secondary)
-                .frame(width: 42, alignment: .trailing)
-
-            commandButton("A-", isEnabled: fontSize > PlainEditorFontSettings.minimumFontSize) {
-                fontSize = PlainEditorFontSettings.decreasedFontSize(from: fontSize)
-            }
-            commandButton("A+", isEnabled: fontSize < PlainEditorFontSettings.maximumFontSize) {
-                fontSize = PlainEditorFontSettings.increasedFontSize(from: fontSize)
-            }
-            commandButton("Reset") {
-                fontFamily = PlainEditorFontSettings.defaultFontFamily
-                fontSize = PlainEditorFontSettings.defaultFontSize
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Editor font controls")
+extension EnvironmentValues {
+    var forcedReduceTransparencyForStatusBar: Bool? {
+        get { self[ForcedReduceTransparencyKey.self] }
+        set { self[ForcedReduceTransparencyKey.self] = newValue }
     }
 }
+#endif
 
 private struct PlainEditorStatusBar: View {
     @ObservedObject var chrome: PlainEditorChromeModel
+    @Environment(\.colorScheme) private var colorScheme
+    // Reduce Transparency fallback (docs/LIQUID_GLASS.md section 12 point 1: this
+    // is the single highest-value fix, since it honors every user who already told
+    // the system they need it).
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    #if DEBUG
+    @Environment(\.forcedReduceTransparencyForStatusBar) private var forcedReduceTransparencyForStatusBar
+    #endif
+
+    // The reduce-transparency state actually rendered: the forced override when an
+    // automated capture set one, otherwise the real system value.
+    private var effectiveReduceTransparency: Bool {
+        #if DEBUG
+        return forcedReduceTransparencyForStatusBar ?? reduceTransparency
+        #else
+        return reduceTransparency
+        #endif
+    }
 
     var body: some View {
+        // Status bar is the control layer (docs/LIQUID_GLASS.md sections 2/5): it owns
+        // its own custom Liquid Glass as the bottom counterpart to the native toolbar's
+        // top chrome. The two never stack, so each samples the content between them.
+        // Tinted per scheme so the glass has a gentle accent to
+        // refract instead of reading as plain white/black
+        // (docs/active_plans/reports/wp_g2_glass_evidence_report.md).
+        if effectiveReduceTransparency {
+            statusBarContent
+                .background(opaqueTintedFill)
+        } else {
+            statusBarContent
+                .glassEffect(.regular.tint(glassTint), in: Rectangle())
+        }
+    }
+
+    private var statusBarContent: some View {
         HStack(spacing: 14) {
             Text(chrome.cursorPosition)
             Text(chrome.lineCount)
@@ -766,6 +829,23 @@ private struct PlainEditorStatusBar: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial)
+    }
+
+    // Tuned separately per scheme: dark needs a stronger tint to read against a
+    // dark backdrop, light needs a lighter touch to stay subtle.
+    private var glassTint: Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.10)
+            : Color.accentColor.opacity(0.08)
+    }
+
+    // A fully opaque fallback fill: a solid neutral base with the same tint
+    // layered on top, so nothing behind it can show through (unlike a plain
+    // translucent color, which would still let content bleed through).
+    private var opaqueTintedFill: some View {
+        ZStack {
+            Rectangle().fill(Color(nsColor: .windowBackgroundColor))
+            Rectangle().fill(glassTint)
+        }
     }
 }

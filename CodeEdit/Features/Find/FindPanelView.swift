@@ -2,7 +2,7 @@
 //  FindPanelView.swift
 //  SwiftlyCodeEdit
 //
-//  The SwiftUI find/replace bar (WP-F1). The old CodeEditSourceEditor find panel was
+//  The SwiftUI find/replace bar. The old CodeEditSourceEditor find panel was
 //  an AppKit `NSViewController` hosted in the scroll view; this port is plain SwiftUI
 //  laid over the top of the editor, keeping AppKit out of the find feature entirely.
 //  All state and behavior live in `FindPanelModel`; this view is its surface.

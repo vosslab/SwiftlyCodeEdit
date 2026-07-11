@@ -45,7 +45,10 @@ pkill -x SwiftlyCodeEdit 2>/dev/null || true
 CODEEDIT_DEBUG_SOURCE_FILE="$SOURCE_FILE" \
 CODEEDIT_PLAIN_EDITOR_COMMAND_SELF_TEST=1 \
 CODEEDIT_SETTINGS_APPLY_SELF_TEST=1 \
-"$APP_PATH" "--kill-after=$APP_KILL_AFTER_SECONDS" >"$LOG_FILE" 2>&1 &
+"$APP_PATH" "--kill-after=$APP_KILL_AFTER_SECONDS" \
+  -PlainEditor.forceReduceTransparency YES \
+  -PlainEditor.forceIncreaseContrast YES \
+  >"$LOG_FILE" 2>&1 &
 APP_PID="$!"
 
 cleanup() {
@@ -133,7 +136,7 @@ wait_for_line "Created editor window for $SOURCE_FILE"
 wait_for_line "LAUNCH_TO_WINDOW_MS="
 wait_for_line "PlainTextEditorView created"
 wait_for_line "PlainTextEditorView requested first responder"
-wait_for_line "Plain editor command ribbon ready"
+wait_for_line "Plain editor toolbar ready"
 wait_for_line "Plain editor status bar ready"
 wait_for_line "Plain editor status: cursor="
 wait_for_line "encoding=UTF-8"
@@ -142,13 +145,21 @@ wait_for_line "Plain editor Swift syntax highlight:"
 wait_for_line "tokens=comment,keyword,number,string,type"
 wait_for_line "colors=6"
 wait_for_line "Plain editor command self-test: insert=true undo=true redo=true selectAll=true copy=true cut=true paste=true cleanText=true cleanUndo=true cleanRedo=true cleanLineEndings=true cleanFinalNewline=true cleanTabsToSpaces=true cleanSpacesToTabs=true cleanSmartPunct=true"
-# WP-F5 live-apply: the settings self-test performs a real post-mount font-size
+# Settings live-apply: the settings self-test performs a real post-mount font-size
 # and theme change through the same @AppStorage path the Settings window uses,
 # so both view-application markers must appear, then it restores the prior
 # values (proving the seam persisted nothing to the user's preferences).
 wait_for_line "SETTINGS_APPLIED key=fontSize"
 wait_for_line "SETTINGS_APPLIED key=theme"
 wait_for_line "SETTINGS_APPLY_SELF_TEST fontRestored=true themeRestored=true"
+# Appearance markers: the app is launched with -PlainEditor.forceReduceTransparency YES and
+# -PlainEditor.forceIncreaseContrast YES (NSArgumentDomain launch arguments, no
+# `defaults write` against the real com.apple.universalaccess preferences), so
+# the appearance marker must report both forced accessibility flags as set.
+# The mode half (light/dark) reflects the real system appearance, which this
+# script does not force, so only the accessibility-flag suffix is asserted.
+wait_for_line "APPEARANCE_MODE="
+wait_for_line "reduceTransparency=1 increaseContrast=1"
 wait_for_line "Main menu items:"
 check_menu_has_items "File" "New" "Open..." "Save" "Save As..." "Close"
 check_menu_has_items "Edit" "Undo" "Redo" "Cut" "Copy" "Paste" "Select All" "Clean Text"

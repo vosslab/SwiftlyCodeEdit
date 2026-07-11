@@ -3,13 +3,10 @@
 //  CodeEditTests
 //
 //  Regression tests pinning the four HIGH-severity findings from
-//  docs/active_plans/audits/document_lifecycle_audit.md (Findings 1-4). Each expected-fail test
-//  documents the exact baseline failure reason so a later fix (closing the named work package)
-//  can be verified by removing the surrounding withKnownIssue wrapper and watching the test go
-//  green. Finding 1 is closed by WP-L1: its test now asserts the fixed behavior directly, with no
-//  withKnownIssue wrapper. Findings 2-4 remain expected-fail until their work packages land. Do
-//  not weaken or remove the pinned assertions without updating the audit and the document state
-//  contract at docs/active_plans/decisions/document_architecture_decision.md.
+//  docs/active_plans/audits/document_lifecycle_audit.md (Findings 1-4). All four findings are
+//  now closed. Each test asserts the fixed behavior directly; none is wrapped as an expected failure.
+//  Do not weaken or remove the pinned assertions without updating the audit and the document
+//  state contract at docs/active_plans/decisions/document_architecture_decision.md.
 //
 
 import AppKit
@@ -37,7 +34,7 @@ struct CodeFileDocumentLifecycleGapTests {
         try await operation(directory)
     }
 
-    // Finding 1 (closed: WP-L1): undo/redo now clears and restores the document's dirty flag.
+    // Finding 1 (closed): undo/redo now clears and restores the document's dirty flag.
     //
     // The document owns change tracking: CodeFileView reports each mutation through
     // CodeFileDocument.recordEdit(_:replacedRange:newLength:) with how it reached the buffer
@@ -91,7 +88,7 @@ struct CodeFileDocumentLifecycleGapTests {
         }
     }
 
-    // Finding 2 (closed: WP-L2): an external change while the document has unsaved edits now
+    // Finding 2 (closed): an external change while the document has unsaved edits now
     // surfaces a conflict instead of being silently dropped.
     //
     // presentedItemDidChange routes a dirty + decodable external change to the keep-mine-or-reload
@@ -139,7 +136,7 @@ struct CodeFileDocumentLifecycleGapTests {
         }
     }
 
-    // Finding 3 (closed: WP-L3): a reload that cannot decode the new file contents surfaces an
+    // Finding 3 (closed): a reload that cannot decode the new file contents surfaces an
     // error and leaves the in-memory document untouched, instead of advancing the modification
     // date behind stale text via a swallowed `try?`.
     //
@@ -181,7 +178,7 @@ struct CodeFileDocumentLifecycleGapTests {
         }
     }
 
-    // WP-L2-review regression (fixed in WP-L3): resolving a keep-mine-or-reload conflict with
+    // Conflict-resolution regression: resolving a keep-mine-or-reload conflict with
     // "Reload from Disk" must not mark the document clean if the reload itself fails.
     //
     // resolveExternalChangeConflict called `try? self.read(...)` and then updateChangeCount(
@@ -225,7 +222,7 @@ struct CodeFileDocumentLifecycleGapTests {
         }
     }
 
-    // Finding 4 (closed: WP-L4): an external reload resets the editor's undo stack.
+    // Finding 4 (closed): an external reload resets the editor's undo stack.
     //
     // Wires a real TextView + CEUndoManager to the document's shared NSTextStorage, mirroring the
     // live wiring, and registers the same reset the production editor does: the document

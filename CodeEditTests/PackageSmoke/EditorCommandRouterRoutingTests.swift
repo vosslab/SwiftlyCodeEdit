@@ -4,7 +4,7 @@
 //
 //  Created by Claude on 2026-07-10.
 //
-//  Covers the WP-S2 multi-window targeting fix in EditorCommandRouter: the
+//  Covers the multi-window targeting fix in EditorCommandRouter: the
 //  register/unregister lifecycle, key-window routing selection across two
 //  registrants, and close-drops-entry behavior. Each test drives a fresh router
 //  instance and real TextViews, asserting the command lands on the intended editor
@@ -90,7 +90,7 @@ struct EditorCommandRouterRoutingTests {
         #expect(closing.string == "close-C")
     }
 
-    // MARK: - WP-F4 patch 2: new Clean Text actions are single undoable edits
+    // MARK: - Clean Text actions are single undoable edits
 
     @Test
     func cleanLineEndingsToLFIsSingleUndoableOperation() {

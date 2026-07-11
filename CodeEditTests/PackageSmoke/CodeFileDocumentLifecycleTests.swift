@@ -139,7 +139,7 @@ struct CodeFileDocumentLifecycleTests {
         }
     }
 
-    // WP-S3 fix (recorded in docs/active_plans/active/scope_closure_plan.md, WP-V3 open question,
+    // Encoding fix (recorded in docs/active_plans/active/scope_closure_plan.md,
     // Update 2026-07-09): a BOM-less UTF-16 little-endian file must decode as real text with no
     // embedded NULs, not the silent content-corruption previously pinned here (see git history for
     // the original `bomlessUTF16LittleEndianSilentlyMisdecodesAsUTF8` bug-contract test this
@@ -167,7 +167,7 @@ struct CodeFileDocumentLifecycleTests {
         }
     }
 
-    // WP-S3 fix: same probe for BOM-less UTF-16 big-endian, mirroring the little-endian case above.
+    // Encoding fix: same probe for BOM-less UTF-16 big-endian, mirroring the little-endian case above.
     @Test
     @MainActor
     func bomlessUTF16BigEndianDecodesCorrectly() throws {
@@ -216,7 +216,7 @@ struct CodeFileDocumentLifecycleTests {
     }
 
     // A lone Windows-1252-undefined byte (0x81) must fail every supported decode and raise the
-    // real decode error, confirming the rejected-byte behavior WP-V3 recorded still holds for a
+    // real decode error, confirming the rejected-byte behavior recorded in the audit still holds for a
     // single-byte file, not just the five-byte combination in
     // ``undecodableFileThrowsInsteadOfBlankWindow``.
     @Test
@@ -261,7 +261,7 @@ struct CodeFileDocumentLifecycleTests {
         }
     }
 
-    // WP-L3 reload-direction encoding case: a file opened as UTF-8 that is rewritten on disk in a
+    // Reload-direction encoding case: a file opened as UTF-8 that is rewritten on disk in a
     // different but still-supported encoding (Latin-1) reloads to the new decoded text with the
     // re-detected encoding recorded. This exercises the successful clean-reload branch and the
     // encoding re-detection the reload path performs, the decode direction opposite the initial
@@ -294,9 +294,9 @@ struct CodeFileDocumentLifecycleTests {
         }
     }
 
-    // WP-L1 deliverable: a bounded edit broadcasts the explicit range case of the two-case
+    // A bounded edit broadcasts the explicit range case of the two-case
     // edited-range change notification (replaced range plus new length), so a range-bounded
-    // consumer (M8 rehighlighter/status) rescans only the edited region, never the whole buffer.
+    // consumer (rehighlighter/status) rescans only the edited region, never the whole buffer.
     @Test
     @MainActor
     func recordEditBroadcastsBoundedRangeChange() throws {
@@ -319,7 +319,7 @@ struct CodeFileDocumentLifecycleTests {
         }
     }
 
-    // WP-L1 deliverable: an external reload replaces the whole buffer and broadcasts the explicit
+    // An external reload replaces the whole buffer and broadcasts the explicit
     // full-invalidation case, distinct from a bounded range edit, so consumers rescan everything.
     @Test
     @MainActor

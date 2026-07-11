@@ -4,7 +4,7 @@
 //
 //  Created by Claude on 2026-07-10.
 //
-//  Covers the WP-F1 find-panel port: the pure FindEngine search paths and the
+//  Covers the find-panel port: the pure FindEngine search paths and the
 //  FindPanelModel behavior against a real headless TextView. These are the acceptance
 //  criteria for the port -- literal and regex find, zero matches, invalid-regex inline
 //  error, next/previous moving the visible selection, replace landing selection on the

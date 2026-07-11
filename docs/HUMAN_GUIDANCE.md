@@ -19,7 +19,7 @@ swap-out path. "Less AppKit is better" is the north star; zero AppKit is not pre
 today.
 
 Once the SwiftUI migration (milestone MS in
-[docs/active_plans/active/scope_closure_plan.md](active_plans/active/scope_closure_plan.md))
+[docs/archive/scope_closure_plan.md](archive/scope_closure_plan.md))
 lands, treat `NSDocument`, hand-built `NSMenu`, `NSWindowController`, and delegate-chain patterns
 outside the isolated editor-surface adapter as defects. AppKit must never be the app
 architecture.

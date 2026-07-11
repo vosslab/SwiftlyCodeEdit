@@ -47,7 +47,7 @@ A failure in any of these fails the whole run:
   enum
 - deterministic file-backed launch
 - editor window creation
-- command ribbon and status bar creation
+- native toolbar and status bar creation
 - Swift status mode, UTF-8 encoding, and LF line-ending reporting
 - meaningful Swift syntax highlighting tokens and color count
 - the full active-editor command self-test line: insert, Undo, Redo, Select
@@ -63,6 +63,14 @@ A failure in any of these fails the whole run:
   the storage write; the seam then restores the prior values and logs
   `SETTINGS_APPLY_SELF_TEST fontRestored=true themeRestored=true`, proving the
   live change reversed and left the user's stored preferences untouched
+- the appearance/accessibility marker (WP-G1b): the app is launched with
+  `-PlainEditor.forceReduceTransparency YES` and
+  `-PlainEditor.forceIncreaseContrast YES` (NSArgumentDomain launch arguments,
+  never `defaults write` against the real `com.apple.universalaccess`
+  preferences), and the runtime log's `APPEARANCE_MODE=<light|dark>
+  reduceTransparency=<0|1> increaseContrast=<0|1>` marker must appear reporting
+  both forced flags as `1`; the mode half reflects the real system appearance
+  and is not forced by this script
 - the Commands-menu item inventory: the runtime log's `Main menu items:`
   line is parsed per top-level menu (File, Edit, Find, Format) and each
   first-party item below must be present in its own menu -- File (New,

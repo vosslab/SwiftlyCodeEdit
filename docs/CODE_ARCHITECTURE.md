@@ -21,7 +21,7 @@ SwiftUI owns the app shell. AppKit and TextKit own the editor surface through a 
 
 - [SwiftlyCodeEditApp.swift](../CodeEdit/App/SwiftlyCodeEditApp.swift): the single SwiftUI `App` `@main` entry point (Settings scene plus File commands). Document windows are hosted through `NSDocumentController` under this plain `App` scene, not `DocumentGroup`.
 - [CodeFileDocumentBridge.swift](../CodeEdit/Features/Documents/CodeFileDocument/CodeFileDocumentBridge.swift): the single sanctioned document-layer AppKit boundary -- the launch-path app delegate, `NSDocumentController` document actions, and the `NSWindowController`+`NSHostingController` window hosting that `CodeFileDocument.makeWindowControllers()` delegates into.
-- [CodeEditApp.swift](../CodeEdit/CodeEditApp.swift): the retired AppKit shell (`CodeEditMain`, `PlainEditorAppDelegate`, `PlainEditorMainMenu`), now unreachable dead code kept until WP-S4 deletes it; its `launchStartNanoseconds`/`logLaunchToWindowIfNeeded` statics still back the `LAUNCH_TO_WINDOW_MS` marker.
+- [CodeEditApp.swift](../CodeEdit/CodeEditApp.swift): WP-S4 deleted the hand-built AppKit shell (`PlainEditorAppDelegate`, `PlainEditorMainMenu`, `PlainEditorActionRouter`) this file used to hold; only the `CodeEditMain` enum remains, and only for its `launchStartNanoseconds`/`logLaunchToWindowIfNeeded` statics, which still back the `LAUNCH_TO_WINDOW_MS` marker read by the document bridge.
 - [CodeFileView.swift](../CodeEdit/Features/Editor/Views/CodeFileView.swift): document-to-editor bridge used by the plain editor surface.
 - [PlainTextEditorView.swift](../CodeEdit/Features/Editor/Views/PlainTextEditorView.swift): AppKit/TextKit wrapper around `CodeEditTextView.TextView`.
 - `CodeEdit/Features/Editor/PlainEditorTextCleaner.swift`: deterministic text-cleaning helpers used by the Clean Text command.
@@ -108,7 +108,7 @@ Required path:
 - Plain file-backed window shell for the editor.
 - Plain editor view bridge.
 - Document model, autosave, and external file-change reload.
-- Top command bar and bottom status bar.
+- Top toolbar and bottom status bar.
 - Clean Text trailing space/tab trimming.
 - Context-preserving Kate XML syntax highlighting for Swift.
 - Syntax mode and text-format reporting.
@@ -143,7 +143,7 @@ Each `CodeEditTextView.TextView` owns a single `CEUndoManager` (its `_undoManage
 that text view's undo manager is the one undo owner for the document. The pre-migration
 answer was "ad hoc, wired in `PlainEditorActionRouter`"; after the SwiftUI migration the
 undo manager belongs to the text view the adapter (`PlainTextEditorView`) hosts, and
-`EditorCommandRouter`/the command ribbon route Undo and Redo through that same
+`EditorCommandRouter`/the toolbar route Undo and Redo through that same
 `TextView.undoManager`. No SwiftUI `\.environment(\.undoManager)` is set, so no second
 competing stack exists. On an external-change reload the document mutates the shared
 `NSTextStorage` in place (preserving object identity) and broadcasts `.fullInvalidation`;
@@ -153,11 +153,49 @@ replay against mismatched offsets. The document never touches the undo manager d
 
 ## Product shell styling
 
-The Milestone 2 shell keeps Liquid Glass/system styling on control chrome only.
-The top command bar and bottom status bar use standard SwiftUI buttons, text,
-semantic colors, and `.regularMaterial`. The editor content remains on
-`NSColor.textBackgroundColor` so dense code stays readable in light, dark, high
-contrast, and reduced-transparency contexts.
+The shell keeps Liquid Glass/system styling on control chrome only. The top
+toolbar is a native macOS 26 `.unified` Liquid Glass toolbar (see the M9
+toolbar architecture section below); the bottom status bar uses a tinted
+`.glassEffect`, with a reduce-transparency opaque fallback for accessibility.
+The editor content remains on `NSColor.textBackgroundColor` so dense code
+stays readable in light, dark, high contrast, and reduced-transparency
+contexts.
+
+## M9 native toolbar architecture
+
+The top chrome is a SwiftUI `.toolbar` declared on the hosted content
+(`editorToolbar()` in `CodeFileView.swift`) and bridged into the host
+`NSWindow`'s native `NSToolbar` by setting
+`hostingController.sceneBridgingOptions = [.toolbars, .title]` in the
+sanctioned document bridge (`CodeFileDocumentBridge.swift`). This is the
+supported "SwiftUI content in an AppKit-hosted window" path: toolbar item
+code stays pure SwiftUI, and the AppKit change is the single
+`sceneBridgingOptions` line.
+
+`window.toolbarStyle = .unified` keeps the toolbar to a narrow integrated
+band rather than the system default's taller expanded style. Each item uses
+a custom `ToolbarButtonLabel` -- an `HStack` that lays the icon and text out
+side by side -- because the system's default `Label` stacks the text below
+the icon, producing a taller row than the single-row layout this shell
+wants. Items are grouped under `ToolbarItemGroup(placement: .navigation)` (4
+groups, 7 items: New/Open, Save/Save As, Undo/Redo, Clean Text) so the row
+docks at the leading edge, right after the traffic lights, instead of the
+system default's trailing float.
+
+The status bar's accent tint is fed by `window.backgroundColor`, set once at
+window-creation time to a gentle accent blend
+(`NSColor.controlAccentColor.blended(withFraction:of:)` against
+`.windowBackgroundColor`) in `CodeFileWindowBridge.installWindowController`;
+`PlainEditorStatusBar`'s `.glassEffect(.regular.tint(...))` samples that
+backdrop to produce its visible color pop.
+
+The bridged toolbar cannot take a custom color tint: it is window-server
+chrome outside the SwiftUI paintable region, so it cannot sample color
+composited by the hosted SwiftUI content or by `NSWindow.backgroundColor`
+the way the status bar's glass does. The toolbar therefore ships with OS
+Liquid Glass only. See
+[docs/active_plans/decisions/native_toolbar_decision.md](active_plans/decisions/native_toolbar_decision.md)
+for the full decision record.
 
 ## Known gaps
 

@@ -47,7 +47,7 @@ enum ThemeRepository {
     }
 
     #if DEBUG
-    // MARK: - In-memory themes (DEBUG live-apply self-test seam, WP-F5)
+    // MARK: - In-memory themes (DEBUG live-apply self-test seam)
     //
     // The `SETTINGS_APPLIED key=theme` marker fires only when a highlight pass
     // resolves a theme whose `name` differs from the one last applied. The app
@@ -148,7 +148,7 @@ enum ThemeRepository {
     /// Resolves the active theme by schema `name`, falling back to the
     /// bundled default with a logged warning when the name is nil, absent
     /// from every discovered theme, or every candidate failed to parse
-    /// (rule 3). `name` is nil until WP-F5's Settings scene ships a
+    /// (rule 3). `name` is nil until the Settings scene ships a
     /// user-selectable theme name.
     ///
     /// The result is cached per `(requestedName, overrideRoot, bundle)` so
@@ -182,7 +182,7 @@ enum ThemeRepository {
             return bundledDefaultTheme(bundle: bundle)
         }
         #if DEBUG
-        // A DEBUG in-memory theme (registered by the WP-F5 live-apply
+        // A DEBUG in-memory theme (registered by the live-apply
         // self-test) resolves ahead of disk so a distinctly-named theme is
         // observable without a second bundled file or a user Themes-dir write.
         if let inMemory = inMemoryThemes.theme(named: requestedName) {
@@ -237,7 +237,7 @@ private final class ResolvedThemeCache: @unchecked Sendable {
 /// Process-wide lock-guarded registry of in-memory themes backing
 /// `ThemeRepository.registerInMemoryTheme(_:)`. Mirrors `ResolvedThemeCache`'s
 /// `@unchecked Sendable` NSLock pattern so a background resolve (the highlight
-/// pass) can read it safely. DEBUG-only: it exists solely for the WP-F5
+/// pass) can read it safely. DEBUG-only: it exists solely for the
 /// live-apply self-test and never participates in a release build.
 private final class InMemoryThemeRegistry: @unchecked Sendable {
     private let lock = NSLock()

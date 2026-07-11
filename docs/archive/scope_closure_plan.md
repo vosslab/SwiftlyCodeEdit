@@ -51,7 +51,7 @@ the north star; zero AppKit is not pretended practical today.
   human commit checkpoint; then WP-Q2, WP-G1/G2 and the WP-G0 smoke-capture integration patch.
 - WP-L0: COMPLETE. Document state contract plus four expected-fail Swift Testing lifecycle
   tests (`CodeFileDocumentLifecycleGapTests.swift`, pinning WP-L1..WP-L4) written into
-  [document_architecture_decision.md](../decisions/document_architecture_decision.md); both
+  [document_architecture_decision.md](../active_plans/decisions/document_architecture_decision.md); both
   spec review and quality review passed.
 - WP-S0: status pointer below (see the WP-S0 work package entry) is extended to record the
   architect's bridge-mechanism decision - document windows host through `NSDocumentController`
@@ -59,7 +59,7 @@ the north star; zero AppKit is not pretended practical today.
   single sanctioned document-layer AppKit boundary.
 - WP-S0c: COMPLETE. Re-validation verdict FAIL confirmed on the same toolchain (keystroke p95
   513.30 ms vs the 16 ms gate); the TextKit/AppKit editor adapter stands. Decision doc:
-  [text_engine_decision.md](../decisions/text_engine_decision.md).
+  [text_engine_decision.md](../active_plans/decisions/text_engine_decision.md).
 - WP-Q5: COMPLETE. Corrected end-to-end keystroke baseline p95 15233 ms on the 1 MB fixture
   (git 028868f); spec review and quality review passed.
 - WP-F5: COMPLETE 2026-07-10. Settings scene (patches 15-16) plus live-apply observability seam;
@@ -457,7 +457,7 @@ Durable components (code identifiers use these, never milestone names):
 - Acceptance criteria: a minimal DocumentGroup + ReferenceFileDocument prototype demonstrates (or refutes) each of: autosave debounce parity, Save As, external-change reload into shared text storage, and encoding preservation on save; the decision doc records the chosen architecture (ReferenceFileDocument vs DocumentGroup-over-NSDocument bridge) with the evidence for each behavior BEFORE WP-S1 is dispatched.
 - Verification commands: prototype run log; lifecycle test suite executed against the prototype where feasible.
 - Obvious follow-ons: changelog decision entry; feed the chosen shape into WP-S1's task description.
-- Status 2026-07-09: COMPLETE, verdict "NSDocument behind a DocumentGroup bridge". A throwaway `DocumentGroup`+`ReferenceFileDocument` prototype (macOS 26.5.2, Swift 6.3.3, MacBookPro18,3) passed the encoding gates (Save As and open-edit-save round-trips byte-identical across all five encodings) but failed both lifecycle gates: no 2 s autosave debounce (`ReferenceFileDocument` has no `scheduleAutosaving` override; a force-dirtied document never autosaved within 8 s), and no external-change reload into the same `NSTextStorage` (reload was either not delivered in place or arrived as a fresh document with a new storage). Mechanical rule -> bridge. Keep `CodeFileDocument` as the `NSDocument` model; the single sanctioned document-layer AppKit bridge file is `CodeFileDocumentBridge.swift` (created by WP-S1). Re-evaluation trigger: next macOS SDK. Decision record: [document_architecture_decision.md](../decisions/document_architecture_decision.md).
+- Status 2026-07-09: COMPLETE, verdict "NSDocument behind a DocumentGroup bridge". A throwaway `DocumentGroup`+`ReferenceFileDocument` prototype (macOS 26.5.2, Swift 6.3.3, MacBookPro18,3) passed the encoding gates (Save As and open-edit-save round-trips byte-identical across all five encodings) but failed both lifecycle gates: no 2 s autosave debounce (`ReferenceFileDocument` has no `scheduleAutosaving` override; a force-dirtied document never autosaved within 8 s), and no external-change reload into the same `NSTextStorage` (reload was either not delivered in place or arrived as a fresh document with a new storage). Mechanical rule -> bridge. Keep `CodeFileDocument` as the `NSDocument` model; the single sanctioned document-layer AppKit bridge file is `CodeFileDocumentBridge.swift` (created by WP-S1). Re-evaluation trigger: next macOS SDK. Decision record: [document_architecture_decision.md](../active_plans/decisions/document_architecture_decision.md).
 - Bridge-mechanism decision (architect, 2026-07-09, same decision doc): document windows host through `NSDocumentController` under a plain SwiftUI `App` scene, not `DocumentGroup` - this refines the mechanical verdict's "DocumentGroup" label to the concrete scene type. `CodeFileDocument` keeps sole ownership of the autosave debounce, the `NSFilePresenter` external-reload path, and the shared `NSTextStorage` identity; a `ReferenceFileDocument` facade under `DocumentGroup` cannot deliver this (`DocumentGroup` always manages its own private `NSDocument`, creating a double-owner conflict). WP-S1 wires `@main` as the SwiftUI `App`, routes File > New / File > Open to `NSDocumentController.shared`, and builds `CodeFileDocumentBridge.swift` accordingly.
 
 ### Work package: WP-S0b SwiftUI-native text engine spike

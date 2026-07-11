@@ -2,22 +2,22 @@
 //  EditorCommands.swift
 //  SwiftlyCodeEdit
 //
-//  The SwiftUI `Commands` menu for the editor (WP-S2), attached to the app scene in
+//  The SwiftUI `Commands` menu for the editor, attached to the app scene in
 //  SwiftlyCodeEditApp.swift. It declares the File, Edit, Find, and Format menus that
 //  replace the hand-built PlainEditorMainMenu, preserving every keyboard shortcut
 //  from the menu-shortcut inventory. Document commands route through the sanctioned
 //  document bridge (`ShellDocumentActions`); editor commands route through the shared
-//  `EditorCommandRouter`, the same functions the in-window ribbon calls.
+//  `EditorCommandRouter`, the same functions the native toolbar calls.
 //
 
 import SwiftUI
 
 struct EditorCommands: Commands {
-    // Backs the Format menu's Increase/Decrease/Reset Size items (WP-F6).
+    // Backs the Format menu's Increase/Decrease/Reset Size items.
     // This is the same `PlainEditor.fontFamily` / `PlainEditor.fontSize`
-    // @AppStorage key pair the command-bar ribbon and Settings scene read
-    // and write, so a menu invocation and a ribbon click stay in sync
-    // across every open window with no extra routing needed.
+    // @AppStorage key pair the Settings scene reads and writes, so a
+    // menu invocation and a Settings-pane edit stay in sync across
+    // every open window with no extra routing needed.
     @AppStorage("PlainEditor.fontFamily")
     private var editorFontFamily = PlainEditorFontSettings.defaultFontFamily
     @AppStorage("PlainEditor.fontSize")
@@ -96,9 +96,9 @@ struct EditorCommands: Commands {
 
             Divider()
 
-            // Clean Text submenu (WP-F4 patch 2): each item is a single
+            // Clean Text submenu: each item is a single
             // undoable whole-document transform, applied through the shared
-            // router so a menu invocation and the ribbon's Clean Text button
+            // router so a menu invocation and the toolbar's Clean Text button
             // run the same code path. No keyboard shortcuts here; the
             // menu-shortcut parity inventory has none for Clean Text.
             Menu("Clean Text") {
@@ -162,10 +162,10 @@ struct EditorCommands: Commands {
 
         // MARK: Format
         // Font family lives in the Settings scene's General pane; size
-        // adjustment (WP-F6) lives here so it is reachable without opening
+        // adjustment lives here so it is reachable without opening
         // Settings, matching Zoom In/Out/Reset conventions elsewhere on
-        // macOS. Both items call the same `PlainEditorFontSettings` step
-        // functions the command-bar ribbon's `A-`/`A+` buttons call.
+        // macOS. Both items call the same `PlainEditorFontSettings.increasedFontSize`/
+        // `decreasedFontSize` step functions, which clamp the size to the allowed range.
         CommandMenu("Format") {
             Button("Font and Text Options") { }
                 .disabled(true)

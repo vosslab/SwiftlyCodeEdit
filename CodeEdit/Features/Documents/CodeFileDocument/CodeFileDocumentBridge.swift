@@ -2,7 +2,7 @@
 //  CodeFileDocumentBridge.swift
 //  SwiftlyCodeEdit
 //
-//  The single sanctioned document-layer AppKit boundary (WP-S1). Everything AppKit
+//  The single sanctioned document-layer AppKit boundary. Everything AppKit
 //  that presents the retained NSDocument (`CodeFileDocument`) inside the SwiftUI
 //  App scene lives here: the application delegate that reproduces the launch path,
 //  the NSDocumentController glue for New/Open/Save/Save As/Close, and the
@@ -32,6 +32,12 @@ final class ShellAppDelegate: NSObject, NSApplicationDelegate {
         // promote it to a regular foreground app so document windows and the menu
         // bar behave normally, matching the previous AppKit shell.
         NSApp.setActivationPolicy(.regular)
+        #if DEBUG
+        // Runs before any document window is created (window creation is deferred
+        // to a later runloop turn in finishLaunch below), so a forced appearance
+        // applies to every window and the toolbar from first paint.
+        ForcedAppearanceOverride.applyIfRequested()
+        #endif
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -223,11 +229,55 @@ enum CodeFileWindowBridge {
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false
         )
+        // Narrow, integrated single-row toolbar with labels beside each icon
+        // (Kate-style layout, per user direction). `.expanded` renders a tall band with
+        // labels below the icon row; `.unifiedCompact` shrinks the toolbar into the
+        // traffic-light corner with icon-only items. `.unified` is the compact,
+        // title-integrated row that matches the reference.
+        window.toolbarStyle = .unified
+        // Gives the status bar's custom tinted glass (CodeFileView,
+        // PlainEditorStatusBar) something colorful to sample.
+        // `.tint()` on a glass surface only modulates whatever already composites
+        // behind it (docs/LIQUID_GLASS.md section 11); the plain window background
+        // has nothing to modulate, so the tint is invisible without this. A gentle
+        // blend keeps the window a "clean, simple editor" while still giving the
+        // status bar real color to refract. Resolved once against the effective
+        // appearance at window-creation time; it does not track a later live
+        // Dark Mode toggle while the window stays open (a known, minor limitation
+        // of a static NSWindow.backgroundColor, left as a follow-up if it proves
+        // to matter in practice).
+        window.backgroundColor = CodeFileWindowBridge.glassPopBackdropColor()
         // Host the SwiftUI editor tree in an NSHostingController set as the window's
         // content view controller, per the bridge decision. WindowCodeFileView picks
         // the text vs non-text editor. The hosting content view collapses the window
         // to its fitting size, so restore the intended editor size explicitly.
+        #if DEBUG
+        // Forces the hosted status bar's reduce-transparency fallback so an automated
+        // capture can show the opaque fill (PlainEditorStatusBar in CodeFileView.swift)
+        // without a System Settings toggle. SwiftUI's own \.accessibilityReduceTransparency
+        // is a read-only environment value with no writable key path, so the override
+        // travels through the app-local forcedReduceTransparencyForStatusBar key instead;
+        // PlainEditorStatusBar falls back to the real \.accessibilityReduceTransparency
+        // whenever this override is nil, using the same launch-argument parsing the
+        // runtime marker already applies. Leaving the override nil (argument absent)
+        // means the real system Reduce Transparency setting keeps winning, including
+        // live changes while the window stays open.
+        let forcedReduceTransparency = PlainEditorAppearanceMarker.overrideBool(
+            forKey: PlainEditorAppearanceMarker.forceReduceTransparencyKey, in: UserDefaults.standard
+        )
+        let hostingController = NSHostingController(
+            rootView: WindowCodeFileView(codeFile: document)
+                .environment(\.forcedReduceTransparencyForStatusBar, forcedReduceTransparency)
+        )
+        #else
         let hostingController = NSHostingController(rootView: WindowCodeFileView(codeFile: document))
+        #endif
+        // Bridge the SwiftUI `.toolbar` declared on the hosted editor tree into this
+        // AppKit-hosted window's NSToolbar. macOS 26 renders a standard toolbar as
+        // grouped rounded-capsule Liquid Glass automatically, so the item definitions
+        // stay in SwiftUI (CodeFileView) and this one line is the only AppKit the
+        // native toolbar needs. `.title` keeps the window title bridged alongside it.
+        hostingController.sceneBridgingOptions = [.toolbars, .title]
         window.contentViewController = hostingController
         window.setContentSize(NSSize(width: 960, height: 600))
 
@@ -251,25 +301,50 @@ enum CodeFileWindowBridge {
         }
         #if DEBUG
         debugRuntimeLog("Created editor window for \(document.fileURL?.path ?? "<unknown>")")
+        // Confirm the SwiftUI `.toolbar` bridged into this window's NSToolbar via
+        // sceneBridgingOptions above. Checked on a later runloop turn because SwiftUI
+        // installs the bridged toolbar after the hosting view first lays out. A zero
+        // or missing count is the signal to fall back to a hand-built NSToolbar.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak window] in
+            let itemCount = window?.toolbar?.items.count ?? 0
+            debugRuntimeLog("TOOLBAR_BRIDGED items=\(itemCount)")
+        }
         #endif
 
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         // Fires on the first document window only; must run before highlighting
-        // (WP-Q0 made the first highlight async) so the marker reflects launch-to-paint.
+        // (the first highlight is async) so the marker reflects launch-to-paint.
         CodeEditMain.logLaunchToWindowIfNeeded()
+        #if DEBUG
+        // Fires on the first document window only, right after it is on screen, so
+        // a screenshot capture can be labeled by the mode the app actually
+        // rendered with rather than a guess.
+        AppearanceMarker.logOnceIfNeeded()
+        #endif
 
         if let fileURL = document.fileURL,
            UserDefaults.standard.object(forKey: "NSWindow Frame \(fileURL.path)") == nil {
             window.center()
         }
     }
+
+    // Tuned separately per scheme: dark backdrops need a
+    // stronger blend to read as color at all, light backdrops need a lighter
+    // touch to stay subtle. `blended(withFraction:of:)` mixes toward
+    // `.windowBackgroundColor`, so a higher fraction means less accent.
+    private static func glassPopBackdropColor() -> NSColor {
+        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let neutralFraction: CGFloat = isDark ? 0.93 : 0.96
+        return NSColor.controlAccentColor.blended(withFraction: neutralFraction, of: .windowBackgroundColor)
+            ?? .windowBackgroundColor
+    }
 }
 
 // MARK: - Key-window observation
 
 /// Bridges AppKit key-window and close notifications into the editor command router,
-/// which stays free of AppKit shell symbols (WP-S2 boundary). One observer is created
+/// which stays free of AppKit shell symbols. One observer is created
 /// per editor window, keyed on the hosting document's identity so it matches
 /// CodeFileView's registration. It reports the window becoming key (so menu commands
 /// target the focused editor) and closing (so the router drops the entry), then tears
@@ -333,7 +408,84 @@ private final class EditorWindowKeyObserver {
     }
 }
 
-// MARK: - Window self-capture (WP-G0, DEBUG only)
+// MARK: - Forced appearance override (DEBUG only)
+
+#if DEBUG
+/// Forces NSApp's effective appearance from a launch argument, so an
+/// automated screenshot run can capture light and dark without touching the
+/// real System Settings appearance. NSApp.effectiveAppearance otherwise
+/// always tracks the live system mode -- passing "-AppleInterfaceStyle
+/// Light|Dark" alone does not change it, since that key only carries meaning
+/// through the AppKit call below. Applied from
+/// ShellAppDelegate.applicationWillFinishLaunching, before any document
+/// window exists, so every window and its toolbar render in the forced mode
+/// from first paint. Absent the argument this is a no-op: NSApp.appearance
+/// stays nil and effectiveAppearance keeps following the real system mode.
+@MainActor
+enum ForcedAppearanceOverride {
+    static func applyIfRequested() {
+        // NSArgumentDomain only (not merged UserDefaults.standard reads): see
+        // PlainEditorAppearanceMarker.overrideAppearanceMode for why the merged
+        // search list would leak the real system Dark Mode state.
+        let argumentDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        guard let mode = PlainEditorAppearanceMarker.overrideAppearanceMode(in: argumentDomain) else {
+            return
+        }
+        NSApp.appearance = NSAppearance(named: mode == "dark" ? .darkAqua : .aqua)
+    }
+}
+#endif
+
+// MARK: - Appearance/accessibility marker (DEBUG only)
+
+#if DEBUG
+/// Logs a single per-launch runtime marker naming the effective appearance
+/// mode plus reduced-transparency and increased-contrast state, so a
+/// screenshot capture can be labeled by the mode the app actually
+/// rendered with. The live NSApp.effectiveAppearance and NSWorkspace
+/// accessibility reads are AppKit, so they stay confined to this sanctioned
+/// bridge file; the override-argument parsing and line formatting live
+/// AppKit-free in PlainEditorAppearanceMarker.
+@MainActor
+enum AppearanceMarker {
+    private static var didLog = false
+
+    /// Logs the marker once per launch. Calls from a second or later window
+    /// are no-ops.
+    static func logOnceIfNeeded() {
+        guard !didLog else { return }
+        didLog = true
+
+        let bestMatch = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])
+        let mode = bestMatch == .darkAqua ? "dark" : "light"
+
+        let defaults = UserDefaults.standard
+        // Marker-only override: the native toolbar's glass reduce-transparency
+        // behavior is OS-owned and inherited from the standard NSToolbar
+        // component, so this flag is not (and cannot be) force-applied to it.
+        let reduceTransparency = PlainEditorAppearanceMarker.effectiveFlag(
+            override: PlainEditorAppearanceMarker.overrideBool(
+                forKey: PlainEditorAppearanceMarker.forceReduceTransparencyKey, in: defaults
+            ),
+            systemValue: NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+        )
+        let increaseContrast = PlainEditorAppearanceMarker.effectiveFlag(
+            override: PlainEditorAppearanceMarker.overrideBool(
+                forKey: PlainEditorAppearanceMarker.forceIncreaseContrastKey, in: defaults
+            ),
+            systemValue: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+        )
+
+        debugRuntimeLog(
+            PlainEditorAppearanceMarker.markerLine(
+                mode: mode, reduceTransparency: reduceTransparency, increaseContrast: increaseContrast
+            )
+        )
+    }
+}
+#endif
+
+// MARK: - Window self-capture (DEBUG only)
 
 #if DEBUG
 /// Renders the editor window's own view hierarchy to a PNG on request, without

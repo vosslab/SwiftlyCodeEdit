@@ -14,7 +14,7 @@ import CodeEditTextView
 // Entry point and orchestrator for plain-editor syntax coloring. Cold open,
 // theme change, and reload take the whole-document `HighlightFullPass`; each
 // keystroke takes the bounded `rehighlight` path, which reinterprets only a
-// region around the edit (WP-Q6). The supporting concerns live in sibling
+// region around the edit. The supporting concerns live in sibling
 // types: per-storage state and the DEBUG completion seam in `HighlightStateStore`,
 // region math in `HighlightRegionPlanner`, and attribute application in
 // `HighlightPainter`.
@@ -63,7 +63,7 @@ enum PlainSyntaxHighlighter {
     }
 
     // Bounds keystroke work to a region instead of reinterpreting and repainting
-    // the whole document. The edited-range broadcast (WP-L1) is the single
+    // the whole document. The edited-range broadcast is the single
     // highlight driver now, so exactly one pass runs per edit (this also removes
     // the old double-highlight where `onTextChange` scheduled a whole-document
     // pass on top of the edited-range signal).
@@ -105,11 +105,21 @@ enum PlainSyntaxHighlighter {
         let requestGeneration = state.latestGeneration
         state.currentTask?.cancel()
 
+        #if DEBUG
+        // Timestamp the main-actor Task enqueue so the bench can attribute the
+        // scheduling hop (enqueue to task-body start) apart from real compute and
+        // paint. DEBUG-only; read only when the phase markers fire.
+        let enqueueUptime = DispatchTime.now().uptimeNanoseconds
+        #endif
+
         // The generation was bumped synchronously above so a bench waiter
         // registered right after this edit observes the in-flight generation; all
         // storage and layout reads happen inside the task, after the enclosing
         // edit batch (beginEditing/endEditing) has completed and layout settled.
         state.currentTask = Task { @MainActor in
+            #if DEBUG
+            let bodyUptime = DispatchTime.now().uptimeNanoseconds
+            #endif
             guard requestGeneration == state.latestGeneration else {
                 HighlightStateStore.settle(state: state, generation: requestGeneration)
                 return
@@ -127,7 +137,7 @@ enum PlainSyntaxHighlighter {
             )
 
             #if DEBUG
-            debugRuntimeLog("WPQ6_BOUNDED editedSpan=\(editedSpan) region=\(region) storageLength=\(storage.length) strategy=\(strategy)")
+            debugRuntimeLog("BOUNDED_REHIGHLIGHT editedSpan=\(editedSpan) region=\(region) storageLength=\(storage.length) strategy=\(strategy)")
             #endif
             // A region covering the whole buffer (Clean Text arrives as a
             // whole-buffer range edit) is just a full highlight; delegate rather
@@ -139,32 +149,62 @@ enum PlainSyntaxHighlighter {
             }
 
             let regionText = storage.mutableString.substring(with: region)
+            #if DEBUG
+            let spanStart = DispatchTime.now().uptimeNanoseconds
+            #endif
             let spans = await Task.detached(priority: .userInitiated) {
                 CodeEditSyntaxDefinitions.highlightSpans(text: regionText, language: languageName)
             }.value
+            #if DEBUG
+            let spanMs = Double(DispatchTime.now().uptimeNanoseconds - spanStart) / 1_000_000
+            #endif
 
             guard requestGeneration == state.latestGeneration, !Task.isCancelled else {
                 HighlightStateStore.settle(state: state, generation: requestGeneration)
                 return
             }
 
+            #if DEBUG
+            let paintStart = DispatchTime.now().uptimeNanoseconds
+            #endif
             HighlightPainter.applyBoundedHighlight(
                 spans: spans,
                 storage: storage,
                 region: region,
                 layoutTarget: layoutTarget
             )
+            #if DEBUG
+            emitKeystrokePhaseMarkers(
+                schedMs: Double(bodyUptime - enqueueUptime) / 1_000_000,
+                spanMs: spanMs,
+                paintMs: Double(DispatchTime.now().uptimeNanoseconds - paintStart) / 1_000_000
+            )
+            #endif
             HighlightStateStore.settle(state: state, generation: requestGeneration)
         }
     }
 
     #if DEBUG
-    // DEBUG completion seam for the keystroke bench (WP-Q5). Forwards to the
+    // DEBUG completion seam for the keystroke bench. Forwards to the
     // state store, which owns the per-generation settle bookkeeping; kept on this
     // type so the bench's `PlainSyntaxHighlighter.onHighlightSettled` call site
     // stays stable.
     static func onHighlightSettled(storage: NSTextStorage, perform completion: @escaping () -> Void) {
         HighlightStateStore.onHighlightSettled(storage: storage, perform: completion)
+    }
+
+    // Emits the per-edit sub-phase breakdown for the keystroke floor-attribution
+    // experiment, one marker set per measured edit. `schedMs` is the
+    // main-actor Task enqueue-to-body hop, `spanMs` the off-main span compute plus
+    // its detached round trip, and `paintMs` the attribute paint and layout. These
+    // plus the bench's KEYSTROKE_MUTATION_MS sum to the KEYSTROKE_MS window, so a
+    // reader can see which phase dominates the fixed floor. Gated so the cold-open
+    // pass and non-bench runs stay silent.
+    static func emitKeystrokePhaseMarkers(schedMs: Double, spanMs: Double, paintMs: Double) {
+        guard PlainEditorKeystrokeBench.phaseMarkersEnabled else { return }
+        debugRuntimeLog("KEYSTROKE_SCHED_MS=\(schedMs)")
+        debugRuntimeLog("KEYSTROKE_SPAN_MS=\(spanMs)")
+        debugRuntimeLog("KEYSTROKE_PAINT_MS=\(paintMs)")
     }
     #endif
 }

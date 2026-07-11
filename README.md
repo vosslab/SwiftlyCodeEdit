@@ -24,5 +24,5 @@ More reference docs (style guides, the Kate syntax pipeline, theming, related pr
 ## Screenshots
 
 <!-- screenshots:begin (managed by screenshot-docs) -->
-![Plain editor window with top command bar and bottom status bar](docs/screenshots/codeedit_window.png)
+![Plain editor window with toolbar and bottom status bar](docs/screenshots/codeedit_window.png)
 <!-- screenshots:end -->

@@ -2,7 +2,7 @@
 //  PlainEditorConflictAutoChoice.swift
 //  SwiftlyCodeEdit
 //
-//  DEBUG-only auto-answer seam for the external-change reload conflict (WP-L2).
+//  DEBUG-only auto-answer seam for the external-change reload conflict.
 //  Passing `-PlainEditor.conflictAutoChoice keep|reload` lands in UserDefaults'
 //  volatile NSArgumentDomain (per-process, never persisted, no `defaults write`),
 //  so an unattended e2e run can drive the dirty + decodable conflict to a fixed

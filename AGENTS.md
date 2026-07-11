@@ -21,7 +21,7 @@
 - docs/ROADMAP.md
 - docs/TODO.md
 - docs/NEWS.md
-- MILESTONE3_CHECKLIST.md
+- docs/archive/MILESTONE3_CHECKLIST.md
 - docs/DEVELOPER_USAGE.md
 - docs/SMOKE_TEST.md
 - docs/E2E_TESTS.md

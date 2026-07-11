@@ -49,11 +49,25 @@ This repository is driven by a small set of scripts. Use these first.
 3. Check `/tmp/codeedit_runtime.log`
 4. Inspect `docs/screenshots/codeedit_window.png`
 
+## Regenerate screenshots
+
+- `./scripts/capture_screenshots.sh`
+- Regenerates all `docs/screenshots/` PNGs in one command: five live
+  on-screen window captures (the representative default-source window, plus
+  varied-token and backdrop-differential fixtures under
+  `tests/fixtures/screenshots/`), with light/dark appearance forced via
+  `-AppleInterfaceStyle` and a fixed 15pt font
+- Serializes each launch (`pkill`/`pgrep` before and after) so no capture
+  races a prior instance
+- `scripts/check_screenshot_not_black.py` gates each capture against a
+  near-black mean-brightness floor, so a slept-or-locked-display capture is
+  skipped rather than silently overwriting a good tracked PNG
+- Also regenerates the app-icon preview via `scripts/make_app_icon.py`
+
 ## What The Smoke Run Verifies
 
 - the app launches through the file-backed plain editor path
 - the default source file opens
-- the top command bar is present
-- the editor font controls are mounted and report their persisted settings
+- the native toolbar is present
 - the bottom status bar is present
 - the editor stays visible long enough for a screenshot capture

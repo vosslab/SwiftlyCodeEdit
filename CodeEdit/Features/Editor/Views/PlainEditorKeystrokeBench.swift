@@ -2,7 +2,7 @@
 //  PlainEditorKeystrokeBench.swift
 //  CodeEdit
 //
-//  Created for WP-Q5 keystroke latency harness.
+//  Created for the keystroke latency harness.
 //
 
 import Foundation
@@ -19,10 +19,25 @@ import CodeEditTextView
 /// outside the synchronous mutation. Each `KEYSTROKE_MS=<float>` line therefore
 /// times the whole end-to-end window (mutation + status refresh + span compute
 /// + paint), not just the synchronous slice, so a future bounded-rehighlight
-/// improvement (WP-Q6) becomes visible in this baseline.
+/// improvement becomes visible in this baseline.
 @MainActor
 enum PlainEditorKeystrokeBench {
     private static var didSchedule = false
+
+    // Flipped true the moment the first real bench edit begins. The one cold-open
+    // full pass that runs before any edit stays unmarked, so the highlighter's
+    // per-edit sub-phase markers (KEYSTROKE_SCHED_MS / KEYSTROKE_SPAN_MS /
+    // KEYSTROKE_PAINT_MS) are exactly one set per measured edit, not one extra for
+    // the cold pass (floor attribution).
+    static var editsStarted = false
+
+    // Whether the highlighter should emit its per-edit sub-phase markers. Gated on
+    // both the bench being requested and the first edit having started, so the
+    // markers never fire in a normal DEBUG run, the command self-test, or the cold
+    // open pass. DEBUG-only measurement seam.
+    static var phaseMarkersEnabled: Bool {
+        editsStarted && requestedEditCount() != nil
+    }
 
     static func scheduleIfRequested(textView: TextView) {
         guard let editCount = requestedEditCount(), !didSchedule else {
@@ -66,6 +81,11 @@ enum PlainEditorKeystrokeBench {
             return
         }
 
+        // From the first real edit on, the highlighter emits per-edit sub-phase
+        // markers; the cold-open pass that already ran stays unmarked so the
+        // phase-marker stream is exactly one set per measured edit.
+        editsStarted = true
+
         let documentLength = (textView.string as NSString).length
         // Spread insertion offsets across the whole document. Advancing by a
         // full stride (documentLength / editCount) per edit means editCount
@@ -83,6 +103,14 @@ enum PlainEditorKeystrokeBench {
             in: NSRange(location: insertionOffset, length: 0),
             with: insertedCharacter
         )
+        // The synchronous mutation slice ends here, before any async highlight hop
+        // runs: it covers the edit apply, the status refresh (STATUS_REFRESH_MS),
+        // and the synchronous highlight scheduling up to Task creation. This is the
+        // work a real keystroke blocks on to show the typed character; timing it on
+        // its own lets the async highlight floor be attributed apart from the real
+        // synchronous keystroke cost.
+        let mutationMs = Double(DispatchTime.now().uptimeNanoseconds - startTime.uptimeNanoseconds) / 1_000_000
+        debugRuntimeLog("KEYSTROKE_MUTATION_MS=\(mutationMs)")
         // Waiting captures the generation this edit just bumped, so the timer
         // stops only after that generation's span compute and paint finish.
         PlainSyntaxHighlighter.onHighlightSettled(storage: textView.textStorage) {

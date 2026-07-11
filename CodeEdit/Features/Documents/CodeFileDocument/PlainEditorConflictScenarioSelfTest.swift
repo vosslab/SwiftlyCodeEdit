@@ -4,7 +4,7 @@
 //
 //  DEBUG-only driver that stages an external-change scenario so the unattended
 //  e2e (tests/e2e/e2e_external_change_conflict.py) can exercise the real
-//  NSFilePresenter path in a running app (WP-L2). Gated by the environment
+//  NSFilePresenter path in a running app. Gated by the environment
 //  variable CODEEDIT_CONFLICT_SCENARIO=clean|dirty and scheduled from
 //  CodeFileView.onTextViewReady, mirroring PlainEditorCommandSelfTest. For the
 //  dirty scenario it makes one real edit through the editor so the document is

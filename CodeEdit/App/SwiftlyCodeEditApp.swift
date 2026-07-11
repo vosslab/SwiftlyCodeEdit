@@ -2,7 +2,7 @@
 //  SwiftlyCodeEditApp.swift
 //  SwiftlyCodeEdit
 //
-//  The single SwiftUI `App` entry point for the editor (WP-S1). SwiftUI owns the
+//  The single SwiftUI `App` entry point for the editor. SwiftUI owns the
 //  app shell: this scene, its `Settings` window, and its file `Commands`. The
 //  retained AppKit document model (`CodeFileDocument`, an `NSDocument`) is hosted
 //  through `NSDocumentController` under this plain `App` scene, per
@@ -37,8 +37,8 @@ struct SwiftlyCodeEditApp: App {
         // makeWindowControllers (delegated into the bridge), created through
         // NSDocumentController, not by a SwiftUI WindowGroup or DocumentGroup. The
         // App declares a Settings scene here and attaches the full parity menu
-        // (File, Edit, Find, Format) as SwiftUI Commands from EditorCommands (WP-S2).
-        // SettingsWindowView (WP-F5, CodeEdit/Features/Settings/) is the full
+        // (File, Edit, Find, Format) as SwiftUI Commands from EditorCommands.
+        // SettingsWindowView (CodeEdit/Features/Settings/) is the full
         // font/theme/editing preferences surface built entirely in SwiftUI.
         Settings {
             SettingsWindowView()

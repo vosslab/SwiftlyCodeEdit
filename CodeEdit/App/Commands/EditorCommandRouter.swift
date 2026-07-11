@@ -2,17 +2,17 @@
 //  EditorCommandRouter.swift
 //  SwiftlyCodeEdit
 //
-//  The single shared action router for editor commands (WP-S2). Both the SwiftUI
-//  `Commands` menu (EditorCommands.swift) and the in-window command ribbon
-//  (CodeFileView.swift) call these functions, so a menu item and its ribbon button
+//  The single shared action router for editor commands. Both the SwiftUI
+//  `Commands` menu (EditorCommands.swift) and the in-window native toolbar
+//  (CodeFileView.swift) call these functions, so a menu item and its toolbar button
 //  always run the same code path. Undo and redo resolve through the target
 //  `TextView`'s own `undoManager`, keeping a single undo owner per the architect
 //  decision; nothing here touches `\.environment(\.undoManager)`.
 //
-//  Multi-window targeting model (WP-S2 quality-review fix): each editor window
+//  Multi-window targeting model: each editor window
 //  registers its `TextView` under a stable per-window key, and the document bridge
 //  reports which window is key. Menu commands resolve to the key window's editor;
-//  ribbon buttons pass their own window's editor directly. This replaces the old
+//  toolbar buttons pass their own window's editor directly. This replaces the old
 //  single last-write-wins weak slot, which silently misdirected menu commands to the
 //  last-opened window and no-oped once that window closed.
 //
@@ -29,7 +29,7 @@ import CodeEditTextView
 
 /// Routes editor actions to the correct `TextView`. Each window registers its editor
 /// under a per-window key; the menu resolves to the key window's editor while the
-/// ribbon passes its own. Both invoke the same underlying action functions.
+/// toolbar passes its own. Both invoke the same underlying action functions.
 @Observable
 @MainActor
 final class EditorCommandRouter {
@@ -65,11 +65,9 @@ final class EditorCommandRouter {
     // through this so they always target the focused window's editor.
     @ObservationIgnored private var activeWindowKey: ObjectIdentifier?
 
-    // Tab width used by the Clean Text tab/space conversions (WP-F4 patch 2).
-    // Hardcoded for now; the Settings scene (WP-F5, in flight on a separate
-    // lane) will own this as a persisted preference. Do not read WP-F5's keys
-    // here yet -- wiring this to the real setting is a named follow-up once
-    // that lane lands.
+    // Tab width used by the Clean Text tab/space conversions.
+    // Hardcoded for now; the Settings scene will own this as a persisted
+    // preference. Wiring this to the real setting is a named follow-up.
     private let cleanTabWidth = 4
 
     // MARK: - Registration lifecycle
@@ -226,10 +224,10 @@ final class EditorCommandRouter {
 
     // MARK: - Target commands (act on a caller-supplied editor)
     //
-    // The ribbon passes its own window's editor here so its buttons always target
+    // The toolbar passes its own window's editor here so its buttons always target
     // the window they live in, staying consistent with that window's enabled-state
     // bindings. The menu forms above resolve the key window and then call these, so
-    // ribbon and menu invoke the same action functions (WP-S2 acceptance criterion).
+    // toolbar and menu invoke the same action functions.
 
     /// Undoes the last edit through the given editor's own undo manager, the single
     /// undo owner. Returns false when there is nothing to undo.

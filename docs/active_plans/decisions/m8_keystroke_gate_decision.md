@@ -270,3 +270,216 @@ off. Evaluated here as a concrete candidate.
   wiring) land, with WP-Q9 (fix the O(cursor-offset) cursor-label scan at
   `PlainEditorStatusReporter.swift:25`) recommended in scope. Decision record:
   `docs/active_plans/decisions/m8_keystroke_gate_decision.md`.
+
+## Revision 2026-07-11: gate the metric the user feels
+
+This is a scientific-method revision, not a reversal by taste. The original
+decision above (the two-tier curve-derived gate on `KEYSTROKE_MS` keyed to a
+crossing point `N`) is kept intact for audit. New phase-attribution evidence
+reframes what the gate should measure, so the gate shape changes. The prior
+reasoning was correct about the TextKit floor; it was measuring the wrong
+window and drawing the ship gate around it.
+
+- Decision owner: architect
+- Environment: MacBookPro18,3, macOS 26.5.2, Swift 6.3.3, git 93312b6
+- New source: `test-results/perf/keystroke_floor_attribution.txt` (WP-Q8 floor
+  attribution), finer low-end sweep at 1 KB / 2 KB / 5 KB / 10 KB, 200 edits.
+
+### What the new evidence shows
+
+Each per-edit `KEYSTROKE_MS` window decomposes into four sub-phases that sum to
+the whole (residual ~0):
+
+| size | lines | KEYSTROKE_MS | mutation | sched | span | paint |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 KB | 54 | 15.47 | 1.17 | 7.24 | 2.82 | 4.48 |
+| 2 KB | 99 | 19.84 | 1.20 | 7.44 | 4.60 | 6.87 |
+| 5 KB | 234 | 35.92 | 1.43 | 10.12 | 10.12 | 15.88 |
+| 10 KB | 459 | 67.37 | 1.72 | 9.46 | 18.82 | 37.48 |
+
+Phase meanings, and the three established facts:
+
+- `mutation` is the synchronous edit apply plus status refresh plus synchronous
+  scheduling: the ONLY work that blocks the typed character from reaching the
+  screen. This is perceived typing latency.
+- `sched` is an async main-actor Task enqueue-to-body hop, a fixed ~7-9 ms the
+  real keystroke never blocks on. `span` is off-main span compute. `paint` is
+  attribute paint plus layout on the full path, inflated by DEBUG-only
+  token-summary logging that a release build omits.
+- Fact 1: perceived typing latency (`mutation`) is ~1.2-1.7 ms at every tested
+  size, including the 1 MB fixture's synchronous slice. That is ~10x under the
+  16 ms budget. The mutation p95 is 1.46 / 1.41 / 1.64 / 2.14 ms at 1 / 2 / 5 /
+  10 KB, so it passes the 16 ms p95 target with an order of magnitude of margin.
+- Fact 2: `KEYSTROKE_MS` was measured to full highlight settle, so it conflated
+  the async highlight pipeline (including the ~7-9 ms `sched` artifact and the
+  DEBUG-inflated paint) with input latency and overstated perceived typing cost.
+  The 16 ms gate in the original decision was applied to the wrong metric.
+- Fact 3: the non-monotonic low end is a real design gap, not launch noise. The
+  highlighter's `boundedMinimumDocumentLength` (20,000 bytes, at
+  `PlainSyntaxHighlightRegion.swift:48`, enforced at
+  `PlainSyntaxHighlighter.swift:91`) routes every sub-20 KB document through the
+  WHOLE-DOCUMENT full pass per keystroke, so 1-10 KB files reinterpret and
+  repaint the entire buffer each edit, while 100 KB and up take the bounded
+  ~80-line window. That is why 10 KB (full pass, settle p95 71 ms) exceeds
+  100 KB (bounded, 42 ms) in the WP-Q7 sweep.
+
+### Revised verdict
+
+The M8 miss in the original decision was a measurement framing error compounding
+a real engine floor. Corrected framing: the milestone owns perceived typing
+latency, and perceived typing latency PASSES the 16 ms target at every tested
+size, including 1 MB. M8's typing-latency exit criterion is met on the recorded
+evidence; it exits once WP-Q8 wires the corrected gate on the synchronous
+first-paint slice and it is green (which the data already shows it will be).
+Highlight settle becomes a separately tracked background-freshness metric, not a
+ship gate, so M8 is no longer blocked on an engine floor the milestone does not
+own. The two-tier curve-derived gate from the original decision is superseded:
+there is no unreachable 1 MB absolute to defend once the gate measures the
+synchronous slice instead of the settle window.
+
+### 1. Ship gate redefined on the synchronous first-paint slice
+
+- The M8 perceived-typing-latency ship gate is `KEYSTROKE_MUTATION_MS` p95 <
+  16 ms on baseline hardware (MacBookPro18,3). This is already instrumented.
+- This is the metric grounded in what the user feels: the synchronous mutation
+  slice is the work that blocks the typed character from appearing (first paint
+  the user sees). It replaces full-highlight-settle `KEYSTROKE_MS` as the ship
+  gate. The retained 16 ms value now sits on the metric it actually bounds.
+- The recorded data passes this gate at every tested size (mutation p95
+  <= 2.14 ms through 10 KB, mutation median ~1.2-1.7 ms including the 1 MB
+  synchronous slice), so the crossing point `N` construction from the original
+  decision is retired for the typing gate: there is no size at which the
+  synchronous slice crosses 16 ms in the tested range.
+- The regression half is retained on this metric: p95 must also not regress more
+  than 20 percent above the recorded first-paint baseline, so a future
+  highlighter or status change that pushes synchronous work onto the hot path is
+  still caught.
+
+### 2. Highlight settle as a separate background-freshness metric
+
+- Define `HIGHLIGHT_SETTLE_MS` (the full `KEYSTROKE_MS`-to-settle window) as a
+  tracked background-freshness metric with its own target, NOT a typing gate. It
+  measures how quickly live coloring catches up after an edit, which happens
+  after the character is already on screen.
+- Its target must be derived from the bounded-path curve (100 KB and up), not
+  the full-path curve, because the full path is the small-file design gap fixed
+  by item 3. The target must be measured on a release-representative build (or
+  with the DEBUG-only token-summary logging removed from the timed window),
+  because the recorded `paint` phase is DEBUG-inflated and the `sched` hop is a
+  bench artifact absent from a real settle.
+- Provisional target, to be finalized by the WP-Q12 measurement below:
+  bounded-path settle p95 under 100 ms up to 500 KB on baseline hardware. The
+  WP-Q7 bounded rows (100 KB 42 ms, 250 KB 74 ms, 500 KB 126 ms, 1 MB 239 ms)
+  include the DEBUG paint inflation and the `sched` artifact, so they are an
+  upper bound, not the settle target; a release-representative measurement is
+  required before the number is fixed.
+
+### 3. Ruling on the small-file full-pass design gap
+
+- Ruling: the sub-20 KB full-pass routing is a real settle-freshness gap and is
+  to be fixed. Lower or remove `boundedMinimumDocumentLength` so small documents
+  take the bounded rehighlight path instead of reinterpreting and repainting the
+  whole buffer per keystroke. This makes the settle curve monotonic and small
+  files fast, and it is the fix that lets the item 2 settle target hold across
+  the whole size range.
+- Correctness guard, not a blocker: the full pass was originally kept for small
+  documents because the bounded edited-line-window path has a documented
+  stateful-interpreter limitation (a bounded region that opens inside a long
+  multi-line string or comment can mis-color its head, mitigated by the 40-line
+  context window; see `PlainSyntaxHighlightRegion.swift` and the dirty-range
+  contract in `docs/CODE_ARCHITECTURE.md`). The fix must keep the bounded-path
+  correctness tests green at small sizes. If lowering the threshold regresses
+  correctness, the fallback is to keep a whole-document pass for small files but
+  move it fully off the synchronous slice and coalesce it, so settle no longer
+  scales per keystroke. Either way the synchronous slice (the ship gate) is
+  unaffected, so this is recommended for settle freshness, not required for the
+  typing-latency exit.
+
+### 4. WP-Q10 reassessment (Kate large-document guard)
+
+- Because perceived typing latency now passes at every size including 1 MB, the
+  Kate-style large-document guard is no longer warranted as a typing-latency
+  mechanism. The original decision already noted it does not reach 16 ms on the
+  settle window; with the gate corrected to the synchronous slice there is no
+  typing-latency problem for it to guard against at all.
+- The only remaining rationale is highlight-settle freshness at extreme sizes
+  (bounded settle p95 ~239 ms at 1 MB), where live coloring may feel stale.
+  WP-Q10 is downgraded to an optional, product-gated, low-priority
+  settle-freshness and expectation-setting UX affordance at extreme sizes, and
+  is closed as a latency mechanism. It is not on the M8 exit path.
+
+### Revised follow-up package list (ordered, with owners)
+
+- WP-Q7 (latency-versus-size sweep): DONE. The sweep landed and produced the
+  finer low-end series that grounds this revision. No longer an exit blocker.
+- WP-Q8 (corrected ship gate, required for M8 exit): owner `coder`. Wire
+  `e2e_keystroke_latency.py --gate` to the `KEYSTROKE_MUTATION_MS` first-paint
+  metric with an absolute 16 ms p95 target plus a 20-percent-over-baseline
+  regression check, and record BOTH series (typing-latency first-paint and
+  highlight-settle freshness) in `test-results/perf/keystroke_latency.txt`.
+  Acceptance: the gate reads the mutation slice, passes the 16 ms p95 target on
+  the recorded fixtures, holds the regression threshold, and the results file
+  records both series and which check applied. Verification:
+  `source source_me.sh && python3 tests/e2e/e2e_keystroke_latency.py --gate`;
+  `pyflakes tests/e2e/e2e_keystroke_latency.py`; `pytest tests/`.
+- WP-Q12 (settle-freshness target, required to finalize the settle metric):
+  owner `coder`. Measure bounded-path `HIGHLIGHT_SETTLE_MS` on a
+  release-representative build (or with DEBUG-only token-summary logging removed
+  from the timed window) across the 100 KB-1 MB bounded range, and set the
+  settle target from that curve (proposal: p95 under 100 ms up to 500 KB).
+  Acceptance: a release-representative bounded-path settle series is recorded
+  with the environment triple, and the settle target is stated with its
+  supporting number. Does not gate typing latency. Verification:
+  `source source_me.sh && python3 tests/e2e/e2e_keystroke_latency.py --sweep`;
+  `pytest tests/`.
+- WP-Q11 (small-file bounded-threshold fix, recommended for settle freshness):
+  owner `coder` or `expert_coder`. Lower or remove
+  `HighlightRegionPlanner.boundedMinimumDocumentLength` so sub-20 KB documents
+  take the bounded rehighlight path (`PlainSyntaxHighlightRegion.swift:48`,
+  `PlainSyntaxHighlighter.swift:91`). Acceptance: small documents (1-10 KB) no
+  longer take the whole-document full pass per keystroke; the settle curve is
+  monotonic across the size series (10 KB no longer exceeds 100 KB); the bounded
+  rehighlight correctness tests (`BoundedRehighlightTests`) and the highlighter
+  tests stay green at small sizes; if correctness regresses, apply the item 3
+  fallback (off-synchronous coalesced full pass) instead. Verification:
+  `swift test`; `./scripts/plain_editor_smoke.sh`;
+  `source source_me.sh && python3 tests/e2e/e2e_keystroke_latency.py --floor-attribution`.
+- WP-Q9 (cursor-label incremental line index, recommended, in scope): unchanged
+  from the original decision. Owner `coder`. Replace the O(cursor-offset) scan at
+  `PlainEditorStatusReporter.swift:25` with an incremental line index. Still
+  worth doing to bound the last hot-path scan and help the synchronous slice.
+- WP-Q10 (Kate large-document guard): downgraded and closed as a latency
+  mechanism per item 4. Optional, product-gated, low-priority settle-freshness
+  and UX affordance at extreme sizes only. Not on the M8 exit path.
+
+### Changelog bullet (for docs/CHANGELOG.md, Decisions and Failures)
+
+- M8 keystroke gate decision revised by architect as a scientific-method
+  discovery: WP-Q8 phase attribution
+  (`test-results/perf/keystroke_floor_attribution.txt`, MacBookPro18,3, git
+  93312b6) decomposes each per-edit `KEYSTROKE_MS` window into mutation / sched /
+  span / paint sub-phases and shows the prior 16 ms gate was applied to the wrong
+  metric. Perceived typing latency is the synchronous `mutation` slice
+  (edit apply plus status refresh plus synchronous scheduling), the only work
+  that blocks the typed character from appearing; it measures ~1.2-1.7 ms at
+  every size including the 1 MB synchronous slice (p95 <= 2.14 ms through 10 KB),
+  an order of magnitude under 16 ms. `KEYSTROKE_MS` was timed to full highlight
+  settle, conflating the async pipeline (a fixed ~7-9 ms `sched` hop the
+  keystroke never blocks on, plus DEBUG-inflated paint) with input latency.
+  Decision: the M8 ship gate is redefined to `KEYSTROKE_MUTATION_MS` p95 < 16 ms
+  (already instrumented, passes at every tested size), retiring the crossing-
+  point `N` construction and the unreachable 1 MB settle absolute; highlight
+  settle becomes a separately tracked background-freshness metric with a target
+  set from a release-representative bounded-path measurement, not a typing gate.
+  The sub-20 KB full-pass routing
+  (`HighlightRegionPlanner.boundedMinimumDocumentLength`) is ruled a real
+  settle-freshness gap and slated to be lowered so small files use the bounded
+  path (making the settle curve monotonic), guarded by the bounded-path
+  correctness tests. WP-Q10 (Kate large-document guard) is downgraded and closed
+  as a latency mechanism since typing latency now passes at 1 MB; it survives
+  only as an optional product-gated settle-freshness UX affordance at extreme
+  sizes. Revised packages: WP-Q8 (wire the mutation first-paint gate, required),
+  WP-Q12 (release-representative settle target, required to finalize the settle
+  metric), WP-Q11 (small-file bounded-threshold fix, recommended), WP-Q9 (cursor
+  incremental index, recommended), WP-Q10 (downgraded). Decision record:
+  `docs/active_plans/decisions/m8_keystroke_gate_decision.md`.

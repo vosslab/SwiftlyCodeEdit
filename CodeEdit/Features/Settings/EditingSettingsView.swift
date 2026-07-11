@@ -11,8 +11,8 @@ import SwiftUI
 /// default line ending for newly created files (LF per the plan's Resolved
 /// decisions). These persist to `PlainEditorSettingsKeys`, but neither is
 /// consumed by the editor yet -- auto-indent behavior and new-document line
-/// endings land with the document-side packages. WP-F5 only persists and
-/// exposes the settings.
+/// endings land with the document-side packages. The Settings pane only
+/// persists and exposes the settings.
 struct EditingSettingsView: View {
     @AppStorage(PlainEditorSettingsKeys.indentationStyle)
     private var indentationStyle = IndentationStyle.spaces.rawValue

@@ -10,7 +10,7 @@ import Foundation
 
 /// A parsed theme color, stored as plain RGBA components so the type stays a
 /// trivially `Sendable` value (`NSColor` itself is not a `Sendable` type, so
-/// theme parsing -- which must run off the main actor per WP-F2 -- never
+/// theme parsing -- which must run off the main actor -- never
 /// carries one across a task boundary).
 struct ThemeColor: Sendable, Equatable {
     let red: Double

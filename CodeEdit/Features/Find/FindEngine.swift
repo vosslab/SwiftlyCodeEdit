@@ -2,7 +2,7 @@
 //  FindEngine.swift
 //  SwiftlyCodeEdit
 //
-//  Pure search logic for the find panel (WP-F1). Harvested behavior from the old
+//  Pure search logic for the find panel. Harvested behavior from the old
 //  CodeEditSourceEditor find panel (FindPanelViewModel+Find), but with no dependency
 //  on TextViewController: it takes a plain String and returns match ranges, so it can
 //  be unit-tested without a live editor. The panel model drives selection and undo;

@@ -38,7 +38,7 @@ enum HighlightPainter {
     ) {
         let fullRange = NSRange(location: 0, length: storage.length)
         guard fullRange.length > 0 else { return }
-        // Reads the Settings scene's live theme choice (WP-F5). This function
+        // Reads the Settings scene's live theme choice. This function
         // runs on every highlight pass, including the cache-hit fast path, so
         // a theme switch takes effect on the very next pass without a fresh
         // span computation.
@@ -46,7 +46,7 @@ enum HighlightPainter {
         // Detect the theme-name change here, but log the marker only after the
         // colors below are actually applied to the storage and laid out, so
         // SETTINGS_APPLIED key=theme reports a real rendered-state change, not
-        // just the resolve. WP-F5.
+        // just the resolve.
         let themeNameChanged = theme.name != state.lastAppliedThemeName
         let variant = theme.variant(forDarkAppearance: isDarkAppearance())
         #if DEBUG
@@ -68,7 +68,7 @@ enum HighlightPainter {
         layout(layoutTarget)
         // The colors are now on the storage and laid out; this is the point
         // after which the editor's rendered state has actually changed, so log
-        // the theme marker here rather than at the resolve above. WP-F5.
+        // the theme marker here rather than at the resolve above.
         if themeNameChanged {
             state.lastAppliedThemeName = theme.name
             debugRuntimeLog("SETTINGS_APPLIED key=theme")

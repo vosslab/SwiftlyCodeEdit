@@ -1,8 +1,8 @@
-# SwiftlyCodeEdit bundled default theme (WP-F2 Patch A/B).
+# SwiftlyCodeEdit bundled default theme.
 #
 # Colors are the exact sRGB values NSColor's dynamic system colors resolved
 # to under NSAppearance .aqua (light) and .darkAqua (dark) prior to the
-# WP-F2 cutover, so this theme reproduces the previous hardcoded
+# theme-file cutover, so this theme reproduces the previous hardcoded
 # `PlainSyntaxTheme.standard` palette unchanged. See docs/THEME_FORMAT.md
 # for the schema this file follows.
 version: 1

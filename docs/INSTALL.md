@@ -60,7 +60,7 @@ builds the app themselves.
 ## Verify install
 
 Run the smoke script, which launches the debug build, opens a source file
-through the plain-editor path, and confirms the command bar, editor, and
+through the plain-editor path, and confirms the toolbar, editor, and
 status bar all appear:
 
 ```bash

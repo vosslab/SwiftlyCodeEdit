@@ -34,7 +34,7 @@ Known issues and fixes for SwiftlyCodeEdit development and smoke testing. See
 - Cause: Cold syntax-highlight compute competes for CPU with other concurrent
   builds or app launches on the same machine; this is a known cold-compute
   contention knife-edge (see
-  `docs/active_plans/active/scope_closure_plan.md`).
+  `docs/archive/scope_closure_plan.md`).
 - Fix: Rerun the smoke script on an otherwise idle machine, with no other
   builds or launches in progress. A clean rerun reporting `SMOKE_EXIT=0`
   confirms the earlier failure was contention, not a regression.
@@ -102,3 +102,22 @@ Known issues and fixes for SwiftlyCodeEdit development and smoke testing. See
   directly with `--kill-after=N` (as `build_debug.sh` and the smoke script
   do) instead of `open`. If `open` was used for Dock-icon evidence, quit the
   app manually afterward from the Dock or with Cmd+Q.
+
+## Toolbar cannot carry a color tint
+
+- Symptom: Attempts to apply a custom color tint to the top toolbar (a
+  gradient, `.toolbarBackground`, `.toolbarBackgroundVisibility`, or
+  `window.backgroundColor`) measure zero tint at the toolbar band, even
+  though the same `window.backgroundColor` mechanism successfully tints the
+  status bar's glass.
+- Cause: The bridged `NSToolbar`
+  (`hostingController.sceneBridgingOptions = [.toolbars, .title]`) is
+  window-server chrome outside the SwiftUI paintable region, so it cannot
+  sample color composited by the hosted SwiftUI content or by
+  `NSWindow.backgroundColor`.
+- Fix/status: use OS Liquid Glass only for the toolbar (no custom tint); the
+  status bar carries the chrome's accent color instead. A toolbar color pop
+  would need a custom `NSToolbar`/`NSVisualEffectView` replacement, an
+  architect-level change out of scope for the current chrome work. See
+  `docs/active_plans/decisions/native_toolbar_decision.md` and the 2026-07-11
+  "Decisions and Failures" entry in `docs/CHANGELOG.md`.

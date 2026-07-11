@@ -4,7 +4,7 @@
 //
 //  Created by Claude on 2026-07-10.
 //
-//  M8 entry-criterion sufficiency check: pins the Clean Text case of the
+//  Entry-criterion sufficiency check: pins the Clean Text case of the
 //  edited-range contract (docs/active_plans/decisions/document_architecture_decision.md).
 //  Clean Text applies through `TextView.replaceCharacters`, the same mutation API
 //  typing, paste, undo, and redo use, so it fires `didReplaceContentsIn` and
@@ -54,7 +54,7 @@ struct EditedRangeContractTests {
     // Clean Text (trim trailing whitespace) applies through the same
     // `TextView.replaceCharacters` mutation API as typing, paste, undo, and redo. This
     // pins that it broadcasts a bounded `.range` covering the whole pre-edit buffer --
-    // not `.fullInvalidation` -- so an M8 consumer (bounded rehighlighter, incremental
+    // not `.fullInvalidation` -- so an edited-range consumer (bounded rehighlighter, incremental
     // status bar) receives a usable, non-empty payload for this case rather than
     // silence.
     @Test

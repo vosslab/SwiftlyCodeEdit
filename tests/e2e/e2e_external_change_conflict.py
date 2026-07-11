@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive the external-change conflict matrix against the running app (WP-L2).
+"""Drive the external-change conflict matrix against the running app.
 
 Launches the built SwiftlyCodeEdit app on a sandboxed /tmp fixture, rewrites that
 fixture from this process (a genuine external change picked up by NSFilePresenter),

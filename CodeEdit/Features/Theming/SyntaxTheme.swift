@@ -32,8 +32,7 @@ struct ThemeVariant: Sendable, Equatable {
 }
 
 /// A fully parsed theme file: a schema `name`, and one or both appearance
-/// variants. `Sendable` per WP-F2's requirement that theme parsing run off
-/// the main actor.
+/// variants. `Sendable` so theme parsing can run off the main actor.
 struct SyntaxTheme: Sendable, Equatable {
     let version: Int
     let name: String

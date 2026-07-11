@@ -2,8 +2,8 @@
 
 Planned work for SwiftlyCodeEdit, in priority order. This file states priorities only; execution
 detail, owners, and acceptance criteria live in
-[MILESTONE3_CHECKLIST.md](../MILESTONE3_CHECKLIST.md) and
-[docs/active_plans/active/scope_closure_plan.md](active_plans/active/scope_closure_plan.md).
+[docs/archive/MILESTONE3_CHECKLIST.md](archive/MILESTONE3_CHECKLIST.md) and
+[docs/archive/scope_closure_plan.md](archive/scope_closure_plan.md).
 
 ## Planned work
 
@@ -25,9 +25,17 @@ detail, owners, and acceptance criteria live in
 6. **Large-file performance.** Make highlighting viewport-first and bound keystroke-triggered
    rehighlighting and status recomputation to the edited region, with a repeatable benchmark
    proving p95 keystroke handling under 16 ms on a 1 MB file.
-7. **Liquid Glass chrome.** Move the command ribbon and status bar to macOS 26 `glassEffect`
-   styling per [docs/LIQUID_GLASS.md](LIQUID_GLASS.md), leaving the editor text surface untouched,
-   with captured evidence for light mode, dark mode, and reduced transparency.
+
+## Nearly complete
+
+- **Liquid Glass chrome.** The top chrome moved to a native macOS 26 toolbar
+  (`.unified` style, grouped-capsule Liquid Glass via `sceneBridgingOptions`)
+  and the status bar carries an accent-tinted `glassEffect` with a reduce-
+  transparency opaque fallback, per [docs/LIQUID_GLASS.md](LIQUID_GLASS.md);
+  the editor text surface is untouched. See
+  [docs/active_plans/decisions/native_toolbar_decision.md](active_plans/decisions/native_toolbar_decision.md).
+  Light-mode and dark-mode evidence is captured; reduced-transparency
+  evidence for the final record is the one item still open.
 
 ## Intentionally not started
 
@@ -39,7 +47,7 @@ Per the non-goals in [docs/SCOPE.md](SCOPE.md), this project does not build:
 
 ## More detail
 
-- [MILESTONE3_CHECKLIST.md](../MILESTONE3_CHECKLIST.md): human-readable tracking checklist for
-  every gap above, plus document-lifecycle correctness fixes.
-- [docs/active_plans/active/scope_closure_plan.md](active_plans/active/scope_closure_plan.md):
+- [docs/archive/MILESTONE3_CHECKLIST.md](archive/MILESTONE3_CHECKLIST.md): human-readable tracking
+  checklist for every gap above, plus document-lifecycle correctness fixes.
+- [docs/archive/scope_closure_plan.md](archive/scope_closure_plan.md):
   the full milestone and work-package plan, including current execution status.

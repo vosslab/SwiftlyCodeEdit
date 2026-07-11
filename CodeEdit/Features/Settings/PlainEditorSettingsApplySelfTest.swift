@@ -9,7 +9,7 @@
 import AppKit
 import Foundation
 
-/// DEBUG-only live-apply self-test for the Settings scene (WP-F5). Gated by the
+/// DEBUG-only live-apply self-test for the Settings scene. Gated by the
 /// `CODEEDIT_SETTINGS_APPLY_SELF_TEST=1` environment variable and scheduled from
 /// `CodeFileView.onTextViewReady` (mirroring `PlainEditorCommandSelfTest`), it
 /// proves the `SETTINGS_APPLIED` markers fire from a genuine post-mount change

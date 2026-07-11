@@ -123,6 +123,39 @@ work belongs in [ROADMAP.md](ROADMAP.md) or a dedicated plan under
   "aaaa" creating adjacent "aa" pairs) do not show as matches until the next external edit.
   Consider ending `replaceAllMatches` with a `performFind()` re-scan so the match list
   reflects the post-replace document.
+- ThemeRepositoryTests cache-race flake (found 2026-07-11): an intermittent
+  failure in `ThemeRepositoryTests` traced to a test-cache race (parallel test
+  cases sharing `ThemeRepository`'s resolved-theme cache), not a product bug.
+  Needs a maintainer decision on the fix shape: per-test cache isolation (an
+  `overrideRoot`-style seam like `UserSyntaxDirectory`'s) versus serializing
+  the affected cases.
+- Editor default font renders larger than expected (found 2026-07-09): the app
+  default font size is 13.0 (`PlainEditorFontSettings.defaultFontSize` in
+  `CodeEdit/Features/Editor/Views/CodeFileView.swift`), but on screen the
+  editor text reads noticeably larger than a 14pt terminal on the same
+  display, roughly double per user observation. Investigation so far found no
+  scaling bug in the font construction (clean `monospacedSystemFont(ofSize:)`,
+  no `* 2`, and no magnification/scaleFactor in `PlainTextEditorView` or the
+  vendored `CodeEditTextView`). Likely a line-height/metrics or
+  display-scaling effect, not a settable point-size bug. Follow-up: confirm
+  the perceived size against the vendored `CodeEditTextView`
+  line-height/typesetting and decide the target default (user prefers roughly
+  a 14pt-terminal appearance). Screenshots are separately forced to 14pt via
+  `scripts/capture_screenshots.sh`; this item is about the live-app default
+  only.
+- Lifecycle test uses real-time sleeps instead of a deterministic hook (found
+  2026-07-09): `CodeEditTests/PackageSmoke/CodeFileDocumentLifecycleGapTests.swift`
+  uses two `Task.sleep(nanoseconds: 200_000_000)` (200ms each) waits for
+  `presentedItemDidChange`'s async task. Replace with a deterministic
+  drain/completion hook (same pattern as the status reporter's
+  `drainHeavyRecomputeForTesting`) so the test does not spend ~400ms of real
+  time per run. Pre-existing, non-blocking; flagged by the test audit.
+- Optional final-gate re-verification (found 2026-07-09): the last full gate
+  (build / swift test / plain_editor_smoke / pytest) ran on the final code
+  during the planning-tag cleanup; a later change touched only
+  `scripts/capture_screenshots.sh` and regenerated PNGs (no Swift/test logic).
+  A fresh full-gate run on the exact pre-commit tree is belt-and-suspenders,
+  not required, since the code gates already passed on the final source.
 - SETTINGS_APPLIED smoke gate (DONE 2026-07-10): the DEBUG-only
   `CODEEDIT_SETTINGS_APPLY_SELF_TEST` seam
   (`CodeEdit/Features/Settings/PlainEditorSettingsApplySelfTest.swift`) now

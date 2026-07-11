@@ -63,7 +63,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     /// reload), an undecodable external change, and a deleted or moved file -- and
     /// cleared when the user resolves or dismisses it. A clean, decodable external
     /// change reloads silently and never sets this. See the external-change matrix
-    /// in docs/active_plans/decisions/document_architecture_decision.md (WP-L2).
+    /// in docs/active_plans/decisions/document_architecture_decision.md.
     @Published var pendingExternalChange: ExternalChangePrompt?
 
     /// The external-change situations the editor asks the user about. The clean +
@@ -132,7 +132,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
     }
 
     /// Handlers notified with the two-case ``EditedTextChange`` on every text change.
-    /// The bounded rehighlighter and incremental status bar (M8) subscribe here rather
+    /// The bounded rehighlighter and incremental status bar subscribe here rather
     /// than observing raw `NSTextStorage` edits, so they receive the explicit case.
     /// Edit consumers drive main-actor UI, so handlers are main-actor isolated.
     private var editObservers: [@MainActor (EditedTextChange) -> Void] = []
@@ -410,7 +410,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
 
     /// Handle the notification that the represented file item changed.
     ///
-    /// Routes to the five-case external-change matrix (WP-L2). The mtime probe is
+    /// Routes to the five-case external-change matrix. The mtime probe is
     /// read off the main actor; every decision, buffer read, and state change runs
     /// on the main actor so AppKit document state stays isolated correctly.
     override func presentedItemDidChange() {
@@ -492,7 +492,7 @@ final class CodeFileDocument: NSDocument, ObservableObject {
         // The reload replaces the whole buffer and broadcasts .fullInvalidation, which
         // the editor observes to refresh the encoding label (audit F7) and to reset the
         // now-stale undo stack (audit F4). Killing the old `try?` swallow, the read error
-        // is surfaced rather than hidden, extending the WP-V3 "always real text or an
+        // is surfaced rather than hidden, extending the "always real text or an
         // explicit error, never a silent blank" contract to the reload path. The date
         // advances only after the reload actually succeeds.
         do {
@@ -570,9 +570,9 @@ final class CodeFileDocument: NSDocument, ObservableObject {
             // longer decode, so the reload failed. The user's kept edits are still in
             // the buffer -- clearing the dirty flag here would mark the document clean
             // over unsaved content and lose those edits silently at the next close.
-            // Leave the dirty flag alone and surface the failure instead (found in
-            // WP-L2 review; the same silent `try?` swallow WP-L3 kills on the
-            // presentedItemDidChange reload path).
+            // Leave the dirty flag alone and surface the failure instead. This is the
+            // same silent `try?` swallow that the presentedItemDidChange reload path
+            // also avoids.
             surfaceExternalChangeAlert(.undecodable)
             #if DEBUG
             debugRuntimeLog("EXTERNAL_CHANGE_RESOLVED choice=reload result=failed")

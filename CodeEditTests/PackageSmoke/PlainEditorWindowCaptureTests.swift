@@ -2,7 +2,7 @@
 //  PlainEditorWindowCaptureTests.swift
 //  CodeEditTests
 //
-//  Covers the pure path-validation half of the WP-G0 window self-capture seam.
+//  Covers the pure path-validation half of the window self-capture seam.
 //  The rendering half needs a live AppKit window and is proven end to end by the
 //  _temp capture proof runner, not by swift test.
 //
